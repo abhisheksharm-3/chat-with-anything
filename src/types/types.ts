@@ -7,4 +7,5 @@ export interface TypeButtonCta extends React.ButtonHTMLAttributes<HTMLButtonElem
   variant?: VariantProps<typeof buttonVariants>["variant"]
   size?: VariantProps<typeof buttonVariants>["size"]
   className?: string
+  showArrow?: boolean
 }

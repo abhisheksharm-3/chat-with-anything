@@ -13,62 +13,76 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
-    <div className="flex h-screen bg-black text-white">
-      {/* Sidebar */}
-      <div className="w-16 border-r border-gray-800 flex flex-col items-center justify-between py-6 space-y-8">
+    // 1. Use theme variables. Add `relative` for positioning the sidebar.
+    <div className="relative flex h-screen bg-[#121212] text-foreground">
+      {/* 2. Floating Sidebar:
+        - Made `absolute` to float over the content.
+        - Centered vertically with `top-1/2 -translate-y-1/2`.
+        - Styled with rounded corners and `bg-muted` for a distinct look.
+        - Removed the right border.
+      */}
+      <aside className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-16 bg-[#181818] rounded-2xl flex flex-col items-center justify-between py-6 h-[calc(100vh-1rem)]">
         {/* Logo */}
-        <Image
-            src="/logo.png"
-            alt="Logo"
-            className="object-contain"
-            width={32}
-            height={32}
-            priority
-          />
+        <Link href="/choose">
+            <Image
+                src="/logo.png" // Ensure you have a logo image at this path
+                alt="Logo"
+                className="object-contain"
+                width={32}
+                height={32}
+                priority
+            />
+        </Link>
         
         {/* Navigation Icons */}
-        <div className="flex flex-col space-y-6">
-          <Link href="/choose" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white">
+        <nav className="flex flex-col space-y-2">
+          <Link href="/choose" className="p-2 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary">
             <FileText size={20} />
           </Link>
-          <Link href="/history" className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white">
+          <Link href="/history" className="p-2 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary">
             <Clock size={20} />
           </Link>
           <SettingsDialog 
             trigger={
-              <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white">
+              <button className="p-2 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary">
                 <Settings size={20} />
               </button>
             }
           />
-        </div>
+        </nav>
 
+        {/* Logout at the bottom */}
         <LogoutDialog
           trigger={
-            <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white">
+            <button className="p-2 rounded-md text-muted-foreground hover:text-destructive/20 hover:text-destructive">
               <LogOut size={20} />
             </button>
           }
         />
-      </div>
+      </aside>
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      {/* 3. Added left padding `pl-24` to prevent content from going under the floating sidebar */}
+      <div className="flex-1 flex flex-col pl-20">
         {/* Header */}
-        <header className="h-16 border-b border-gray-800 flex items-center justify-between px-6">
-          <h1 className="text-white text-sm font-medium">Home screen</h1>
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm" className="bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800">
-              <span className="mr-2">+</span> New Note
-            </Button>
-            <PricingDialog
-              trigger={
-                <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
-                  Upgrade plan <span className="ml-1 text-xs bg-purple-500 px-1 rounded">$10</span>
-                </Button>
-              }
-            />
+        {/* 4. Use theme variables for borders and button styles */}
+        <header className="h-16 border-b border-border flex items-center justify-between px-6">
+          {/* Using a simple div for the "New Note" tab as in the image */}
+          <div className='flex items-center gap-2 border border-border rounded-t-md px-3 py-1.5 -mb-px border-b-background z-10'>
+             <span className='text-primary'>
+                <FileText size={16}/>
+             </span>
+             <span className='text-sm text-foreground'>New Note</span>
           </div>
+          
+          <PricingDialog
+            trigger={
+              <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                Upgrade plan
+                <span className="ml-2 text-xs bg-primary-foreground/20 text-primary-foreground font-semibold px-1.5 py-0.5 rounded">PRO</span>
+              </Button>
+            }
+          />
         </header>
         
         {/* Page Content */}
@@ -80,4 +94,4 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   );
 };
 
-export default DashboardLayout; 
+export default DashboardLayout;

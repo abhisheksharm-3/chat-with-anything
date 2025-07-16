@@ -35,28 +35,28 @@ const Hero = () => {
       
       {/* Floating Logos */}
       <div className="absolute inset-0 z-0 max-w-6xl mx-auto">
-        <div className="absolute top-[30%] left-[10%] rotate-18">
+        <div className="absolute top-[30%] left-[10%] rotate-18 opacity-70">
           <Image src={youtubeImg} alt="YouTube Logo" width={60} height={60} />
         </div>
-        <div className="absolute top-[35%] right-[15%] rotate-8">
+        <div className="absolute top-[35%] right-[15%] rotate-8 opacity-70">
           <Image src={githubImg} alt="GitHub Logo" width={60} height={60} />
         </div>
-        <div className="absolute bottom-[5%] left-[13%] -rotate-17">
+        <div className="absolute bottom-[5%] left-[13%] -rotate-17 opacity-70">
           <Image src={notionImg} alt="Notion Logo" width={60} height={60} />
         </div>
-        <div className="absolute top-[85%] right-[10%] -rotate-10">
+        <div className="absolute top-[85%] right-[10%] -rotate-10 opacity-70">
           <Image src={sheetsImg} alt="Google Sheets Logo" width={60} height={60} />
         </div>
-        <div className="absolute bottom-[20%] right-[23%] rotate-17">
+        <div className="absolute bottom-[20%] right-[23%] rotate-17 opacity-70">
           <Image src={docsImg} alt="Google Docs Logo" width={60} height={60} />
         </div>
-        <div className="absolute top-[55%] -rotate-16">
+        <div className="absolute top-[55%] -rotate-16 opacity-70">
           <Image src={pdfImg} alt="PDF Logo" width={60} height={60} />
         </div>
-        <div className="absolute bottom-[25%] left-[25%] -rotate-16">
+        <div className="absolute bottom-[25%] left-[25%] -rotate-16 opacity-70">
           <Image src={imageFileImg} alt="Image Logo" width={60} height={60} />
         </div>
-        <div className="absolute top-[45%] right-[2%] rotate-16">
+        <div className="absolute top-[45%] right-[2%] rotate-16 opacity-70">
           <Image src={slidesImg} alt="Slides Logo" width={60} height={60} />
         </div>
       </div>
@@ -71,7 +71,7 @@ const Hero = () => {
           </div>
         </div>
         <div className='mt-10 min-w-96 mx-auto'>
-          <ButtonCta className='py-6' />
+          <ButtonCta className='py-6' showArrow={true} />
         </div>
       </div>
     </section>

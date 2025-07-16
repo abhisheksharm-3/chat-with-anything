@@ -12,7 +12,7 @@ const Features = () => {
       <SectionHeader subtitle="Features" title="Experience the power of AI" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto px-8">
         {[...Array(3)].map((_, index) => (
-          <Card key={index} className="space-y-3 text-center p-6">
+          <Card key={index} className="space-y-3 text-center p-6 backdrop-blur-sm">
             <CardHeader>
               <div className="h-72 w-52 " />
             </CardHeader>

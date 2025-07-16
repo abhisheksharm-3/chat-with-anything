@@ -13,7 +13,6 @@ import imageIcon from '@/assets/images/logos/flat-color-icons_image-file.png';
 import youtubeIcon from '@/assets/images/logos/youtube.png';
 import githubIcon from '@/assets/images/logos/github.png';
 import notionIcon from '@/assets/images/logos/notion.png';
-import webIcon from '@/assets/images/logos/web.png';
 
 // File type options with their respective images
 const fileTypes = [
@@ -28,11 +27,6 @@ const fileTypes = [
     image: youtubeIcon,
   },
   {
-    id: 'web',
-    name: 'Web',
-    image: webIcon,
-  },
-  {
     id: 'docs',
     name: 'Google Doc',
     image: docsIcon,
@@ -41,11 +35,13 @@ const fileTypes = [
     id: 'notion',
     name: 'Notion Page',
     image: notionIcon,
+    comingSoon: true, // Example of a coming soon feature
   },
   {
     id: 'github',
     name: 'Github Repo',
     image: githubIcon,
+    comingSoon: true, // Example of a coming soon feature
   },
   {
     id: 'image',
@@ -56,13 +52,11 @@ const fileTypes = [
     id: 'slides',
     name: 'Google Slide',
     image: slidesIcon,
-    comingSoon: true,
   },
   {
     id: 'sheets',
     name: 'Google Sheet',
     image: sheetsIcon,
-    comingSoon: true,
   },
 ];
 
