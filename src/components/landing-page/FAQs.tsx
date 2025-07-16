@@ -1,81 +1,76 @@
-// This component is used to display a list of frequently asked questions and their answers.
-// This component is typically used in sections like 'Help' or 'Support' to assist users in finding quick answers.
-// The FAQ data is expected to be passed as a prop in the form of an array of {question, answer} objects.
-
-'use client';
+"use client"
 import React, { useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import PlusIcon from '@/assets/icons/PlusIcon';
-import MinusIcon from '@/assets/icons/MinusIcon';
-import { cn } from '@/utils/utils';
+import { Plus, Minus } from 'lucide-react';
+import SectionHeader from '../shared/SectionHeader';
 
 const accordionData = [
   {
     value: '0',
     question: 'How does the application function',
-    answer: 'Our application uses advanced algorithms to process your data and provide meaningful insights.',
+    answer: 'Our application uses advanced algorithms to process your data and provide meaningful insights. It integrates seamlessly with your existing workflow and provides real-time analytics.',
   },
   {
     value: '1',
     question: 'How does the application function',
-    answer: 'Our application uses advanced algorithms to process your data and provide meaningful insights.',
+    answer: 'Our application uses advanced algorithms to process your data and provide meaningful insights. It integrates seamlessly with your existing workflow and provides real-time analytics.',
   },
   {
     value: '2',
     question: 'How does the application function',
-    answer: 'Our application uses advanced algorithms to process your data and provide meaningful insights.',
+    answer: 'Our application uses advanced algorithms to process your data and provide meaningful insights. It integrates seamlessly with your existing workflow and provides real-time analytics.',
   },
   {
     value: '3',
     question: 'How does the application function',
-    answer: 'Our application uses advanced algorithms to process your data and provide meaningful insights.',
+    answer: 'Our application uses advanced algorithms to process your data and provide meaningful insights. It integrates seamlessly with your existing workflow and provides real-time analytics.',
   },
   {
     value: '4',
     question: 'How does the application function',
-    answer: 'Our application uses advanced algorithms to process your data and provide meaningful insights.',
+    answer: 'Our application uses advanced algorithms to process your data and provide meaningful insights. It integrates seamlessly with your existing workflow and provides real-time analytics.',
   },
 ];
 
 const FAQs = () => {
-  const [openAccordion, setOpenAccordion] = useState<string | null>(null);
-
-  const toggleAccordion = (value: string) => {
-    setOpenAccordion(value === openAccordion ? null : value);
-  };
+  const [openAccordion, setOpenAccordion] = useState('');
 
   return (
-    <div id='faq' className='py-16'>
-      <div className='max-w-4xl mx-auto px-6'>
-        <p className='text-purple-500 text-center mb-4'>FAQ</p>
-        <h1 className='text-center text-4xl md:text-5xl font-medium mb-16'>You might have a question?</h1>
+    <div className="min-h-screen py-32">
+      <div className="mx-auto px-6 max-w-6xl">
+        <SectionHeader 
+          subtitle="FAQ"
+          title="You might have a question?"
+        />
         
-        <div className='border border-gray-800 rounded-lg overflow-hidden'>
-          <Accordion type='single' collapsible className='w-full'>
-            {accordionData.map((item, index) => (
+        <div className="border border-primary/30 rounded-lg overflow-hidden backdrop-blur-sm">
+          <Accordion 
+            type="single" 
+            collapsible 
+            className="w-full"
+            value={openAccordion}
+            onValueChange={setOpenAccordion}
+          >
+            {accordionData.map((item) => (
               <AccordionItem 
-                key={index} 
+                key={item.value} 
                 value={item.value} 
-                className={cn(
-                  'border-b border-gray-800 last:border-b-0',
-                )}
               >
-                <AccordionTrigger 
-                  onClick={() => toggleAccordion(item.value)}
-                  className='flex items-center gap-4 py-4 px-6'
-                >
-                  <div className='flex items-center gap-4'>
-                    <span className="flex-shrink-0">
-                      {openAccordion === item.value ? <MinusIcon /> : <PlusIcon />}
+                <AccordionTrigger className="flex items-center gap-4 py-6 px-6 hover:bg-gray-750 transition-colors duration-200 [&[data-state=open]>svg]:rotate-0 [&>svg]:transition-transform [&>svg]:duration-200">
+                  <div className="flex items-center gap-12 flex-1">
+                    <div className="flex-shrink-0">
+                      {openAccordion === item.value ? (
+                        <Minus className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <Plus className="w-5 h-5 text-gray-400" />
+                      )}
+                    </div>
+                    <span className="text-lg font-normal text-left">
+                      {item.question}
                     </span>
-                    <span className="text-base md:text-lg font-normal">{item.question}</span>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent
-                  className={cn(
-                    'text-gray-400 text-base font-normal pl-16 pr-6'
-                  )}
-                >
+                <AccordionContent className="px-6 pb-6 pl-16 text-gray-400 text-base leading-relaxed">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>

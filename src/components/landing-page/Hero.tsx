@@ -4,6 +4,7 @@
 
 import Image from 'next/image';
 import ButtonCta from './ButtonCta';
+import GlowEffect from './GlowEffect';
 
 import youtubeImg from '@/assets/images/logos/youtube.png';
 import githubImg from '@/assets/images/logos/github.png';
@@ -21,7 +22,16 @@ const Hero = () => {
       {/* Background Grid */}
       <div className="absolute inset-0 z-0">
         <div className="h-full w-full bg-grid-pattern" />
+        {/* Radial blur to fade grid into background */}
+        <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-[#121212] opacity-90" />
       </div>
+      
+      {/* Reusable Glow Effect */}
+      <GlowEffect 
+        color="#5463FF" 
+        intensity="medium" 
+        variant="centered" 
+      />
       
       {/* Floating Logos */}
       <div className="absolute inset-0 z-0 max-w-6xl mx-auto">

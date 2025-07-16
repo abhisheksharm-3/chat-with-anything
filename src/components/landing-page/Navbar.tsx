@@ -1,9 +1,10 @@
+"use client";
 import Link from "next/link";
 import Image from "next/image";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import ButtonCta from "./ButtonCta";
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 const NavbarRoutes = [
   { label: "Pricing", url: "/#pricing" },
@@ -12,9 +13,19 @@ const NavbarRoutes = [
 ];
 
 export default function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const closeMenu = () => {
+    setIsOpen(false);
+  };
+
   return (
     <div className="w-full">
-      <div className="mx-auto flex items-center justify-between py-10 px-24">
+      <div className="mx-auto flex items-center justify-between py-6 px-6 lg:py-10 lg:px-28">
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2.5">
           <Image
@@ -63,23 +74,47 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        <Sheet>
-          <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon" className="flex-shrink-0">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Open menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-[240px] sm:w-[300px]">
-            <div className="flex flex-col h-full justify-between py-6">
-              <nav>
-                <ul className="grid gap-4 py-6">
+        {/* Mobile Menu Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden flex-shrink-0"
+          onClick={toggleMenu}
+        >
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Open menu</span>
+        </Button>
+      </div>
+
+      {/* Mobile Overlay Menu */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Full Screen Overlay */}
+          <div
+            className="fixed inset-0 bg-background/95 backdrop-blur-sm"
+            onClick={closeMenu}
+          >
+            <div className="flex flex-col items-center justify-center h-full px-6">
+              {/* Close Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={closeMenu}
+                className="absolute top-6 right-6 h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close menu</span>
+              </Button>
+
+              {/* Navigation */}
+              <nav className="text-center">
+                <ul className="space-y-8">
                   {NavbarRoutes.map((item, index) => (
                     <li key={index}>
                       <Link
                         href={item.url}
-                        className="text-sm font-medium hover:text-foreground/80 transition-colors"
+                        className="block text-2xl font-semibold hover:text-foreground/80 transition-colors"
+                        onClick={closeMenu}
                       >
                         {item.label}
                       </Link>
@@ -87,24 +122,28 @@ export default function Navbar() {
                   ))}
                 </ul>
               </nav>
-              <div className="flex flex-col gap-2.5">
-                <ButtonCta
-                  label="Login"
-                  link="/login"
-                  variant="outline"
-                  className="w-full text-primary-foreground"
-                />
-                <ButtonCta
-                  label="Try For Free"
-                  link="/signup"
-                  variant="default"
-                  className="w-full text-primary-foreground"
-                />
+
+              {/* CTA Buttons */}
+              <div className="mt-12 w-full max-w-xs">
+                <div className="flex flex-col gap-4">
+                  <ButtonCta
+                    label="Login"
+                    link="/login"
+                    variant="outline"
+                    className="w-full text-primary-foreground text-lg py-3"
+                  />
+                  <ButtonCta
+                    label="Try For Free"
+                    link="/signup"
+                    variant="default"
+                    className="w-full text-primary-foreground text-lg py-3"
+                  />
+                </div>
               </div>
             </div>
-          </SheetContent>
-        </Sheet>
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

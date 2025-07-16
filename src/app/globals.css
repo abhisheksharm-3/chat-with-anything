@@ -129,8 +129,11 @@
 }
 
 .bg-grid-pattern {
-  background-size: 50px 50px;
+  background-color: #121212;
+  background-size: 50px 20px;
   background-image: 
     linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    radial-gradient(ellipse at center, rgba(18,18,18,0) 60%, #121212 100%);
+  background-blend-mode: normal, normal, normal;
 }
