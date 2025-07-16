@@ -13,6 +13,7 @@ import youtubeIcon from '@/assets/images/logos/youtube.png';
 import githubIcon from '@/assets/images/logos/github.png';
 import notionIcon from '@/assets/images/logos/notion.png';
 import { Card, CardContent } from '@/components/ui/card';
+import UploadModal from '@/components/dashboard/UploadModal';
 
 const fileTypes = [
   {
@@ -68,34 +69,54 @@ export default function ChoosePage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-2xl">
         {fileTypes.map((fileType) => (
-          <Link
-            key={fileType.id}
-            href={fileType.comingSoon ? '#' : `/chat/${fileType.id}`}
-            className="group"
-          >
-            <Card className="h-32 w-full hover:bg-muted/50 transition-colors">
-              <CardContent className='flex flex-col items-center justify-center gap-3 h-full relative'>
-                <div className="h-12 w-12 flex items-center justify-center">
-                  <Image
-                    src={fileType.image}
-                    alt={fileType.name}
-                    width={40}
-                    height={40}
-                    className={`${fileType.comingSoon ? "opacity-50" : ""} object-contain`}
-                  />
-                </div>
-                <span className="text-sm text-center text-gray-300">{fileType.name}</span>
+          <div key={fileType.id} className="group">
+            {fileType.comingSoon ? (
+              <Link href="#" className="group">
+                <Card className="h-32 w-full hover:bg-muted/50 transition-colors">
+                  <CardContent className='flex flex-col items-center justify-center gap-3 h-full relative'>
+                    <div className="h-12 w-12 flex items-center justify-center">
+                      <Image
+                        src={fileType.image}
+                        alt={fileType.name}
+                        width={40}
+                        height={40}
+                        className={`${fileType.comingSoon ? "opacity-50" : ""} object-contain`}
+                      />
+                    </div>
+                    <span className="text-sm text-center text-gray-300">{fileType.name}</span>
 
-                {fileType.comingSoon && (
-                  <div className="absolute bottom-2 left-0 right-0 flex justify-center translate-y-11">
-                    <span className="text-xs bg-foreground text-primary px-2 py-1 rounded-xl tracking-tighter font-bold">
-                      COMING SOON
-                    </span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </Link>
+                    {fileType.comingSoon && (
+                      <div className="absolute bottom-2 left-0 right-0 flex justify-center translate-y-11">
+                        <span className="text-xs bg-foreground text-primary px-2 py-1 rounded-xl tracking-tighter font-bold">
+                          COMING SOON
+                        </span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
+            ) : (
+              <UploadModal 
+                fileType={fileType.id}
+                trigger={
+                  <Card className="h-32 w-full hover:bg-muted/50 transition-colors cursor-pointer">
+                    <CardContent className='flex flex-col items-center justify-center gap-3 h-full relative'>
+                      <div className="h-12 w-12 flex items-center justify-center">
+                        <Image
+                          src={fileType.image}
+                          alt={fileType.name}
+                          width={40}
+                          height={40}
+                          className="object-contain"
+                        />
+                      </div>
+                      <span className="text-sm text-center text-gray-300">{fileType.name}</span>
+                    </CardContent>
+                  </Card>
+                }
+              />
+            )}
+          </div>
         ))}
       </div>
     </div>
