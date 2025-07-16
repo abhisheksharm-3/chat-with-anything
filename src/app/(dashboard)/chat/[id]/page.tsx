@@ -8,56 +8,49 @@ import { notFound } from 'next/navigation';
 // Mock data for chats
 const MOCK_CHATS = [
   {
-    id: 'new-pdf-1752668171912-825',
+    id: 'pdf',
     title: 'My Journey',
     source: 'pdf',
     lastUpdated: '2 hours ago',
     progress: '40%'
   },
   {
-    id: '2',
+    id: 'docs',
     title: 'Product Roadmap',
     source: 'docs',
     lastUpdated: '1 day ago',
     progress: '75%'
   },
   {
-    id: '3',
-    title: 'Research Paper',
-    source: 'pdf',
-    lastUpdated: '3 days ago',
-    progress: '100%'
-  },
-  {
-    id: '4',
+    id: 'youtube',
     title: 'Tutorial Video',
     source: 'youtube',
     lastUpdated: '1 week ago',
     progress: '60%'
   },
   {
-    id: '5',
+    id: 'web',
     title: 'Company Website',
     source: 'web',
     lastUpdated: '2 weeks ago',
     progress: '85%'
   },
   {
-    id: '6',
+    id: 'github',
     title: 'Project Documentation',
     source: 'github',
     lastUpdated: '3 weeks ago',
     progress: '90%'
   },
   {
-    id: '7',
+    id: 'image',
     title: 'Design Mockup',
     source: 'image',
     lastUpdated: '1 month ago',
     progress: '100%'
   },
   {
-    id: '8',
+    id: 'notion',
     title: 'Meeting Notes',
     source: 'notion',
     lastUpdated: '1 month ago',

@@ -4,12 +4,11 @@ import React, { useState } from 'react';
 import { 
   Dialog, 
   DialogContent, 
-  DialogHeader, 
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { XIcon, CheckIcon } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 
 interface PricingDialogProps {
   trigger?: React.ReactNode;
@@ -19,39 +18,38 @@ interface PricingDialogProps {
 const PricingDialog = ({ trigger, defaultOpen = false }: PricingDialogProps) => {
   const [open, setOpen] = useState(defaultOpen);
   const [selectedPlan, setSelectedPlan] = useState<'annual' | 'lifetime'>('annual');
-  const [selectedTier, setSelectedTier] = useState<'free' | 'personal' | 'pro'>('free');
 
   const handleClose = () => setOpen(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="bg-black border border-gray-800 text-white max-w-3xl p-0">
-        <div className="flex items-center justify-between border-b border-gray-800 p-4">
+      <DialogContent className="bg-[#121212] border border-[#333] text-white sm:max-w-md p-0 rounded-lg overflow-hidden" showCloseButton={false}>
+        <div className="p-4 flex items-center justify-between">
           <div>
-            <DialogTitle className="text-white">Select plan</DialogTitle>
-            <p className="text-gray-400 text-sm mt-1">Simple and flexible per-user pricing.</p>
+            <DialogTitle className="text-base font-medium">Select plan</DialogTitle>
+            <p className="text-[#A9A9A9] text-xs mt-0.5">Simple and flexible per-user pricing.</p>
           </div>
           <button 
             onClick={handleClose}
             className="text-gray-400 hover:text-white"
           >
-            <XIcon size={18} />
+            <X size={16} />
           </button>
         </div>
         
-        <div className="p-6">
+        <div className="px-4 py-2">
           {/* Plan selector */}
-          <div className="flex justify-center mb-6">
-            <div className="bg-gray-900 rounded-md p-1 inline-flex">
+          <div className="flex justify-center mb-4">
+            <div className="bg-[#1A1A1A] rounded-md p-1 inline-flex">
               <button 
-                className={`px-4 py-1 rounded-md text-sm ${selectedPlan === 'annual' ? 'bg-purple-600 text-white' : 'text-gray-400'}`}
+                className={`px-4 py-1 rounded-md text-xs font-medium transition-colors ${selectedPlan === 'annual' ? 'bg-primary text-white' : 'text-gray-400'}`}
                 onClick={() => setSelectedPlan('annual')}
               >
                 Annual
               </button>
               <button 
-                className={`px-4 py-1 rounded-md text-sm ${selectedPlan === 'lifetime' ? 'bg-purple-600 text-white' : 'text-gray-400'}`}
+                className={`px-4 py-1 rounded-md text-xs font-medium transition-colors ${selectedPlan === 'lifetime' ? 'bg-primary text-white' : 'text-gray-400'}`}
                 onClick={() => setSelectedPlan('lifetime')}
               >
                 Lifetime
@@ -59,142 +57,118 @@ const PricingDialog = ({ trigger, defaultOpen = false }: PricingDialogProps) => 
             </div>
           </div>
           
-          {/* Pricing tiers */}
-          <div className="grid grid-cols-3 gap-4">
-            {/* Free tier */}
-            <div 
-              className={`border rounded-lg p-4 ${selectedTier === 'free' ? 'border-purple-600' : 'border-gray-700'}`}
-              onClick={() => setSelectedTier('free')}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-white font-medium">Free</h3>
-                  <p className="text-gray-400 text-xs">Audionotes Trial</p>
-                </div>
-                {selectedTier === 'free' && (
-                  <div className="bg-purple-600 rounded-full p-1">
-                    <CheckIcon size={14} />
-                  </div>
-                )}
+          {/* Free tier */}
+          <div className="border border-[#333] rounded-md p-3 mb-2">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-sm font-medium">Free</h3>
+                <p className="text-[#A9A9A9] text-xs">Audionotes Trial</p>
               </div>
-              
-              <div className="space-y-2 mb-4">
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Unlimited Voice Notes (Upto 15 mins/note)</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Upload Audio Files (Upto 25 Mb)</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Create High Quality Content</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Notes, Summaries & Content are saved forever</span>
-                </div>
+              <div className="bg-primary rounded-full p-0.5">
+                <Check size={12} className="text-white" />
               </div>
             </div>
             
-            {/* Personal tier */}
-            <div 
-              className={`border rounded-lg p-4 ${selectedTier === 'personal' ? 'border-purple-600' : 'border-gray-700'}`}
-              onClick={() => setSelectedTier('personal')}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-white font-medium">₹2299/annual</h3>
-                  <p className="text-gray-400 text-xs">Audionotes Personal</p>
-                </div>
-                {selectedTier === 'personal' && (
-                  <div className="bg-purple-600 rounded-full p-1">
-                    <CheckIcon size={14} />
-                  </div>
-                )}
+            <div className="mt-3 space-y-1.5">
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Unlimited Voice Notes (Upto 15 mins/note)</span>
               </div>
-              
-              <div className="space-y-2 mb-4">
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Everything in Personal (Incl. Unlimited 15 min Notes)</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Record Upto 60 mins/note (900 mins/mo or 5000 mins/mo)</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Upload Audio Files (Upto 50 Mb)</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Create High Quality Content</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Audio digitization and One-Click Content Generate</span>
-                </div>
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Upload Audio Files (Upto 25 Mb)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Create High Quality Content</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Notes, Summaries & Content are saved forever</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Personal tier */}
+          <div className="border border-[#333] rounded-md p-3 mb-2">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-sm font-medium">₹2299/annual</h3>
+                <p className="text-[#A9A9A9] text-xs">Audionotes Personal</p>
               </div>
             </div>
             
-            {/* Pro tier */}
-            <div 
-              className={`border rounded-lg p-4 ${selectedTier === 'pro' ? 'border-purple-600' : 'border-gray-700'}`}
-              onClick={() => setSelectedTier('pro')}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-white font-medium">₹5999/annual</h3>
-                  <p className="text-gray-400 text-xs">Audionotes Pro</p>
-                  <p className="text-gray-400 text-xs">5000mins/month</p>
-                </div>
-                {selectedTier === 'pro' && (
-                  <div className="bg-purple-600 rounded-full p-1">
-                    <CheckIcon size={14} />
-                  </div>
-                )}
+            <div className="mt-3 space-y-1.5">
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Everything in Personal (Incl. Unlimited 15 min Notes)</span>
               </div>
-              
-              <div className="space-y-2 mb-4">
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Everything in Personal (Incl. Unlimited 15 min Notes)</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Record Upto 60 mins/note (900 mins/mo or 5000 mins/mo)</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Upload Audio Files (Upto 50 Mb)</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Create High Quality Content</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <CheckIcon size={16} className="text-purple-600 mt-0.5" />
-                  <span className="text-xs text-gray-300">Audio digitization and One-Click Content Generate</span>
-                </div>
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Record Upto 60 mins/note (900 mins/mo or 5000 mins/mo)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Upload Audio Files (Upto 50 Mb)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Create High Quality Content</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Audio digitization and One-Click Content Generate</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Pro tier */}
+          <div className="border border-[#333] rounded-md p-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-sm font-medium">₹5999/annual</h3>
+                <p className="text-[#A9A9A9] text-xs">Audionotes Pro</p>
+                <p className="text-[#A9A9A9] text-xs">5000mins/month</p>
+              </div>
+            </div>
+            
+            <div className="mt-3 space-y-1.5">
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Everything in Personal (Incl. Unlimited 15 min Notes)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Record Upto 60 mins/note (900 mins/mo or 5000 mins/mo)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Upload Audio Files (Upto 50 Mb)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Create High Quality Content</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Check size={12} className="text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs">Audio digitization and One-Click Content Generate</span>
               </div>
             </div>
           </div>
         </div>
         
-        <div className="p-4 flex justify-between border-t border-gray-800">
+        <div className="p-4 border-t border-[#333] flex flex-col gap-2">
           <Button 
-            variant="outline"
-            className="text-gray-400 border-gray-700 hover:bg-gray-800"
+            className="w-full bg-primary hover:bg-primary/90 text-white py-2 text-sm rounded-md"
+          >
+            Subscribe now
+          </Button>
+          <Button 
+            variant="ghost"
+            className="w-full text-[#A9A9A9] hover:text-white hover:bg-transparent py-2 text-sm"
             onClick={handleClose}
           >
             Cancel
-          </Button>
-          <Button 
-            className="bg-purple-600 hover:bg-purple-700 text-white"
-          >
-            Subscribe now
           </Button>
         </div>
       </DialogContent>

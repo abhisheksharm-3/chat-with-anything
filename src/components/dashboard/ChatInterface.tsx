@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { SendIcon, MessageSquareIcon } from 'lucide-react';
+import { Send, MoreVertical, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 
 interface ChatMessage {
   id: string;
@@ -22,11 +23,6 @@ const ChatInterface = ({ title, source }: ChatInterfaceProps) => {
       content: 'Type in the chat box how can I help you today',
       isBot: true
     },
-    {
-      id: '2',
-      content: 'Please ask more specific question',
-      isBot: true
-    }
   ]);
   const [inputValue, setInputValue] = useState('');
 
@@ -62,62 +58,76 @@ const ChatInterface = ({ title, source }: ChatInterfaceProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
-        <div className="flex items-center">
-          <h2 className="text-sm font-medium text-white">{title}</h2>
-          <span className="ml-2 px-1.5 py-0.5 text-xs bg-gray-800 text-gray-400 rounded">40%</span>
+    <div className="grid grid-cols-2 gap-2 h-full">
+      {/* Left Panel - Document Viewer */}
+      <div className="bg-[#181818] border rounded-xl border-[#333] flex flex-col">
+
+        <div className="flex-1 flex items-center justify-center relative">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+            <Search className="text-gray-500" size={16} />
+            <span className="text-gray-500">40%</span>
+          </div>
         </div>
-        <Button size="sm" variant="ghost" className="text-gray-400">
-          <svg width="20" height="20" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3.625 7.5C3.625 8.12132 3.12132 8.625 2.5 8.625C1.87868 8.625 1.375 8.12132 1.375 7.5C1.375 6.87868 1.87868 6.375 2.5 6.375C3.12132 6.375 3.625 6.87868 3.625 7.5ZM8.625 7.5C8.625 8.12132 8.12132 8.625 7.5 8.625C6.87868 8.625 6.375 8.12132 6.375 7.5C6.375 6.87868 6.87868 6.375 7.5 6.375C8.12132 6.375 8.625 6.87868 8.625 7.5ZM13.625 7.5C13.625 8.12132 13.1213 8.625 12.5 8.625C11.8787 8.625 11.375 8.12132 11.375 7.5C11.375 6.87868 11.8787 6.375 12.5 6.375C13.1213 6.375 13.625 6.87868 13.625 7.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
-          </svg>
-        </Button>
       </div>
 
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div key={message.id} className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}>
-            <div className={`max-w-[80%] rounded-lg p-3 ${message.isBot ? 'bg-gray-800 text-white' : 'bg-purple-600 text-white'}`}>
+      {/* Right Panel - Chat Interface */}
+      <div className="bg-[#181818] flex flex-col border rounded-xl px-4 py-2">
+        <div className="p-3 border border-[#333] rounded-xl">
+          <h2 className="text-sm text-center text-gray-400">// Chat with the doc here //</h2>
+        </div>
+
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map((message) => (
+            <div key={message.id} className="mb-4">
               {message.isBot && (
-                <div className="flex items-center mb-1">
-                  <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center mr-2">
-                    <MessageSquareIcon size={14} />
+                <div className="flex items-center gap-2 mb-4">
+                  <div className='flex items-center justify-center bg-[#272626] rounded-xl p-2'>
+                  <Image
+                src="/logo.png"
+                alt="Logo"
+                className="object-contain"
+                width={32}
+                height={32}
+                priority
+            />
+                  </div>
+                  <div className="bg-[#272626] rounded-xl p-3 text-sm text-white">
+                    {message.content}
                   </div>
                 </div>
               )}
-              <p className="text-sm">{message.content}</p>
+              
+              {!message.isBot && (
+                <div className="flex justify-end">
+                  <div className="bg-primary rounded-xl p-3 text-sm text-white max-w-[80%]">
+                    {message.content}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {/* Chat Input */}
-      <div className="p-4 border-t border-gray-800">
-        <div className="flex items-center">
-          <div className="flex-1 bg-gray-800 rounded-lg p-2">
-            <textarea
-              className="w-full bg-transparent border-0 focus:ring-0 text-white resize-none"
-              placeholder="Message..."
-              rows={1}
+
+        {/* Chat Input */}
+        <div className="p-4 border-t border-[#333] relative">
+          <div className="relative">
+            <input
+              type="text"
+              className="w-full bg-[#1a1a1a] border border-[#333] rounded-lg py-3 pl-4 pr-12 text-white text-sm focus:outline-none"
+              placeholder="Message"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyPress}
             />
+            <Button 
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl w-10 h-10 p-0 bg-primary cursor-pointer hover:bg-primary/90 flex items-center justify-center"
+              onClick={handleSendMessage}
+            >
+              <Send size={16} className="text-white" />
+            </Button>
           </div>
-          <Button 
-            className="ml-2 rounded-full w-8 h-8 p-0 bg-purple-600 hover:bg-purple-700 flex items-center justify-center"
-            onClick={handleSendMessage}
-          >
-            <SendIcon size={14} />
-          </Button>
-        </div>
-        <div className="flex justify-end mt-2">
-          <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white text-xs">
-            What's in the {source.toUpperCase()} <span className="ml-1 bg-purple-500 px-1.5 py-0.5 rounded text-[10px]">5K</span>
-          </Button>
         </div>
       </div>
     </div>

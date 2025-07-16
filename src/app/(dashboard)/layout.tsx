@@ -1,31 +1,28 @@
+"use client"
 import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { FileText, Clock, Settings, LogOut } from 'lucide-react';
+import { FileText, Clock, Settings, LogOut, File, Plus } from 'lucide-react';
 import Image from 'next/image';
 import SettingsDialog from '@/components/dashboard/SettingsDialog';
 import PricingDialog from '@/components/dashboard/PricingDialog';
 import LogoutDialog from '@/components/dashboard/LogoutDialog';
+import { usePathname } from 'next/navigation';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+  const pathname = usePathname();
+  const isHistoryPage = pathname === '/history';
+  
   return (
-    // 1. Use theme variables. Add `relative` for positioning the sidebar.
     <div className="relative flex h-screen bg-[#121212] text-foreground">
-      {/* 2. Floating Sidebar:
-        - Made `absolute` to float over the content.
-        - Centered vertically with `top-1/2 -translate-y-1/2`.
-        - Styled with rounded corners and `bg-muted` for a distinct look.
-        - Removed the right border.
-      */}
-      <aside className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-16 bg-[#181818] rounded-2xl flex flex-col items-center justify-between py-6 h-[calc(100vh-1rem)]">
-        {/* Logo */}
+      <aside className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-12 bg-[#181818] rounded-xl flex flex-col items-center justify-between py-2 px-2 h-[calc(100vh-1rem)]">
         <Link href="/choose">
             <Image
-                src="/logo.png" // Ensure you have a logo image at this path
+                src="/logo.png"
                 alt="Logo"
                 className="object-contain"
                 width={32}
@@ -34,50 +31,67 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             />
         </Link>
         
-        {/* Navigation Icons */}
         <nav className="flex flex-col space-y-2">
-          <Link href="/choose" className="p-2 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary">
-            <FileText size={20} />
+          <Link href="/choose" className={`p-2 rounded-md transition-colors ${
+            pathname === '/choose' 
+              ? 'text-white' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}>
+            <File size={20} />
           </Link>
-          <Link href="/history" className="p-2 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary">
+          <Link href="/history" className={`p-2 rounded-md transition-colors ${
+            pathname === '/history' 
+              ? 'text-white' 
+              : 'text-muted-foreground hover:text-foreground'
+          }`}>
             <Clock size={20} />
           </Link>
           <SettingsDialog 
             trigger={
-              <button className="p-2 rounded-md text-muted-foreground hover:bg-primary/10 hover:text-primary">
+              <button className="p-2 rounded-md text-muted-foreground hover:text-foreground cursor-pointer">
                 <Settings size={20} />
               </button>
             }
           />
         </nav>
-
-        {/* Logout at the bottom */}
         <LogoutDialog
           trigger={
-            <button className="p-2 rounded-md text-muted-foreground hover:text-destructive/20 hover:text-destructive">
+            <button className="p-2 rounded-md text-muted-foreground hover:text-destructive cursor-pointer">
               <LogOut size={20} />
             </button>
           }
         />
       </aside>
       
-      {/* Main Content */}
-      {/* 3. Added left padding `pl-24` to prevent content from going under the floating sidebar */}
-      <div className="flex-1 flex flex-col pl-20">
-        {/* Header */}
-        {/* 4. Use theme variables for borders and button styles */}
-        <header className="h-16 border-b border-border flex items-center justify-between px-6">
-          {/* Using a simple div for the "New Note" tab as in the image */}
-          <div className='flex items-center gap-2 border border-border rounded-t-md px-3 py-1.5 -mb-px border-b-background z-10'>
-             <span className='text-primary'>
-                <FileText size={16}/>
-             </span>
-             <span className='text-sm text-foreground'>New Note</span>
-          </div>
+      <div className="flex-1 flex flex-col pl-14">
+        <header className="h-16 flex items-center justify-between px-6">
+          {!isHistoryPage && (
+            <div className='flex items-center'>
+               {/* New Note Tab - Active with purple left border */}
+               <div className='flex items-center gap-2 bg-[#2a2a2a] px-4 py-2 rounded-l-md border-l-4 border-l-purple-500'>
+                  <span className='text-white'>
+                     <FileText size={16}/>
+                  </span>
+                  <span className='text-sm text-white'>New Note</span>
+               </div>
+               
+               {/* PDF Tab - Inactive */}
+               <div className='flex items-center gap-2 px-4 py-2 bg-[#1a1a1a]'>
+                  <span className='text-sm text-gray-400'>PDF</span>
+               </div>
+               
+               {/* Add Tab Button */}
+               <button className='flex items-center justify-center px-3 py-2 rounded-r-md bg-[#1a1a1a] hover:bg-[#2a2a2a] transition-colors'>
+                  <Plus size={16} className='text-gray-400 hover:text-white' />
+               </button>
+            </div>
+          )}
+          
+          {isHistoryPage && <div></div>}
           
           <PricingDialog
             trigger={
-              <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-5 cursor-pointer">
                 Upgrade plan
                 <span className="ml-2 text-xs bg-primary-foreground/20 text-primary-foreground font-semibold px-1.5 py-0.5 rounded">PRO</span>
               </Button>
@@ -85,8 +99,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           />
         </header>
         
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-2">
           {children}
         </main>
       </div>
