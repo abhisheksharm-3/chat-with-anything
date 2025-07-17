@@ -12,6 +12,7 @@ import imageIcon from '@/assets/images/logos/flat-color-icons_image-file.png';
 import youtubeIcon from '@/assets/images/logos/youtube.png';
 import githubIcon from '@/assets/images/logos/github.png';
 import notionIcon from '@/assets/images/logos/notion.png';
+import webIcon from '@/assets/images/logos/web.png';
 import { Card, CardContent } from '@/components/ui/card';
 import UploadModal from '@/components/dashboard/UploadModal';
 
@@ -23,18 +24,8 @@ const fileTypes = [
   },
   {
     id: 'docs',
-    name: 'Google Doc',
+    name: 'Document',
     image: docsIcon,
-  },
-  {
-    id: 'sheets',
-    name: 'Google Sheet',
-    image: sheetsIcon,
-  },
-  {
-    id: 'slides',
-    name: 'Google Slide',
-    image: slidesIcon,
   },
   {
     id: 'image',
@@ -42,13 +33,23 @@ const fileTypes = [
     image: imageIcon,
   },
   {
+    id: 'sheets',
+    name: 'Spreadsheet',
+    image: sheetsIcon,
+  },
+  {
+    id: 'slides',
+    name: 'Presentation',
+    image: slidesIcon,
+  },
+  {
     id: 'youtube',
-    name: 'Youtube Video',
+    name: 'YouTube Video',
     image: youtubeIcon,
   },
   {
     id: 'github',
-    name: 'Github Repo',
+    name: 'GitHub Repo',
     image: githubIcon,
     comingSoon: true,
   },
@@ -71,7 +72,7 @@ export default function ChoosePage() {
         {fileTypes.map((fileType) => (
           <div key={fileType.id} className="group">
             {fileType.comingSoon ? (
-              <Link href="#" className="group">
+              <div className="group">
                 <Card className="h-32 w-full hover:bg-muted/50 transition-colors">
                   <CardContent className='flex flex-col items-center justify-center gap-3 h-full relative'>
                     <div className="h-12 w-12 flex items-center justify-center">
@@ -80,21 +81,19 @@ export default function ChoosePage() {
                         alt={fileType.name}
                         width={40}
                         height={40}
-                        className={`${fileType.comingSoon ? "opacity-50" : ""} object-contain`}
+                        className="opacity-50 object-contain"
                       />
                     </div>
                     <span className="text-sm text-center text-gray-300">{fileType.name}</span>
 
-                    {fileType.comingSoon && (
-                      <div className="absolute bottom-2 left-0 right-0 flex justify-center translate-y-11">
-                        <span className="text-xs bg-foreground text-primary px-2 py-1 rounded-xl tracking-tighter font-bold">
-                          COMING SOON
-                        </span>
-                      </div>
-                    )}
+                    <div className="absolute bottom-2 left-0 right-0 flex justify-center translate-y-11">
+                      <span className="text-xs bg-foreground text-primary px-2 py-1 rounded-xl tracking-tighter font-bold">
+                        COMING SOON
+                      </span>
+                    </div>
                   </CardContent>
                 </Card>
-              </Link>
+              </div>
             ) : (
               <UploadModal 
                 fileType={fileType.id}

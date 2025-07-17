@@ -11,21 +11,71 @@ import {
   Plus,
   ChevronsRight,
   ChevronsLeft,
+  Loader2,
+  FileIcon,
 } from "lucide-react";
 import Image from "next/image";
 import SettingsDialog from "@/components/dashboard/SettingsDialog";
 import PricingDialog from "@/components/dashboard/PricingDialog";
 import LogoutDialog from "@/components/dashboard/LogoutDialog";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
+import { useUser, useChats, useFiles } from "@/hooks";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+// Helper function to get file type icon
+const getFileTypeIcon = (type: string | null | undefined) => {
+  switch (type) {
+    case 'pdf':
+      return <FileText size={16} className="text-red-500" />;
+    case 'doc':
+      return <FileText size={16} className="text-blue-500" />;
+    case 'image':
+      return <FileIcon size={16} className="text-green-500" />;
+    case 'web':
+    case 'url':
+      return <FileIcon size={16} className="text-purple-500" />;
+    case 'sheet':
+      return <FileIcon size={16} className="text-green-500" />;
+    case 'slides':
+      return <FileIcon size={16} className="text-orange-500" />;
+    default:
+      return <FileText size={16} className="text-gray-500" />;
+  }
+};
+
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+  // Always call hooks in the same order
   const pathname = usePathname();
-  const isHistoryPage = pathname === "/history";
+  const params = useParams();
+  const { user, isLoading } = useUser();
+  const { getChatById } = useChats();
+  const { getFileById } = useFiles();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Derived values (not hooks)
+  const isHistoryPage = pathname === "/history";
+  const isChoosePage = pathname === "/choose";
+  const isChatPage = pathname?.startsWith("/chat/");
+  const chatId = isChatPage && params?.id ? params.id.toString() : null;
+  
+  // Get chat data if we're on a chat page
+const chat = chatId ? getChatById(chatId) : null;
+  
+  // Get file data if chat has a file_id
+  const file = chat?.file_id ? getFileById(chat.file_id) : null;
+  
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user?.name) return "U";
+    
+    const nameParts = user.name.split(" ");
+    if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+    
+    return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+  };
 
   return (
     <div className="relative flex h-screen bg-[#121212] text-foreground">
@@ -178,18 +228,27 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
           {/* Mobile Footer */}
           <div className="p-4 border-t border-gray-700">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm">SK</span>
-              </div>
-              <div>
-                <div className="text-white text-sm font-medium">Shaunak K</div>
-                <div className="text-gray-400 text-xs">shaunak@gmail.com</div>
-              </div>
-              <div className="ml-auto">
-                <span className="bg-primary text-xs px-2 py-1 rounded">
-                  FREE
-                </span>
-              </div>
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <span className="text-gray-400 text-sm">Loading...</span>
+                </div>
+              ) : (
+                <>
+                  <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm">{getUserInitials()}</span>
+                  </div>
+                  <div>
+                    <div className="text-white text-sm font-medium">{user?.name || "User"}</div>
+                    <div className="text-gray-400 text-xs">{user?.email || "No email"}</div>
+                  </div>
+                  <div className="ml-auto">
+                    <span className="bg-primary text-xs px-2 py-1 rounded">
+                      FREE
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
             <PricingDialog
@@ -242,23 +301,41 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <header className="hidden md:flex h-16 items-center justify-between px-6">
           {!isHistoryPage && (
             <div className="flex items-center">
-              {/* New Note Tab - Active with purple left border */}
+              {/* Active Tab with file title and type */}
               <div className="flex items-center gap-2 bg-[#2a2a2a] px-4 py-2 rounded-l-md border-l-4 border-l-purple-500">
-                <span className="text-white">
-                  <FileText size={16} />
-                </span>
-                <span className="text-sm text-white">New Note</span>
+                {isChatPage && chat ? (
+                  <>
+                    <span className="text-white">
+                      {getFileTypeIcon(file?.data?.type || chat.type)}
+                    </span>
+                    <span className="text-sm text-white truncate max-w-[200px]">
+                      {file?.data?.name || chat.title || "Untitled Chat"}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-white">
+                      <FileText size={16} />
+                    </span>
+                    <span className="text-sm text-white">New Note</span>
+                  </>
+                )}
               </div>
 
-              {/* PDF Tab - Inactive */}
-              <div className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a]">
-                <span className="text-sm text-gray-400">PDF</span>
-              </div>
+              {/* File Type Tab */}
+              {isChatPage && chat && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a]">
+                  <span className="text-sm text-gray-400 uppercase">{file?.data?.type || chat.type || "Document"}</span>
+                </div>
+              )}
 
-              {/* Add Tab Button */}
-              <button className="flex items-center justify-center px-3 py-2 rounded-r-md bg-[#1a1a1a] hover:bg-[#2a2a2a] transition-colors">
+              {/* Add Tab Button - Links to choose page */}
+              <Link 
+                href="/choose"
+                className="flex items-center justify-center px-3 py-2 rounded-r-md bg-[#1a1a1a] hover:bg-[#2a2a2a] transition-colors"
+              >
                 <Plus size={16} className="text-gray-400 hover:text-white" />
-              </button>
+              </Link>
             </div>
           )}
 

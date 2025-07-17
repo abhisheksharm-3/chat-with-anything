@@ -1,0 +1,227 @@
+"use client";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabaseBrowserClient } from "@/utils/supabase/client";
+import { TypeChat } from "@/types/supabase";
+import { useUser } from "./useUser";
+import { createChat as createChatWithGemini } from "@/utils/gemini/actions";
+import { useRouter } from "next/navigation";
+
+// Define query keys as constants
+export const CHATS_QUERY_KEY = ["chats"];
+
+/**
+ * Custom hook to fetch and manage user chats
+ */
+export function useChats(chatId?: string) {
+  const queryClient = useQueryClient();
+  const supabase = supabaseBrowserClient();
+  const { userId, isAuthenticated } = useUser();
+  const router = useRouter();
+
+  // Fetch all user chats
+  const chatsQuery = useQuery({
+    queryKey: CHATS_QUERY_KEY,
+    queryFn: async () => {
+      if (!userId) return [];
+
+      const { data, error } = await supabase
+        .from("chats")
+        .select("*, files(*)")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data as TypeChat[];
+    },
+    enabled: isAuthenticated && !!userId,
+  });
+
+  // Fetch a single chat by ID (only if chatId is provided)
+  const isValidChatId = !!chatId && typeof chatId === 'string' && chatId.trim() !== '';
+  
+  const singleChatQuery = useQuery({
+    queryKey: [...CHATS_QUERY_KEY, chatId],
+    queryFn: async () => {
+      if (!userId || !isValidChatId) return null;
+
+      const { data, error } = await supabase
+        .from("chats")
+        .select("*, files(*)")
+        .eq("id", chatId)
+        .eq("user_id", userId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No rows returned - chat not found
+          return null;
+        }
+        throw error;
+      }
+      return data as TypeChat;
+    },
+    enabled: isAuthenticated && !!userId && isValidChatId,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+  });
+
+  // Create a new chat with Gemini
+  const startChatWithFileMutation = useMutation({
+    mutationFn: async (fileId: string) => {
+      try {
+        const chat = await createChatWithGemini(fileId);
+        return chat;
+      } catch (error) {
+        console.error("Error creating chat with Gemini:", error);
+        throw error;
+      }
+    },
+    onSuccess: (newChat) => {
+      // Update the chats list in the cache
+      queryClient.setQueryData(CHATS_QUERY_KEY, (oldData: TypeChat[] | undefined) => {
+        return oldData ? [newChat, ...oldData] : [newChat];
+      });
+      
+      // Navigate to the new chat
+      router.push(`/chat/${newChat.id}`);
+    },
+  });
+
+  // Create a new chat
+  const createChatMutation = useMutation({
+    mutationFn: async (chatData: Omit<TypeChat, "id" | "user_id" | "created_at">) => {
+      if (!userId) {
+        throw new Error("No authenticated user");
+      }
+
+      const newChat = {
+        ...chatData,
+        user_id: userId,
+      };
+
+      const { data, error } = await supabase
+        .from("chats")
+        .insert(newChat)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as TypeChat;
+    },
+    onSuccess: (newChat) => {
+      // Update the chats list in the cache
+      queryClient.setQueryData(CHATS_QUERY_KEY, (oldData: TypeChat[] | undefined) => {
+        return oldData ? [newChat, ...oldData] : [newChat];
+      });
+    },
+  });
+
+  // Update an existing chat
+  const updateChatMutation = useMutation({
+    mutationFn: async ({ chatId, chatData }: { chatId: string; chatData: Partial<TypeChat> }) => {
+      if (!userId) {
+        throw new Error("No authenticated user");
+      }
+
+      const { data, error } = await supabase
+        .from("chats")
+        .update(chatData)
+        .eq("id", chatId)
+        .eq("user_id", userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as TypeChat;
+    },
+    onSuccess: (updatedChat) => {
+      // Update the specific chat in the cache
+      queryClient.setQueryData([...CHATS_QUERY_KEY, updatedChat.id], updatedChat);
+
+      // Update the chat in the chats list
+      queryClient.setQueryData(CHATS_QUERY_KEY, (oldData: TypeChat[] | undefined) => {
+        if (!oldData) return [updatedChat];
+        return oldData.map((chat) => (chat.id === updatedChat.id ? updatedChat : chat));
+      });
+    },
+  });
+
+  // Delete a chat
+  const deleteChatMutation = useMutation({
+    mutationFn: async (chatId: string) => {
+      if (!userId) {
+        throw new Error("No authenticated user");
+      }
+
+      const { error } = await supabase
+        .from("chats")
+        .delete()
+        .eq("id", chatId)
+        .eq("user_id", userId);
+
+      if (error) throw error;
+      return chatId;
+    },
+    onSuccess: (chatId) => {
+      // Remove the chat from the cache
+      queryClient.removeQueries({ queryKey: [...CHATS_QUERY_KEY, chatId] });
+
+      // Update the chats list in the cache
+      queryClient.setQueryData(CHATS_QUERY_KEY, (oldData: TypeChat[] | undefined) => {
+        if (!oldData) return [];
+        return oldData.filter((chat) => chat.id !== chatId);
+      });
+    },
+  });
+
+  // Helper function to get chat by ID from cache or find it in the chats list
+  const getChatById = (targetChatId: string): TypeChat | undefined => {
+    if (!targetChatId || typeof targetChatId !== 'string' || targetChatId.trim() === '') {
+      return undefined;
+    }
+
+    // First try to get from the individual chat cache
+    const cachedChat = queryClient.getQueryData([...CHATS_QUERY_KEY, targetChatId]) as TypeChat | undefined;
+    if (cachedChat) {
+      return cachedChat;
+    }
+
+    // If not in individual cache, look in the chats list
+    const chats = chatsQuery.data || [];
+    return chats.find((chat) => chat.id === targetChatId);
+  };
+
+  return {
+    // Queries - All chats
+    chats: chatsQuery.data || [],
+    isLoading: chatsQuery.isLoading,
+    isError: chatsQuery.isError,
+    error: chatsQuery.error,
+    
+    // Queries - Single chat (only if chatId was provided)
+    chat: singleChatQuery.data,
+    isChatLoading: singleChatQuery.isLoading,
+    isChatError: singleChatQuery.isError,
+    chatError: singleChatQuery.error,
+    
+    // Helper function
+    getChatById,
+
+    // Mutations
+    startChatWithFile: startChatWithFileMutation.mutate,
+    startChatWithFileAsync: startChatWithFileMutation.mutateAsync,
+    isStartingChat: startChatWithFileMutation.isPending,
+    
+    createChat: createChatMutation.mutate,
+    createChatAsync: createChatMutation.mutateAsync,
+    isCreating: createChatMutation.isPending,
+
+    updateChat: updateChatMutation.mutate,
+    updateChatAsync: updateChatMutation.mutateAsync,
+    isUpdating: updateChatMutation.isPending,
+
+    deleteChat: deleteChatMutation.mutate,
+    deleteChatAsync: deleteChatMutation.mutateAsync,
+    isDeleting: deleteChatMutation.isPending,
+  };
+}

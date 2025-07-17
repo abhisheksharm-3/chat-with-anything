@@ -7,8 +7,9 @@ import {
   DialogTrigger
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/hooks';
 
 interface LogoutDialogProps {
   trigger?: React.ReactNode;
@@ -18,12 +19,16 @@ interface LogoutDialogProps {
 const LogoutDialog = ({ trigger, defaultOpen = false }: LogoutDialogProps) => {
   const [open, setOpen] = useState(defaultOpen);
   const router = useRouter();
+  const { signOut, isSigningOut } = useUser();
 
-  const handleLogout = () => {
-    // Here you would typically handle the actual logout logic
-    // For now, we'll just redirect to the home page
-    setOpen(false);
-    router.push('/');
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      setOpen(false);
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   const handleCancel = () => {
@@ -39,6 +44,7 @@ const LogoutDialog = ({ trigger, defaultOpen = false }: LogoutDialogProps) => {
           <button 
             onClick={handleCancel}
             className="text-gray-400 hover:text-white cursor-pointer"
+            disabled={isSigningOut}
           >
             <X size={24} />
           </button>
@@ -52,14 +58,23 @@ const LogoutDialog = ({ trigger, defaultOpen = false }: LogoutDialogProps) => {
           <Button
             onClick={handleCancel}
             className="flex-1 py-6 text-center bg-[#1a1a1a] hover:bg-[#252525] text-white border border-[#333] rounded-xl font-medium cursor-pointer"
+            disabled={isSigningOut}
           >
             Cancel
           </Button>
           <Button
             onClick={handleLogout}
             className="flex-1 py-6 text-center bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium cursor-pointer"
+            disabled={isSigningOut}
           >
-            Yes, Logout
+            {isSigningOut ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Logging out...
+              </>
+            ) : (
+              "Yes, Logout"
+            )}
           </Button>
         </div>
       </DialogContent>
