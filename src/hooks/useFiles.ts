@@ -34,31 +34,6 @@ export function useFiles() {
     enabled: isAuthenticated && !!userId,
   });
 
-  // Fetch a single file by ID
-  const getFileById = (fileId: string) => {
-    // Validate fileId
-    const isValidFileId = !!fileId && typeof fileId === 'string' && fileId.trim() !== '';
-    
-    return useQuery({
-      queryKey: [...FILES_QUERY_KEY, fileId],
-      queryFn: async () => {
-        if (!userId || !isValidFileId) return null;
-
-        const { data, error } = await supabase
-          .from("files")
-          .select("*")
-          .eq("id", fileId)
-          .eq("user_id", userId)
-          .single();
-
-        if (error) return null; // Return null instead of throwing to handle missing files gracefully
-        return data as TypeFile;
-      },
-      enabled: isAuthenticated && !!userId && isValidFileId,
-      staleTime: 30000, // Consider data fresh for 30 seconds
-    });
-  };
-
   // Upload a new file
   const uploadFileMutation = useMutation({
     mutationFn: async ({
@@ -79,7 +54,7 @@ export function useFiles() {
         if (fileData.type !== 'url') {
           // 1. Upload the file to storage only if it's not a URL
           const filePath = `${userId}/${Date.now()}_${file.name}`;
-          const { error: uploadError, data: uploadData } = await supabase.storage
+          const { error: uploadError } = await supabase.storage
             .from("file-storage")
             .upload(filePath, file, {
               cacheControl: "3600",
@@ -236,7 +211,6 @@ export function useFiles() {
     isLoading: filesQuery.isLoading,
     isError: filesQuery.isError,
     error: filesQuery.error,
-    getFileById,
 
     // Mutations
     uploadFile: uploadFileMutation.mutate,
@@ -251,4 +225,35 @@ export function useFiles() {
     deleteFileAsync: deleteFileMutation.mutateAsync,
     isDeleting: deleteFileMutation.isPending,
   };
-} 
+}
+
+/**
+ * Custom hook to fetch a single file by ID
+ * This is a separate hook to follow the rules of hooks
+ */
+export function useFileById(fileId: string) {
+  const supabase = supabaseBrowserClient();
+  const { userId, isAuthenticated } = useUser();
+
+  // Validate fileId
+  const isValidFileId = !!fileId && typeof fileId === 'string' && fileId.trim() !== '';
+  
+  return useQuery({
+    queryKey: [...FILES_QUERY_KEY, fileId],
+    queryFn: async () => {
+      if (!userId || !isValidFileId) return null;
+
+      const { data, error } = await supabase
+        .from("files")
+        .select("*")
+        .eq("id", fileId)
+        .eq("user_id", userId)
+        .single();
+
+      if (error) return null; // Return null instead of throwing to handle missing files gracefully
+      return data as TypeFile;
+    },
+    enabled: isAuthenticated && !!userId && isValidFileId,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+  });
+}

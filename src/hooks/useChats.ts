@@ -6,6 +6,7 @@ import { TypeChat } from "@/types/supabase";
 import { useUser } from "./useUser";
 import { createChat as createChatWithGemini } from "@/utils/gemini/actions";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 // Define query keys as constants
 export const CHATS_QUERY_KEY = ["chats"];
@@ -13,11 +14,12 @@ export const CHATS_QUERY_KEY = ["chats"];
 /**
  * Custom hook to fetch and manage user chats
  */
-export function useChats(chatId?: string) {
+export const useChats = (chatId?: string) => {
   const queryClient = useQueryClient();
   const supabase = supabaseBrowserClient();
   const { userId, isAuthenticated } = useUser();
   const router = useRouter();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Fetch all user chats
   const chatsQuery = useQuery({
@@ -191,6 +193,19 @@ export function useChats(chatId?: string) {
     return chats.find((chat) => chat.id === targetChatId);
   };
 
+  // Handle deleting a chat with loading state
+  const handleDeleteChat = async (chatId: string) => {
+    try {
+      setDeletingId(chatId);
+      await deleteChatMutation.mutateAsync(chatId);
+    } catch (error) {
+      console.error("Failed to delete chat:", error);
+      throw error;
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return {
     // Queries - All chats
     chats: chatsQuery.data || [],
@@ -223,5 +238,9 @@ export function useChats(chatId?: string) {
     deleteChat: deleteChatMutation.mutate,
     deleteChatAsync: deleteChatMutation.mutateAsync,
     isDeleting: deleteChatMutation.isPending,
+    
+    // Enhanced delete with loading state
+    handleDeleteChat,
+    deletingId,
   };
-}
+};

@@ -2,39 +2,27 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Send, MoreVertical, Search, ChevronDown, ChevronUp, Loader2, FileText, Image as ImageIcon, Globe, FileSpreadsheet, Presentation } from 'lucide-react';
+import { Send, Loader2, FileText, Image as ImageIcon, Globe, FileSpreadsheet, Presentation } from 'lucide-react';
 import Image from 'next/image';
-import { useMessages, useUser, useChats, useFiles } from '@/hooks';
+import { useMessages, useChats, useFileById } from '@/hooks';
 
 interface ChatInterfaceProps {
   title: string;
-  source: string;
   chatId: string;
 }
 
-const ChatInterface = ({ title = "Untitled Chat", source = "document", chatId }: ChatInterfaceProps) => {
+const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) => {
   const { messages: chatMessages, isLoading: messagesLoading, sendMessage, isSending, subscribeToMessages } = useMessages(chatId);
-  const { user } = useUser();
   const { getChatById } = useChats();
-  const { getFileById } = useFiles();
   const [inputValue, setInputValue] = useState('');
   const [showPDF, setShowPDF] = useState(false); // For mobile view: false = show chat, true = show document
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Get chat data
-  const { data: chat } = getChatById(chatId);
-  // Get file data if chat has a file_id
-  const { data: file, isLoading: isFileLoading } = getFileById(chat?.file_id || '');
-
-  // Get user initials for avatar
-  const getUserInitials = () => {
-    if (!user?.name) return "U";
-    
-    const nameParts = user.name.split(" ");
-    if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
-    
-    return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
-  };
+  // Get chat data - getChatById returns the chat object directly, not wrapped in { data }
+  const chat = getChatById(chatId);
+  
+  // Get file data if chat has a file_id - using the new hook structure
+  const { data: file, isLoading: isFileLoading, isError: isFileError } = useFileById(chat?.file_id || '');
 
   // Get source icon based on file type
   const getSourceIcon = () => {
@@ -98,6 +86,19 @@ const ChatInterface = ({ title = "Untitled Chat", source = "document", chatId }:
       return (
         <div className="flex items-center justify-center h-full">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2 text-gray-400">Loading document...</span>
+        </div>
+      );
+    }
+
+    if (isFileError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full">
+          <div className="bg-red-900/20 rounded-full p-4 mb-4">
+            <FileText size={24} className="text-red-400" />
+          </div>
+          <h3 className="text-lg font-medium mb-2 text-red-400">Error loading document</h3>
+          <p className="text-sm text-gray-400">Unable to load the document. Please try again.</p>
         </div>
       );
     }
@@ -109,6 +110,7 @@ const ChatInterface = ({ title = "Untitled Chat", source = "document", chatId }:
             {getSourceIcon()}
           </div>
           <h3 className="text-lg font-medium mb-2">{title}</h3>
+          <p className="text-sm text-gray-400">No document attached to this chat</p>
         </div>
       );
     }
@@ -191,6 +193,7 @@ const ChatInterface = ({ title = "Untitled Chat", source = "document", chatId }:
             ) : (
               <div className="text-center">
                 <ImageIcon size={48} className="text-gray-500 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">No image URL available</p>
               </div>
             )}
           </div>
@@ -215,6 +218,7 @@ const ChatInterface = ({ title = "Untitled Chat", source = "document", chatId }:
           ) : (
             <div className="text-center">
               <FileText size={48} className="text-gray-500 mx-auto mb-2" />
+              <p className="text-sm text-gray-400">No text content available</p>
             </div>
           )}
         </div>
