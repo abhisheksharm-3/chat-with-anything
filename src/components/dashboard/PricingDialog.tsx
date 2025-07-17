@@ -9,6 +9,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { X, Check } from 'lucide-react';
+import { PricingData } from '@/constants/PricingData';
+import { TypePricingTier } from '@/types/types';
 
 interface PricingDialogProps {
   trigger?: React.ReactNode;
@@ -18,15 +20,64 @@ interface PricingDialogProps {
 const PricingDialog = ({ trigger, defaultOpen = false }: PricingDialogProps) => {
   const [open, setOpen] = useState(defaultOpen);
   const [selectedPlan, setSelectedPlan] = useState<'annual' | 'lifetime'>('annual');
-  const [selectedPricing, setSelectedPricing] = useState<'free' | 'personal' | 'pro'>('free');
+  const [selectedPricing, setSelectedPricing] = useState<'free' | 'personal' | 'pro'>('personal');
 
   const handleClose = () => setOpen(false);
+
+  const currentPricing = PricingData[selectedPlan];
+
+  const renderPricingCard = (tier: 'free' | 'personal' | 'pro', tierData: TypePricingTier) => {
+    const isSelected = selectedPricing === tier;
+    
+    return (
+      <div 
+        key={tier}
+        className={`border rounded-lg p-4 relative cursor-pointer transition-all ${
+          isSelected 
+            ? 'border-primary bg-gray-900' 
+            : 'border-gray-700 hover:border-primary'
+        }`}
+        onClick={() => setSelectedPricing(tier)}
+      >
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-xl font-semibold">{tierData.price}</h3>
+            <p className="text-gray-400 text-sm">{tierData.subtitle}</p>
+            {tier === 'pro' && selectedPlan === 'annual' && (
+              <p className="text-gray-500 text-xs mt-1">5000mins/month</p>
+            )}
+            {tierData.billingNote && (
+              <p className="text-gray-500 text-xs mt-1">{tierData.billingNote}</p>
+            )}
+          </div>
+          <div className="flex items-center">
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+              isSelected 
+                ? 'border-primary bg-primary' 
+                : 'border-gray-500'
+            }`}>
+              {isSelected && <Check size={12} className="text-white" />}
+            </div>
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          {tierData.features.map((feature, index) => (
+            <div key={index} className="flex items-start gap-3">
+              <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
+              <span className="text-sm">{feature}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="bg-[#121212] border text-foreground sm:max-w-4xl p-0 rounded-xl overflow-hidden" showCloseButton={false}>
-        <div className="p-6 flex items-center justify-between border-b">
+      <DialogContent className="bg-[#121212] border text-foreground sm:max-w-4xl max-w-[95vw] p-0 rounded-xl overflow-hidden max-h-[90vh] overflow-y-auto" showCloseButton={false}>
+        <div className="p-4 sm:p-6 flex items-center justify-between border-b border-gray-800">
           <div>
             <DialogTitle className="text-lg font-semibold tracking-tight">Select plan</DialogTitle>
             <p className="text-muted-foreground text-sm">Simple and flexible per-user pricing.</p>
@@ -39,25 +90,25 @@ const PricingDialog = ({ trigger, defaultOpen = false }: PricingDialogProps) => 
           </button>
         </div>
         
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Plan selector */}
           <div className="flex justify-center mb-6">
-            <div className="bg-muted rounded-xl p-1 inline-flex">
+            <div className="bg-gray-800 rounded-xl p-1 inline-flex">
               <button 
-                className={`px-6 py-2 rounded-xl text-sm font-medium transition-colors ${
+                className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-medium transition-colors ${
                   selectedPlan === 'annual' 
-                    ? 'bg-primary text-primary-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary shadow-sm' 
+                    : 'text-gray-400 hover:text-white'
                 }`}
                 onClick={() => setSelectedPlan('annual')}
               >
                 Annual
               </button>
               <button 
-                className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-medium transition-colors ${
                   selectedPlan === 'lifetime' 
-                    ? 'bg-primary text-primary-foreground shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary shadow-sm' 
+                    : 'text-gray-400 hover:text-white'
                 }`}
                 onClick={() => setSelectedPlan('lifetime')}
               >
@@ -66,152 +117,25 @@ const PricingDialog = ({ trigger, defaultOpen = false }: PricingDialogProps) => 
             </div>
           </div>
           
-          {/* Pricing cards - horizontal layout */}
-          <div className="grid grid-cols-3 gap-4">
-            {/* Free tier */}
-            <div className="border rounded-lg p-4 relative">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-xl font-semibold">Free</h3>
-                  <p className="text-muted-foreground text-sm">Audionotes Trial</p>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    name="pricing"
-                    value="free"
-                    checked={selectedPricing === 'free'}
-                    onChange={() => setSelectedPricing('free')}
-                    className="w-4 h-4 text-primary"
-                  />
-                </div>
-              </div>
-              
-              {selectedPricing === 'free' && (
-                <div className="absolute top-4 right-4 bg-primary rounded-full p-1">
-                  <Check size={12} className="text-primary-foreground" />
-                </div>
-              )}
-              
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Unlimited Voice Notes (Upto 15 mins/note)</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Upload Audio Files (Upto 25 Mb)</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Create High Quality Content</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Notes, Summaries & Content are saved forever</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Personal tier */}
-            <div className="border rounded-lg p-4 relative">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-xl font-semibold">₹2299/annual</h3>
-                  <p className="text-muted-foreground text-sm">Audionotes Personal</p>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    name="pricing"
-                    value="personal"
-                    checked={selectedPricing === 'personal'}
-                    onChange={() => setSelectedPricing('personal')}
-                    className="w-4 h-4 text-primary"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Everything in Personal (Incl. Unlimited 15 min Notes)</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Record Upto 60 mins/note (900 mins/mo or 5000 mins/mo)</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Upload Audio Files (Upto 50 Mb)</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Create High Quality Content</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Audio digitization and One-Click Content Generate</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Pro tier */}
-            <div className="border rounded-lg p-4 relative">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-xl font-semibold">₹5999/annual</h3>
-                  <p className="text-muted-foreground text-sm">Audionotes Pro</p>
-                  <p className="text-muted-foreground text-sm">5000mins/month</p>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    name="pricing"
-                    value="pro"
-                    checked={selectedPricing === 'pro'}
-                    onChange={() => setSelectedPricing('pro')}
-                    className="w-4 h-4 text-primary"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Everything in Personal (Incl. Unlimited 15 min Notes)</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Record Upto 60 mins/note (900 mins/mo or 5000 mins/mo)</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Upload Audio Files (Upto 50 Mb)</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Create High Quality Content</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">Audio digitization and One-Click Content Generate</span>
-                </div>
-              </div>
-            </div>
+          {/* Pricing cards - responsive layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {renderPricingCard('free', currentPricing.free)}
+            {renderPricingCard('personal', currentPricing.personal)}
+            {renderPricingCard('pro', currentPricing.pro)}
           </div>
         </div>
         
-        <div className="p-6 border-t flex flex-col gap-3">
-          <Button 
-            className="w-full py-3 text-sm font-medium rounded-xl"
+        <div className="p-4 sm:p-6 border-t border-gray-800 flex flex-col gap-3">
+          <Button
+            className="w-full py-3 text-sm font-medium rounded-xl bg-primary hover:bg-primary-dark"
             size="lg"
+            disabled={selectedPricing === 'free'}
           >
-            Subscribe now
+            {selectedPricing === 'free' ? 'Current Plan' : 'Subscribe now'}
           </Button>
           <Button 
             variant="outline"
-            className="w-full py-3 text-sm font-medium rounded-xl"
+            className="w-full py-3 text-sm font-medium rounded-xl border-gray-600 hover:bg-gray-800"
             onClick={handleClose}
             size="lg"
           >

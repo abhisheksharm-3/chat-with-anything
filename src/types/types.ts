@@ -22,3 +22,23 @@ export interface TypeGlowProps {
     color?: string;
   }[];
 }
+
+export interface TypePricingTier {
+  price: string;
+  subtitle: string;
+  features: string[];
+  billingNote?: string;
+}
+
+export interface TypePricingData {
+  annual: {
+    free: TypePricingTier;
+    personal: TypePricingTier;
+    pro: TypePricingTier;
+  };
+  lifetime: {
+    free: TypePricingTier;
+    personal: TypePricingTier;
+    pro: TypePricingTier;
+  };
+}
