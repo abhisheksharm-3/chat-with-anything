@@ -36,7 +36,7 @@ const Pricing = () => {
           </li>
         </ul>
 
-        <ButtonCta className="py-6" />
+        <ButtonCta className="py-6" showArrow />
       </div>
       
       <GlowBackground />

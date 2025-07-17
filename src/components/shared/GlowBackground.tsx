@@ -21,20 +21,21 @@ const GlowBackground: React.FC<TypeGlowProps> = ({
   ]
 }) => {
   return (
-    <div className={`absolute inset-0 z-0 overflow-hidden h-max ${className}`}>
-      {glowElements.map((glow, index) => (
-        <div
-          key={index}
-          className={`absolute ${glow.position} rounded-full`}
-          style={{
-            width: `${glow.size.width}px`,
-            height: `${glow.size.height}px`,
-            backgroundColor: glow.color,
-            filter: `blur(${glow.blur}px)`,
-            transform: `translate(${index === 0 ? '-15%' : '15%'}, -30%)`,
-          }}
-        />
-      ))}
+    <div className={`absolute inset-0 z-0 h-max min-h-screen overflow-hidden ${className}`}>
+        {glowElements.map((glow, index) => (
+          <div
+            key={index}
+            className={`absolute ${glow.position}`}
+            style={{
+              width: `${glow.size.width}px`,
+              height: `${glow.size.height}px`,
+              background: `radial-gradient(circle, ${glow.color} 0%, transparent 90%)`,
+              filter: `blur(${glow.blur}px)`,
+              transform: `translate(${index === 0 ? '-15%' : '15%'}, -50%)`,
+              borderRadius: '50%'
+            }}
+          />
+        ))}
     </div>
   );
 };

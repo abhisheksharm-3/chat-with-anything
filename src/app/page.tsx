@@ -12,7 +12,7 @@ export default async function Home() {
     <div className="bg-[#121212]">
       <Navbar />
 
-      <div className="mx-auto pt-2 px-4 lg:pt-10 lg:px-28">
+      <div className="mx-auto pt-2 lg:pt-10 lg:px-28">
         <Hero />
         <Features />
         <Pricing />
