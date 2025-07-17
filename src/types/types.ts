@@ -9,3 +9,16 @@ export interface TypeButtonCta extends React.ButtonHTMLAttributes<HTMLButtonElem
   className?: string
   showArrow?: boolean
 }
+
+export interface TypeGlowProps {
+  className?: string;
+  glowElements?: {
+    position: string;
+    size: {
+      width: number;
+      height: number;
+    };
+    blur?: number;
+    color?: string;
+  }[];
+}

@@ -4,7 +4,6 @@
 
 import Image from 'next/image';
 import ButtonCta from './ButtonCta';
-import GlowEffect from './GlowEffect';
 
 import youtubeImg from '@/assets/images/logos/youtube.png';
 import githubImg from '@/assets/images/logos/github.png';
@@ -15,6 +14,7 @@ import pdfImg from '@/assets/images/logos/pdf.png';
 import imageFileImg from '@/assets/images/logos/flat-color-icons_image-file.png';
 import slidesImg from '@/assets/images/logos/slides.png';
 import { WordRotate } from '../magicui/word-rotate';
+import GlowBackground from '../shared/GlowBackground';
 
 const Hero = () => {
   return (
@@ -26,12 +26,7 @@ const Hero = () => {
         <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-[#121212] opacity-90" />
       </div>
       
-      {/* Reusable Glow Effect */}
-      <GlowEffect 
-        color="#5463FF" 
-        intensity="medium" 
-        variant="centered" 
-      />
+      <GlowBackground />
       
       {/* Floating Logos */}
       <div className="absolute inset-0 z-0 max-w-6xl mx-auto">
