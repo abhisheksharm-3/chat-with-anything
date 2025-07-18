@@ -2,7 +2,6 @@
 
 import { supabaseServerClient } from '@/utils/supabase/server';
 
-// Arrow function for user sign-in
 export const signIn = async (formData: FormData) => {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
@@ -23,7 +22,6 @@ export const signIn = async (formData: FormData) => {
   }
 };
 
-// Arrow function for user sign-up
 export const signUp = async (formData: FormData) => {
   const fullName = formData.get('full-name') as string;
   const email = formData.get('email') as string;

@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
 import { TypeFile } from "@/types/supabase";
 import { useUser } from "./useUser";
-import { processPdfDocument } from "@/utils/document-processor";
+import { processPdfDocument, processGenericDocument } from "@/utils/processors";
 
 // Define query keys as constants
 export const FILES_QUERY_KEY = ["files"];
@@ -112,43 +112,110 @@ export function useFiles() {
         
         console.log("File record created successfully:", data);
         
-        // 4. Process PDF with Pinecone if it's a PDF
-        if ((fileData.type === 'pdf' || file.type === 'application/pdf') && data.id) {
+        // 4. Process document files with Pinecone
+        if (data.id) {
+          // Process PDFs
+          if (fileData.type === 'pdf' || file.type === 'application/pdf') {
+            try {
+              console.log("Starting PDF processing with Pinecone...");
+              
+              // Show that we're processing the PDF
+              await supabase
+                .from("files")
+                .update({ processing_status: 'processing' })
+                .eq("id", data.id);
+                
+              // Process the PDF and index it with Pinecone
+              const result = await processPdfDocument(file, data.id);
+              console.log("PDF indexed successfully with Pinecone:", result);
+              
+              // Update the processing status
+              await supabase
+                .from("files")
+                .update({ 
+                  processing_status: 'completed',
+                  indexed_chunks: result.numDocs
+                })
+                .eq("id", data.id);
+                
+            } catch (indexError) {
+              console.error("Error indexing PDF with Pinecone:", indexError);
+              
+              // Update the processing status to failed
+              await supabase
+                .from("files")
+                .update({ 
+                  processing_status: 'failed',
+                  processing_error: String(indexError)
+                })
+                .eq("id", data.id);
+                
+              // Continue even if indexing fails - the file is still uploaded
+            }
+          }
+          
+          // Process docs, sheets, and slides
+          if (fileData.type === 'doc' || fileData.type === 'docs' || 
+              fileData.type === 'sheet' || fileData.type === 'sheets' || 
+              fileData.type === 'slides') {
+            try {
+              console.log(`Starting ${fileData.type} processing with Pinecone...`);
+              
+              // Show that we're processing the document
+              await supabase
+                .from("files")
+                .update({ processing_status: 'processing' })
+                .eq("id", data.id);
+                
+              // Process the document and index it with Pinecone
+              const result = await processGenericDocument(file, data.id, fileData.type);
+              console.log(`${fileData.type} indexed successfully with Pinecone:`, result);
+              
+              // Update the processing status
+              await supabase
+                .from("files")
+                .update({ 
+                  processing_status: 'completed',
+                  indexed_chunks: result.numDocs
+                })
+                .eq("id", data.id);
+                
+            } catch (indexError) {
+              console.error(`Error indexing ${fileData.type} with Pinecone:`, indexError);
+              
+              // Update the processing status to failed
+              await supabase
+                .from("files")
+                .update({ 
+                  processing_status: 'failed',
+                  processing_error: String(indexError)
+                })
+                .eq("id", data.id);
+                
+              // Continue even if indexing fails - the file is still uploaded
+            }
+          }
+        }
+        
+        // 5. For YouTube URLs, trigger transcript processing
+        if ((fileData.type === 'youtube' || fileData.type === 'video') && 
+            data.id && data.url && 
+            (data.url.includes('youtube.com') || data.url.includes('youtu.be'))) {
           try {
-            console.log("Starting PDF processing with Pinecone...");
+            console.log("Setting up YouTube processing for later...");
             
-            // Show that we're processing the PDF
-            await supabase
-              .from("files")
-              .update({ processing_status: 'processing' })
-              .eq("id", data.id);
-              
-            // Process the PDF and index it with Pinecone
-            const result = await processPdfDocument(file, data.id);
-            console.log("PDF indexed successfully with Pinecone:", result);
-            
-            // Update the processing status
+            // Set the processing status to idle - actual processing will happen in the chat creation
             await supabase
               .from("files")
               .update({ 
-                processing_status: 'completed',
-                indexed_chunks: result.numDocs
+                processing_status: 'idle',
+                type: 'youtube' // Ensure type is set to youtube
               })
               .eq("id", data.id);
               
-          } catch (indexError) {
-            console.error("Error indexing PDF with Pinecone:", indexError);
-            
-            // Update the processing status to failed
-            await supabase
-              .from("files")
-              .update({ 
-                processing_status: 'failed',
-                processing_error: String(indexError)
-              })
-              .eq("id", data.id);
-              
-            // Continue even if indexing fails - the file is still uploaded
+          } catch (youtubeError) {
+            console.error("Error setting up YouTube processing:", youtubeError);
+            // Continue even if setup fails
           }
         }
         

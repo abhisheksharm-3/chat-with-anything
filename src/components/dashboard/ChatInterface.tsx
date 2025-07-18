@@ -26,12 +26,32 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
   // Get file data if chat has a file_id - using the new hook structure
   const { data: file, isLoading: isFileLoading, isError: isFileError } = useFileById(chat?.file_id || '');
 
+  // Check if this is a YouTube video that failed processing
+  const hasYouTubeProcessingError = file?.type === 'youtube' && 
+                                   file?.processing_status === 'failed' && 
+                                   file?.processing_error;
+
   // Combine server messages with local messages
   useEffect(() => {
     if (chatMessages) {
       setLocalMessages(chatMessages);
     }
   }, [chatMessages]);
+
+  // Add an error message for YouTube processing failures
+  useEffect(() => {
+    if (hasYouTubeProcessingError && localMessages.length === 0) {
+      // Add a system message about the YouTube transcript issue
+      setLocalMessages([{
+        id: `error-${Date.now()}`,
+        chat_id: chatId,
+        role: 'assistant',
+        content: `I couldn't process this YouTube video: ${file?.processing_error || 'No transcript available'}`,
+        created_at: new Date().toISOString(),
+        isError: true,
+      }]);
+    }
+  }, [hasYouTubeProcessingError, file?.processing_error, chatId, localMessages.length]);
 
   // Log for debugging
   useEffect(() => {
@@ -40,7 +60,9 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
       chat: !!chat, 
       fileId: chat?.file_id,
       file: !!file,
-      messagesCount: chatMessages?.length 
+      messagesCount: chatMessages?.length,
+      processingStatus: file?.processing_status,
+      processingError: file?.processing_error
     });
   }, [chatId, chat, file, chatMessages]);
 
@@ -146,6 +168,79 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
     }
   };
 
+  // Function to render message content with YouTube embeds
+  const renderMessageContent = (content: string) => {
+    // Check if the content is an error message about YouTube transcripts
+    if (content.startsWith("I couldn't process this YouTube video:") || 
+        content.startsWith("ERROR: No transcript available for this YouTube video")) {
+      return (
+        <div className="text-red-400">
+          <p>{content}</p>
+          <p className="mt-2 text-sm">
+            This video doesn't have available captions or transcripts. Please try a different video 
+            that has manually added captions. Videos with auto-generated captions may not work.
+          </p>
+        </div>
+      );
+    }
+    
+    // Check if the content is an error message about document processing
+    if (content.startsWith("I couldn't process this document:")) {
+      return (
+        <div className="text-red-400">
+          <p>{content}</p>
+          <p className="mt-2 text-sm">The document might be empty, scanned, or in an unsupported format.</p>
+        </div>
+      );
+    }
+    
+    // Check if the content contains a YouTube video ID pattern
+    const youtubeRegex = /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})|youtu\.be\/([a-zA-Z0-9_-]{11})/g;
+    let match;
+    let lastIndex = 0;
+    const parts = [];
+    
+    // Find all YouTube links in the content
+    while ((match = youtubeRegex.exec(content)) !== null) {
+      // Add the text before the match
+      if (match.index > lastIndex) {
+        parts.push(content.substring(lastIndex, match.index));
+      }
+      
+      // Extract the video ID
+      const videoId = match[1] || match[2];
+      
+      // Add the YouTube embed
+      parts.push(
+        <div key={`youtube-${match.index}`} className="my-2 w-full">
+          <iframe 
+            src={`https://www.youtube.com/embed/${videoId}`}
+            width="100%"
+            height="315"
+            frameBorder="0"
+            allowFullScreen
+            title={`YouTube Video ${videoId}`}
+            className="rounded-lg"
+          />
+        </div>
+      );
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Add the remaining text
+    if (lastIndex < content.length) {
+      parts.push(content.substring(lastIndex));
+    }
+    
+    // If no YouTube links were found, just return the content
+    if (parts.length === 0) {
+      return content;
+    }
+    
+    return <>{parts}</>;
+  };
+
   // Render document content based on type
   const renderDocumentContent = () => {
     if (isFileLoading) {
@@ -181,9 +276,68 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
       );
     }
 
+    // Show processing error if document failed to process
+    if (file.processing_status === 'failed') {
+      return (
+        <div className="flex flex-col items-center justify-center h-full">
+          <div className="bg-red-900/20 rounded-full p-4 mb-4">
+            <FileText size={24} className="text-red-400" />
+          </div>
+          <h3 className="text-lg font-medium mb-2 text-red-400">Document Processing Error</h3>
+          <p className="text-sm text-gray-400 text-center max-w-md">
+            {file.processing_error || "Unable to process this document. It might be empty, scanned, or in an unsupported format."}
+          </p>
+        </div>
+      );
+    }
+
+    // Show processing status if document is still processing
+    if (file.processing_status === 'processing') {
+      return (
+        <div className="flex flex-col items-center justify-center h-full">
+          <div className="bg-blue-900/20 rounded-full p-4 mb-4">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+          </div>
+          <h3 className="text-lg font-medium mb-2 text-blue-400">Processing Document</h3>
+          <p className="text-sm text-gray-400">Please wait while we process your document...</p>
+        </div>
+      );
+    }
+
     // Handle YouTube or web URL type
     if (file.type === 'web' || file.type === 'youtube' || file.type === 'url') {
       const url = file.url || '';
+      
+      // Special handling for YouTube videos
+      if (file.type === 'youtube' || url.includes('youtube.com') || url.includes('youtu.be')) {
+        // Extract video ID from YouTube URL
+        const getYouTubeVideoId = (url: string): string | null => {
+          const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+          const match = url.match(regExp);
+          return (match && match[2].length === 11) ? match[2] : null;
+        };
+        
+        const videoId = getYouTubeVideoId(url);
+        
+        if (videoId) {
+          return (
+            <div className="flex flex-col h-full">
+              <div className="flex-1 p-4 overflow-auto">
+                <iframe 
+                  src={`https://www.youtube.com/embed/${videoId}`}
+                  className="w-full h-full border-0 rounded-lg"
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          );
+        }
+      }
+      
+      // Default handling for other web content
       return (
         <div className="flex flex-col h-full">
           <div className="flex-1 p-4 overflow-auto">
@@ -209,6 +363,57 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
                 src={`https://docs.google.com/viewer?url=${encodeURIComponent(file.url)}&embedded=true`}
                 className="w-full h-full border-0"
                 title={`PDF: ${file.name}`}
+              />
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Handle Google Docs type
+    if (file.type === 'doc' || file.type === 'docs') {
+      return (
+        <div className="flex flex-col h-full">
+          <div className="flex-1 overflow-auto">
+            {file.url && (
+              <iframe
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(file.url)}&embedded=true`}
+                className="w-full h-full border-0"
+                title={`Document: ${file.name}`}
+              />
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Handle Google Sheets type
+    if (file.type === 'sheet' || file.type === 'sheets') {
+      return (
+        <div className="flex flex-col h-full">
+          <div className="flex-1 overflow-auto">
+            {file.url && (
+              <iframe
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(file.url)}&embedded=true`}
+                className="w-full h-full border-0"
+                title={`Spreadsheet: ${file.name}`}
+              />
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Handle Google Slides type
+    if (file.type === 'slides') {
+      return (
+        <div className="flex flex-col h-full">
+          <div className="flex-1 overflow-auto">
+            {file.url && (
+              <iframe
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(file.url)}&embedded=true`}
+                className="w-full h-full border-0"
+                title={`Presentation: ${file.name}`}
               />
             )}
           </div>
@@ -244,6 +449,12 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
     // Default document view
     return (
       <div className="flex flex-col h-full">
+        <div className="flex items-center justify-center h-full">
+          <div className="bg-gray-800 rounded-full p-4 mb-4">
+            {getSourceIcon()}
+          </div>
+          <h3 className="text-lg font-medium ml-2">{file.name}</h3>
+        </div>
       </div>
     );
   };
@@ -301,7 +512,7 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
                         <span>AI is thinking...</span>
                       </div>
                     ) : (
-                      message.content
+                      renderMessageContent(message.content)
                     )}
                   </div>
                 </div>
@@ -402,7 +613,7 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
                           <span>AI is thinking...</span>
                         </div>
                       ) : (
-                        message.content
+                        renderMessageContent(message.content)
                       )}
                     </div>
                   </div>

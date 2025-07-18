@@ -99,6 +99,24 @@ export const useUploadLogic = ({ fileType, onClose }: UseUploadLogicProps) => {
       const urlType = getUrlType(url, fileType);
       const urlFileName = urlObj.hostname;
       
+      // Check if this is a YouTube URL and verify transcript availability
+      if (urlType === 'youtube' || url.includes('youtube.com') || url.includes('youtu.be')) {
+        console.log("YouTube URL detected, checking transcript availability...");
+        
+        // Import dynamically to avoid server component issues
+        const { checkYoutubeTranscriptAvailability } = await import('@/utils/processors/youtube-utils');
+        
+        const { available, error } = await checkYoutubeTranscriptAvailability(url);
+        
+        if (!available) {
+          setUploadStatus('error');
+          setError(`Cannot process this YouTube video: ${error || 'No transcript available. The video might not have captions, or they might be disabled.'}`);
+          return null;
+        }
+        
+        console.log("YouTube transcript is available, proceeding with upload");
+      }
+      
       console.log(`Creating ${urlType} file entry for URL:`, url);
 
       const uploadedFile = await uploadFileAsync({
@@ -249,46 +267,27 @@ export const useUploadLogic = ({ fileType, onClose }: UseUploadLogicProps) => {
         }, NAVIGATION_DELAY);
         
       } catch (chatError) {
-        console.error('Chat creation error:', chatError);
-        
-        const errorMessage = getErrorMessage(chatError);
-        
-        // Handle redirect "errors" (not actual errors)
-        if (!errorMessage) {
-          setUploadStatus('uploaded');
-          onClose();
-          return;
-        }
-        
-        throw chatError;
+        console.error("Error creating chat:", chatError);
+        setUploadStatus('error');
+        setError(`Failed to create chat: ${getErrorMessage(chatError)}`);
       }
-      
-    } catch (err) {
-      console.error('Upload error:', err);
-      
-      const errorMessage = getErrorMessage(err);
-      
-      if (!errorMessage) {
-        setUploadStatus('uploaded');
-        onClose();
-        return;
-      }
-      
+    } catch (uploadError) {
+      console.error("Upload error:", uploadError);
       setUploadStatus('error');
-      setError(errorMessage);
+      setError(`Upload failed: ${getErrorMessage(uploadError)}`);
     }
   }, [
     uploadStatus,
     isAuthenticated,
     userId,
-    fileTypeConfig,
     selectedFile,
     url,
     fileType,
+    fileTypeConfig,
+    onClose,
     uploadFileAsync,
     handleUrlUpload,
     createChatWithRetry,
-    onClose,
     router
   ]);
 
@@ -308,7 +307,6 @@ export const useUploadLogic = ({ fileType, onClose }: UseUploadLogicProps) => {
   }, [handleUrlSubmit]);
 
   return {
-    // State
     uploadStatus,
     fileName,
     url,
@@ -316,15 +314,13 @@ export const useUploadLogic = ({ fileType, onClose }: UseUploadLogicProps) => {
     selectedFile,
     fileTypeConfig,
     isUploading,
-    
-    // Handlers
     handleFileChange,
     handleUrlChange,
     handleRemoveFile,
-    handleRetry,
     handleSubmit,
     handleUrlSubmit,
     handleKeyDown,
+    handleRetry,
     resetState,
   };
 };

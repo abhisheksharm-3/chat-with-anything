@@ -17,7 +17,7 @@ export const fileTypes: TypeFileTypeConfig[] = [
     maxSize: 10 * 1024 * 1024, // 10MB
   },
   {
-    type: 'docs',
+    type: 'doc',
     name: 'Document',
     image: docsIcon,
     accept: '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -31,7 +31,7 @@ export const fileTypes: TypeFileTypeConfig[] = [
     maxSize: 5 * 1024 * 1024, // 5MB
   },
   {
-    type: 'sheets',
+    type: 'sheet',
     name: 'Spreadsheet',
     image: sheetsIcon,
     accept: '.xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -45,7 +45,7 @@ export const fileTypes: TypeFileTypeConfig[] = [
     maxSize: 10 * 1024 * 1024, // 10MB
   },
   {
-    type: 'youtube',
+    type: 'video',
     name: 'YouTube Video',
     image: youtubeIcon,
     accept: '',

@@ -28,6 +28,10 @@ export interface Database {
           size: number | null;
           url: string | null;
           uploaded_at: string;
+          processing_status?: 'idle' | 'processing' | 'completed' | 'failed' | null;
+          processing_error?: string | null;
+          indexed_chunks?: number | null;
+          full_text?: string | null;
         };
         Insert: {
           id?: string;
@@ -37,6 +41,10 @@ export interface Database {
           size?: number | null;
           url?: string | null;
           uploaded_at?: string;
+          processing_status?: 'idle' | 'processing' | 'completed' | 'failed' | null;
+          processing_error?: string | null;
+          indexed_chunks?: number | null;
+          full_text?: string | null;
         };
         Update: Partial<Database['public']['Tables']['files']['Insert']>;
       };

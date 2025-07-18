@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useParams } from "next/navigation";
+import { usePathname, useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   FileText,
@@ -61,6 +61,12 @@ const MOBILE_NAV_ITEMS = [
     icon: Clock,
     title: "History",
     description: "Record and create new note",
+  },
+  {
+    href: "/settings",
+    icon: Settings,
+    title: "Account Settings",
+    description: "Manage your account preferences",
   },
 ] as const;
 
@@ -170,19 +176,6 @@ const MobileNavigation = ({
           </div>
         </Link>
       ))}
-      <SettingsDialog
-        trigger={
-          <button className="flex items-center gap-3 p-3 rounded-lg transition-colors text-gray-400 hover:text-white hover:bg-[#2a2a2a] w-full text-left">
-            <Settings size={20} />
-            <div>
-              <div className="text-sm font-medium">Account Settings</div>
-              <div className="text-xs text-gray-500">
-                Record and create new note
-              </div>
-            </div>
-          </button>
-        }
-      />
     </div>
   </nav>
 );
@@ -274,15 +267,29 @@ const AddTabButton = () => (
   </Link>
 );
 
-const MobileHeader = ({ onMenuToggle }: { onMenuToggle: () => void }) => (
+const MobileHeader = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
+  const pathname = usePathname();
+  const isSettingsPage = pathname === '/settings';
+  const router = useRouter();
+
+  return (
   <header className="md:hidden h-16 flex items-center justify-between px-4">
     <div className="flex items-center gap-3 bg-[#181818] rounded-lg border">
+        {isSettingsPage ? (
+          <button
+            onClick={() => router.back()}
+            className="p-1 text-gray-400 hover:text-white"
+          >
+            <ChevronsLeft />
+          </button>
+        ) : (
       <button
         onClick={onMenuToggle}
         className="p-1 text-gray-400 hover:text-white"
       >
         <ChevronsRight />
       </button>
+        )}
     </div>
     <MobileLogo />
     <div className="flex items-center gap-2">
@@ -299,6 +306,7 @@ const MobileHeader = ({ onMenuToggle }: { onMenuToggle: () => void }) => (
     </div>
   </header>
 );
+};
 
 const DesktopHeader = ({
   isHistoryPage,

@@ -1,8 +1,9 @@
 "use client"
 
-import React from 'react';
-import { Send } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, AlertCircle } from 'lucide-react';
 import { TypeFileTypeConfig } from '@/types/types';
+import { isYoutubeUrl } from '@/utils/processors/youtube-utils';
 
 interface UrlInputProps {
   url: string;
@@ -23,6 +24,13 @@ const UrlInput: React.FC<UrlInputProps> = ({
   handleKeyDown,
   isUploading
 }) => {
+  const [isYouTube, setIsYouTube] = useState(false);
+  
+  // Check if the URL is a YouTube URL
+  useEffect(() => {
+    setIsYouTube(isYoutubeUrl(url));
+  }, [url]);
+  
   return (
     <div className="mb-4">
       <p className="text-xs text-gray-400 mb-1">
@@ -47,6 +55,17 @@ const UrlInput: React.FC<UrlInputProps> = ({
           <Send size={16} />
         </button>
       </div>
+      
+      {/* YouTube-specific message */}
+      {isYouTube && (
+        <div className="mt-2 flex items-start gap-2 bg-blue-900/20 p-2 rounded-md">
+          <AlertCircle size={16} className="text-blue-400 mt-0.5" />
+          <p className="text-xs text-blue-400">
+            Note: Only YouTube videos with available captions/transcripts can be processed. 
+            Private or automatically generated captions may not work.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

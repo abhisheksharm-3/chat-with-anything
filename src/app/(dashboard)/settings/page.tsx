@@ -1,29 +1,17 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, X } from 'lucide-react';
-import PricingDialog from './PricingDialog';
+import { Loader2 } from 'lucide-react';
+import PricingDialog from '@/components/dashboard/PricingDialog';
+import LogoutDialog from '@/components/dashboard/LogoutDialog';
 import { useUser, useIsMobile } from '@/hooks';
 import { useRouter } from 'next/navigation';
 
-interface SettingsDialogProps {
-  trigger?: React.ReactNode;
-  defaultOpen?: boolean;
-}
-
-const SettingsDialog = ({ trigger, defaultOpen = false }: SettingsDialogProps) => {
-  const [open, setOpen] = useState(defaultOpen);
+const SettingsPage = () => {
   const { user, isLoading, updateUser, isUpdating } = useUser();
-  const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState("");
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [name, setName] = React.useState("");
   const isMobile = useIsMobile();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
@@ -33,16 +21,15 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: SettingsDialogProps) =
     setIsMounted(true);
   }, []);
 
-  // If on mobile, redirect to settings page, but only after client-side hydration
+  // Redirect to dashboard if on desktop, but only after client-side hydration
   useEffect(() => {
-    if (isMounted && isMobile && open) {
-      setOpen(false);
-      router.push('/settings');
+    if (isMounted && !isMobile) {
+      router.push('/choose');
     }
-  }, [isMobile, open, router, isMounted]);
+  }, [isMobile, router, isMounted]);
 
   // Set name when user data is loaded
-  useEffect(() => {
+  React.useEffect(() => {
     if (user?.name) {
       setName(user.name);
     }
@@ -59,31 +46,24 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: SettingsDialogProps) =
     }
   };
 
-  // If on mobile, don't render the dialog (but only after hydration)
-  if (isMounted && isMobile) {
-    return trigger ? <>{trigger}</> : null;
+  // If on desktop, don't render the page content (but only after hydration)
+  if (isMounted && !isMobile) {
+    return null;
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="bg-[#121212] border border-[#333] max-w-lg p-0 rounded-lg" showCloseButton={false}>
-        <div className="p-6 pb-4 border-b border-[#333]">
-          <div className="flex items-start justify-between mb-2">
-            <div>
-              <DialogTitle className="text-lg font-semibold mt-1">Account Settings</DialogTitle>
-              <p className="text-[#A9A9A9] text-sm">Everything about your account at one place</p>
-            </div>
-            <button 
-              onClick={() => setOpen(false)}
-              className="text-gray-400 hover:text-white mt-2 cursor-pointer"
-            >
-              <X size={24} />
-            </button>
+    <div className="flex flex-col h-full bg-[#121212]">
+      <div className="p-6 pb-4 border-b border-[#333]">
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <h1 className="text-lg font-semibold mt-1">Account Settings</h1>
+            <p className="text-[#A9A9A9] text-sm">Everything about your account at one place</p>
           </div>
         </div>
-        
-        <div className="px-6 pb-6 space-y-6 font-medium text-lg">
+      </div>
+      
+      <div className="flex flex-col h-full">
+        <div className="px-6 pb-6 space-y-6 font-medium text-lg flex-1">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -154,15 +134,15 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: SettingsDialogProps) =
                 <p>{user?.email || "Not available"}</p>
               </div>
               
-              <div className="flex justify-between items-center">
-                <div className="space-y-1">
-                  <p className="text-[#A9A9A9] text-sm">Current Plan</p>
-                  <p>Free</p>
-                </div>
-                
+              <div className="space-y-1">
+                <p className="text-[#A9A9A9] text-sm">Current Plan</p>
+                <p>Free</p>
+              </div>
+              
+              <div className="mt-4">
                 <PricingDialog
                   trigger={
-                    <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-5 cursor-pointer">
+                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-5 w-full cursor-pointer">
                       Upgrade plan
                       <span className="ml-2 text-xs bg-primary-foreground/20 text-primary-foreground font-semibold px-1.5 py-0.5 rounded">PRO</span>
                     </Button>
@@ -172,9 +152,23 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: SettingsDialogProps) =
             </>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+        
+        {/* Logout button fixed at the bottom */}
+        <div className="mt-auto px-6 pb-8 pt-4 border-t border-[#333]">
+          <LogoutDialog
+            trigger={
+              <Button 
+                variant="destructive" 
+                className="w-full py-5 rounded-xl"
+              >
+                Log out
+              </Button>
+            }
+          />
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default SettingsDialog; 
+export default SettingsPage; 

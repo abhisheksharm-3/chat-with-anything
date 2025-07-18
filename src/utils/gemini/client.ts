@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import { createRagSystemPrompt, createYoutubeSystemPrompt } from "@/utils/processors";
 
 // Initialize the Gemini API with the API key from environment variables
 // Use server-side environment variable instead of NEXT_PUBLIC
@@ -31,39 +32,23 @@ export const createChatSession = () => {
     safetySettings: [
       {
         category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
       },
       {
         category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
       },
       {
         category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
       },
       {
         category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
       },
     ],
     history: [], // Always start with empty history
   });
-};
-
-// Function to create a system prompt for RAG
-export const createRagSystemPrompt = (documentContent: string): string => {
-  return `You are a helpful assistant that answers questions based on the provided document content.
-  
-Here is the relevant document content to use when answering questions:
-
-${documentContent}
-
-When answering:
-1. Only use information from the provided document content.
-2. If the document doesn't contain the information needed to answer, say "I don't have enough information to answer that question based on the provided document."
-3. Keep your answers concise and focused on the question.
-4. Do not make up information that isn't in the document.
-5. If asked about topics unrelated to the document, politely redirect the conversation back to the document content.`;
 };
 
 // Function to send a message to Gemini
@@ -77,24 +62,65 @@ export const sendMessageToGemini = async (messages: ChatMessage[], fileContent?:
     console.log(`Has file content: ${!!fileContent}`);
     console.log(`Number of messages: ${messages.length}`);
     
+    // Check if the last message contains an image URL
+    const lastMessage = messages[messages.length - 1];
+    const imageUrlMatch = lastMessage.content.match(/I'm looking at an image at URL: (https:\/\/[^\s]+)\./);
+    
+    if (imageUrlMatch && imageUrlMatch[1]) {
+      const imageUrl = imageUrlMatch[1];
+      console.log("Image URL detected in message:", imageUrl);
+      
+      try {
+        // Extract the actual query from the message
+        const query = lastMessage.content.replace(/I'm looking at an image at URL: https:\/\/[^\s]+\.\s*/, '');
+        console.log("Extracted query:", query);
+        
+        // Currently the Gemini API doesn't support image URLs directly
+        // We'll need to inform the user about this limitation
+        return "I'm sorry, I can't analyze images via URLs at the moment. The Gemini API requires direct image uploads which aren't supported in this interface yet.";
+      } catch (imageError) {
+        console.error("Error processing image with Gemini:", imageError);
+        return "I'm sorry, I couldn't analyze the image. The error was: " + 
+               (imageError instanceof Error ? imageError.message : String(imageError));
+      }
+    }
+    
     // Create chat session (always with empty history)
     const chat = createChatSession();
     
     // If we have file content, send it as a user message first
     if (fileContent) {
       console.log("Creating RAG context with document content");
-      const systemPrompt = createRagSystemPrompt(fileContent);
       
-      // Send the system prompt as a user message first
-      const systemResult = await chat.sendMessage([
-        {
-          text: "I need you to act as a document assistant with the following instructions: " + systemPrompt
-        }
-      ]);
+      // Determine the type of content and use appropriate system prompt
+      let systemPrompt = "";
       
-      // Get the response to acknowledge the system prompt
-      const systemResponse = systemResult.response;
-      console.log("System prompt acknowledged:", systemResponse.text().substring(0, 50) + "...");
+      if (fileContent === "IMAGE_FILE") {
+        // For images, we don't need a system prompt as we're adding context to the user message
+        console.log("Image file detected, skipping system prompt");
+        // Skip adding system prompt for images
+      } else if (fileContent === "YOUTUBE_TRANSCRIPT" || messages[messages.length - 1].content.includes("YouTube")) {
+        // This is a placeholder - actual transcript content is handled in the actions.ts file
+        console.log("YouTube content detected, using YouTube system prompt");
+        systemPrompt = createYoutubeSystemPrompt(fileContent);
+      } else {
+        // Default to RAG system prompt for other document types
+        systemPrompt = createRagSystemPrompt(fileContent);
+      }
+      
+      // Only send system prompt if we have one
+      if (systemPrompt) {
+        // Send the system prompt as a user message first
+        const systemResult = await chat.sendMessage([
+          {
+            text: "I need you to act as a document assistant with the following instructions: " + systemPrompt
+          }
+        ]);
+        
+        // Get the response to acknowledge the system prompt
+        const systemResponse = systemResult.response;
+        console.log("System prompt acknowledged:", systemResponse.text().substring(0, 50) + "...");
+      }
     }
     
     // Process previous messages if there are any (excluding the last one)
@@ -118,6 +144,7 @@ export const sendMessageToGemini = async (messages: ChatMessage[], fileContent?:
     return response.text();
   } catch (error) {
     console.error("Error in Gemini chat:", error);
-    throw new Error("Failed to get response from Gemini");
+    return "I'm sorry, I encountered an error while processing your request. " + 
+           (error instanceof Error ? error.message : String(error));
   }
 };
