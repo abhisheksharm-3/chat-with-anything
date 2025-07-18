@@ -4,7 +4,7 @@ import { ChevronsLeft, Loader2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PricingDialog from "@/components/dashboard/PricingDialog";
-import { MOBILE_NAV_ITEMS } from "@/constants/NavItems";
+import { MobileNavItems } from "@/constants/NavItems";
 import { TypeUser } from "@/types/supabase";
 import { getUserInitials } from "@/utils/dashboard-utils";
 
@@ -24,7 +24,7 @@ const MobileNavigation = ({
 }) => (
   <nav className="flex-1 p-4">
     <div className="space-y-2">
-      {MOBILE_NAV_ITEMS.map(({ href, icon: IconComponent, title, description }) => {
+      {MobileNavItems.map(({ href, icon: IconComponent, title, description }) => {
         const Icon = IconComponent as LucideIcon;
         return (
           <Link

@@ -4,7 +4,7 @@ import { LogOut, Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import SettingsDialog from "@/components/dashboard/SettingsDialog";
 import LogoutDialog from "@/components/dashboard/LogoutDialog";
-import { NAVIGATION_ITEMS } from "@/constants/NavItems";
+import { NavigationItems } from "@/constants/NavItems";
 
 /**
  * Renders the application logo as a clickable link.
@@ -33,7 +33,7 @@ const Logo = () => (
  */
 const DesktopNavigation = ({ pathname }: { pathname: string }) => (
   <nav className="flex flex-col space-y-2">
-    {NAVIGATION_ITEMS.map(({ href, icon: IconComponent }) => {
+    {NavigationItems.map(({ href, icon: IconComponent }) => {
       const LucideIconComponent = IconComponent as LucideIcon;
       return (
         <Link

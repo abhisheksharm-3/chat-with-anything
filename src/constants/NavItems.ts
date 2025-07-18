@@ -1,11 +1,11 @@
 import { Clock, File, Settings } from "lucide-react";
 
-export const NAVIGATION_ITEMS = [
+export const NavigationItems = [
   { href: "/choose", icon: File },
   { href: "/history", icon: Clock },
 ] as const;
 
-export const MOBILE_NAV_ITEMS = [
+export const MobileNavItems = [
   {
     href: "/choose",
     icon: File,

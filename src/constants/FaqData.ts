@@ -1,4 +1,6 @@
-export const FaqData = [
+import { TypeFaqItem } from "@/types/types";
+
+export const FaqData: TypeFaqItem[] = [
   {
     value: '0',
     question: 'How does the application function',

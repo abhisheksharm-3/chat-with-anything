@@ -104,3 +104,9 @@ export interface TypeUploadModalProps {
   defaultOpen?: boolean;
   fileType: string;
 }
+
+export type TypeFaqItem = {
+  value: string;
+  question: string;
+  answer: string;
+};
