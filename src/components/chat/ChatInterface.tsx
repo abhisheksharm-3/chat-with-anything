@@ -4,133 +4,153 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useMessages, useChats, useFileById } from '@/hooks';
 import { TypeMessage } from '@/types/supabase';
 import { TypeChatInterfaceProps } from '@/types/chat';
-import { ChatMessages } from './ChatMessage';
-import { ChatInput } from './ChatInput';
-import { DocumentViewer } from './DocumentViewer';
-import { MobileTabs } from './MobileTabs';
+import { ChatInterfaceMessages } from './ChatInterfaceMessage';
+import { ChatInterfaceInput } from './ChatInterfaceInput';
+import { ChatInterfaceDocumentViewer } from './ChatInterfaceDocumentViewer';
+import { ChatInterfaceMobileTabs } from './ChatInterfaceMobileTabs';
 
+/**
+ * The main component for the chat interface, orchestrating the document viewer,
+ * message display, and user input. It handles data fetching, real-time message
+ * updates, and responsive layouts for desktop and mobile.
+ *
+ * This component manages the lifecycle of a chat session, including:
+ * - Fetching initial chat and file data.
+ * - Subscribing to real-time messages from Supabase.
+ * - Handling optimistic UI updates for sending messages.
+ * - Displaying various states (loading, errors, empty).
+ * - Toggling between document and chat views on mobile.
+ *
+ * @component
+ * @param {TypeChatInterfaceProps} props - The props for the component.
+ * @param {string} [props.title="Untitled Chat"] - The fallback title for the chat, used if a document title is not available.
+ * @param {string} props.chatId - The unique identifier for the current chat session.
+ * @returns {JSX.Element} The fully interactive chat interface.
+ */
 const ChatInterface: React.FC<TypeChatInterfaceProps> = ({ 
   title = "Untitled Chat", 
   chatId 
 }) => {
+  // --- Hooks for data fetching and state management ---
   const { messages: chatMessages, isLoading: messagesLoading, sendMessage, subscribeToMessages } = useMessages(chatId);
   const { getChatById } = useChats();
   const [inputValue, setInputValue] = useState('');
-  const [showPDF, setShowPDF] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showPDF, setShowPDF] = useState(false); // For mobile view toggle
   const [localMessages, setLocalMessages] = useState<TypeMessage[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  // Fetch chat and associated file metadata
   const chat = getChatById(chatId);
   const { data: file, isLoading: isFileLoading, isError: isFileError } = useFileById(chat?.file_id || '');
 
+  // Derived state to check for a specific YouTube processing error
   const hasYouTubeProcessingError = file?.type === 'youtube' && 
-                                   file?.processing_status === 'failed' && 
-                                   file?.processing_error;
+                                    file?.processing_status === 'failed' && 
+                                    file?.processing_error;
 
-  // Combine server messages with local messages - fixed to prevent infinite loop
+  // --- Effects ---
+
+  /**
+   * Syncs server-fetched messages (`chatMessages`) with the local display state (`localMessages`).
+   * This is designed to prevent infinite re-renders by comparing the states and to preserve
+   * temporary optimistic UI messages (like user messages just sent or AI 'thinking' indicators).
+   */
   useEffect(() => {
-    // Only update if chatMessages is different from localMessages
-    // This prevents infinite loops when setting state in useEffect
-    if (chatMessages && JSON.stringify(chatMessages) !== JSON.stringify(localMessages)) {
-      // Filter out any temporary messages
-      const filteredMessages = localMessages.filter(msg => 
+    if (chatMessages && JSON.stringify(chatMessages) !== JSON.stringify(localMessages.filter(m => !m.id.startsWith('temp-')))) {
+      const tempMessages = localMessages.filter(msg => 
         msg.id.startsWith('temp-') || msg.id.startsWith('error-')
       );
-      
-      if (filteredMessages.length > 0) {
-        // If we have temporary messages, keep them and add the server messages
-        const serverMessageIds = chatMessages.map(msg => msg.id);
-        const uniqueTempMessages = filteredMessages.filter(
-          msg => !serverMessageIds.includes(msg.id)
-        );
-        
-        setLocalMessages([...chatMessages, ...uniqueTempMessages]);
-      } else {
-        // If no temporary messages, just use the server messages
-        setLocalMessages(chatMessages);
-      }
+      const serverMessageIds = chatMessages.map(msg => msg.id);
+      const uniqueTempMessages = tempMessages.filter(msg => !serverMessageIds.includes(msg.id));
+      setLocalMessages([...chatMessages, ...uniqueTempMessages]);
     }
-  }, [chatMessages]);
+  }, [chatMessages, localMessages]);
 
-  // Add error message for YouTube processing failures
+  /**
+   * Injects an error message into the chat if a YouTube video fails processing.
+   * This runs only once if the condition is met and the chat is empty.
+   */
   useEffect(() => {
     if (hasYouTubeProcessingError && localMessages.length === 0) {
-      const errorMessage = {
+      const errorMessage: TypeMessage = {
         id: `error-${Date.now()}`,
         chat_id: chatId,
         role: 'assistant' as const,
         content: `I couldn't process this YouTube video: ${file?.processing_error || 'No transcript available'}`,
         created_at: new Date().toISOString(),
       };
-      
       setLocalMessages([errorMessage]);
     }
   }, [hasYouTubeProcessingError, file?.processing_error, chatId, localMessages.length]);
 
-  // Subscribe to real-time updates
+  /**
+   * Subscribes to real-time message updates from Supabase when the component mounts.
+   * Unsubscribes on cleanup to prevent memory leaks.
+   */
   useEffect(() => {
     const unsubscribe = subscribeToMessages();
     return () => unsubscribe();
   }, [subscribeToMessages]);
 
-  // Scroll to bottom when messages change
+  /**
+   * Automatically scrolls the message list to the bottom whenever new messages are added.
+   */
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [localMessages]);
 
+  // --- Event Handlers ---
+
+  /**
+   * Handles sending a new message. It implements an optimistic UI update by
+   * immediately adding temporary user and AI "thinking" messages to the state.
+   */
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
     
+    const tempUserMessage: TypeMessage = {
+      id: `temp-${Date.now()}`,
+      chat_id: chatId,
+      role: "user",
+      content: inputValue,
+      created_at: new Date().toISOString(),
+    };
+    
+    const tempAiMessage: TypeMessage = {
+      id: `temp-ai-${Date.now()}`,
+      chat_id: chatId,
+      role: "assistant",
+      content: '...',
+      created_at: new Date().toISOString(),
+    };
+    
+    setLocalMessages(prev => [...prev, tempUserMessage, tempAiMessage]);
+    const messageToSend = inputValue;
+    setInputValue(''); // Clear input immediately
+    
     try {
-      const tempUserMessage: TypeMessage = {
-        id: `temp-${Date.now()}`,
-        chat_id: chatId,
-        role: "user",
-        content: inputValue,
-        created_at: new Date().toISOString(),
-      };
-      
-      const tempAiMessage: TypeMessage = {
-        id: `temp-ai-${Date.now()}`,
-        chat_id: chatId,
-        role: "assistant",
-        content: '...',
-        created_at: new Date().toISOString(),
-      };
-      
-      // Update state once with both messages
-      setLocalMessages(prev => [...prev, tempUserMessage, tempAiMessage]);
-      
-      // Clear input immediately
-      setInputValue('');
-      
-      // Send the message
-      await sendMessage(inputValue);
-      
-      // Remove the temporary AI message after the real one arrives
+      await sendMessage(messageToSend);
       setLocalMessages(prev => prev.filter(msg => msg.id !== tempAiMessage.id));
     } catch (error) {
       console.error('Failed to send message:', error);
-      
-      // Remove any temporary AI messages
       setLocalMessages(prev => {
         const filtered = prev.filter(msg => !msg.id.startsWith('temp-ai-'));
-        
-        // Add error message
         return [...filtered, {
           id: `error-${Date.now()}`,
           chat_id: chatId,
           role: 'assistant' as const,
           content: 'Sorry, there was an error processing your request.',
           created_at: new Date().toISOString(),
-          isError: true,
         }];
       });
     }
   };
 
+  /**
+   * Sends the message when the user presses Enter without the Shift key.
+   */
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -138,7 +158,9 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
     }
   };
 
-  // Show loading state if we're still loading messages
+  // --- Render Logic ---
+
+  // Initial loading state for the chat
   if (messagesLoading && !localMessages.length) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-64px)]">
@@ -152,11 +174,12 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
 
   return (
     <>
-      {/* Desktop Layout */}
+      {/* Desktop Layout: 2-column grid */}
       <div className="hidden md:grid grid-cols-2 gap-2 h-full">
+        {/* Left Column: Document Viewer */}
         <div className="bg-[#181818] border rounded-xl border-[#333] flex flex-col">
           {file && (
-            <DocumentViewer 
+            <ChatInterfaceDocumentViewer 
               file={file} 
               isLoading={isFileLoading} 
               isError={isFileError} 
@@ -165,20 +188,19 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
           )}
         </div>
 
+        {/* Right Column: Chat Thread */}
         <div className="bg-[#181818] flex flex-col border rounded-xl px-4 py-2 max-h-[calc(100vh-5rem)]">
           <div className="p-3 border border-[#333] rounded-xl">
             <h2 className="text-sm text-center text-gray-400">
               {file ? `// Chat with ${file.name} //` : '// Chat with the document //'}
             </h2>
           </div>
-
-          <ChatMessages 
+          <ChatInterfaceMessages 
             messages={localMessages}
             messagesLoading={messagesLoading}
             messagesEndRef={messagesEndRef}
           />
-
-          <ChatInput 
+          <ChatInterfaceInput 
             inputValue={inputValue}
             setInputValue={setInputValue}
             onSendMessage={handleSendMessage}
@@ -187,14 +209,15 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
         </div>
       </div>
 
-      {/* Mobile Layout */}
+      {/* Mobile Layout: Toggable view */}
       <div className="md:hidden flex flex-col h-full">
-        <MobileTabs showPDF={showPDF} setShowPDF={setShowPDF} />
+        <ChatInterfaceMobileTabs showPDF={showPDF} setShowPDF={setShowPDF} />
 
         {showPDF ? (
+          // View 1: Document Viewer
           <div className="flex-1 overflow-hidden">
             {file && (
-              <DocumentViewer 
+              <ChatInterfaceDocumentViewer 
                 file={file} 
                 isLoading={isFileLoading} 
                 isError={isFileError} 
@@ -203,14 +226,14 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
             )}
           </div>
         ) : (
+          // View 2: Chat Thread
           <div className="flex flex-col h-[calc(100vh-8rem)]">
-            <ChatMessages 
+            <ChatInterfaceMessages 
               messages={localMessages}
               messagesLoading={messagesLoading}
               messagesEndRef={messagesEndRef}
             />
-
-            <ChatInput 
+            <ChatInterfaceInput 
               inputValue={inputValue}
               setInputValue={setInputValue}
               onSendMessage={handleSendMessage}

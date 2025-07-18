@@ -1,15 +1,36 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
-import { ChatMessagesProps } from '@/types/chat';
+import { TypeChatInterfaceMessagesProps } from '@/types/chat';
 
-export const ChatMessages: React.FC<ChatMessagesProps> = ({ 
-  messages, 
-  messagesLoading, 
-  messagesEndRef 
+/**
+ * Renders the main message display area for the chat interface.
+ * This component manages the display of chat messages, handling initial loading states,
+ * empty message states, and rendering a list of messages from both the user and the assistant.
+ * It also facilitates auto-scrolling to the latest message.
+ *
+ * @component
+ * @param {object} props - The properties for the component.
+ * @param {Message[]} props.messages - The array of message objects to be displayed.
+ * @param {boolean} props.messagesLoading - A flag indicating if the initial messages are being loaded.
+ * @param {React.RefObject<HTMLDivElement>} props.messagesEndRef - A ref attached to a div at the end of the message list to enable auto-scrolling.
+ * @returns {JSX.Element} The rendered chat message container.
+ */
+export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = ({
+  messages,
+  messagesLoading,
+  messagesEndRef
 }) => {
-  const renderMessageContent = (content: string) => {
-    // Check if the content is an error message about YouTube transcripts
-    if (content.startsWith("I couldn't process this YouTube video:") || 
+  /**
+   * Parses and renders the string content of a single message.
+   * This function provides rich formatting for special cases, such as displaying
+   * detailed error messages for document or YouTube processing failures.
+   *
+   * @param {string} content - The raw string content of the message.
+   * @returns {React.ReactNode} JSX for special error messages or the original string.
+   */
+  const renderMessageContent = (content: string): React.ReactNode => {
+    // Check for specific, known error messages to provide better user feedback.
+    if (content.startsWith("I couldn't process this YouTube video:") ||
         content.startsWith("ERROR: No transcript available for this YouTube video")) {
       return (
         <div className="text-red-400">
@@ -21,8 +42,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         </div>
       );
     }
-    
-    // Check if the content is an error message about document processing
+
     if (content.startsWith("I couldn't process this document:")) {
       return (
         <div className="text-red-400">
@@ -31,61 +51,27 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         </div>
       );
     }
-    
-    // Check if the content contains a YouTube video ID pattern
-    const youtubeRegex = /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})|youtu\.be\/([a-zA-Z0-9_-]{11})/g;
-    let match;
-    let lastIndex = 0;
-    const parts = [];
-    
-    while ((match = youtubeRegex.exec(content)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(content.substring(lastIndex, match.index));
-      }
-      
-      const videoId = match[1] || match[2];
-      
-      parts.push(
-        <div key={`youtube-${match.index}`} className="my-2 w-full">
-          <iframe 
-            src={`https://www.youtube.com/embed/${videoId}`}
-            width="100%"
-            height="315"
-            frameBorder="0"
-            allowFullScreen
-            title={`YouTube Video ${videoId}`}
-            className="rounded-lg"
-          />
-        </div>
-      );
-      
-      lastIndex = match.index + match[0].length;
-    }
-    
-    if (lastIndex < content.length) {
-      parts.push(content.substring(lastIndex));
-    }
-    
-    if (parts.length === 0) {
-      return content;
-    }
-    
-    return <>{parts}</>;
+
+    // Return the original content if no special error case is matched.
+    return content;
   };
 
   return (
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Initial loading state */}
       {messagesLoading && messages.length === 0 ? (
         <div className="flex items-center justify-center h-full">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
           <span className="ml-2 text-gray-400">Loading messages...</span>
         </div>
+        /* Empty chat state */
       ) : messages.length === 0 ? (
         <div className="flex items-center justify-center h-full">
           <p className="text-gray-400 text-sm text-center">
             No messages yet. Start chatting with the document!
           </p>
         </div>
+        /* Render messages */
       ) : (
         messages.map((message) => (
           <div
@@ -94,26 +80,22 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
               message.role === "user" ? "justify-end" : "justify-start"
             }`}
           >
+            {/* Assistant avatar */}
             {message.role === 'assistant' && (
-              <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0">
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-5 h-5 text-white"
-                  fill="currentColor"
-                >
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
-                </svg>
+              <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0 text-white">
+                🤖
               </div>
             )}
             <div
-              className={`max-w-[80%] rounded-lg p-3 ${
+              className={`max-w-[80%] rounded-lg p-3 text-sm ${
                 message.role === "user"
                   ? "bg-purple-600 text-white"
-                  : message.isError 
-                    ? "bg-red-900/20 text-red-400" 
+                  : message.isError
+                    ? "bg-red-900/20 text-red-400"
                     : "bg-[#1E1E1E] text-white"
               }`}
             >
+              {/* "Thinking" indicator */}
               {message.content === '...' ? (
                 <div className="flex items-center">
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -128,6 +110,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
           </div>
         ))
       )}
+      {/* Invisible div to target for auto-scrolling */}
       <div ref={messagesEndRef} />
     </div>
   );

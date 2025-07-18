@@ -6,13 +6,13 @@ export interface TypeChatInterfaceProps {
   source?: string;
 }
 
-export interface ChatMessagesProps {
+export interface TypeChatInterfaceMessagesProps {
   messages: TypeMessage[];
   messagesLoading: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
 }
 
-export interface ChatInputProps {
+export interface TypeChatInputProps {
   inputValue: string;
   setInputValue: (value: string) => void;
   onSendMessage: () => void;
@@ -20,14 +20,24 @@ export interface ChatInputProps {
   className?: string;
 }
 
-export interface DocumentViewerProps {
+export interface TypeChatInterfaceDocumentViewerProps {
   file: TypeFile;
   isLoading: boolean;
   isError: boolean;
   title: string;
 }
 
-export interface MobileTabsProps {
+export interface TypeChatInterfaceMobileTabsProps {
   showPDF: boolean;
   setShowPDF: (show: boolean) => void;
 } 
+
+export interface TypeControlsProps {
+  zoomLevel: number;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onDownload: () => void;
+  onOpenInNewTab: () => void;
+  showControls: boolean;
+  file?: TypeFile;
+}
