@@ -39,24 +39,11 @@ export function useUser() {
         .single();
 
       if (error) {
-        // If no user record exists yet, create one with default values
+        // If no user record exists, return null instead of creating one
+        // User creation should happen in the signup flow via useAuth hook
         if (error.code === 'PGRST116') {
-          const defaultUser = {
-            id: sessionQuery.data.user.id,
-            email: sessionQuery.data.user.email || '',
-            name: sessionQuery.data.user.user_metadata?.full_name || '',
-            created_at: new Date().toISOString(),
-          };
-
-          // Insert the default user
-          const { data: newUser, error: insertError } = await supabase
-            .from("users")
-            .insert(defaultUser)
-            .select()
-            .single();
-
-          if (insertError) throw insertError;
-          return newUser as TypeUser;
+          console.warn("User profile not found in database. This might indicate an incomplete signup process.");
+          return null;
         }
         throw error;
       }
@@ -109,7 +96,7 @@ export function useUser() {
     },
   });
 
-  // Default user data if not loaded yet
+  // Default user data if not loaded yet (fallback from auth session)
   const defaultUser: TypeUser | null = sessionQuery.data?.user ? {
     id: sessionQuery.data.user.id,
     email: sessionQuery.data.user.email || '',
@@ -139,4 +126,4 @@ export function useUser() {
     signOutAsync: signOutMutation.mutateAsync,
     isSigningOut: signOutMutation.isPending,
   };
-} 
+}

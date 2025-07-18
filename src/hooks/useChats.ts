@@ -71,10 +71,50 @@ export const useChats = (chatId?: string) => {
   const startChatWithFileMutation = useMutation({
     mutationFn: async (fileId: string) => {
       try {
-        const chat = await createChatWithGemini(fileId);
+        if (!userId) {
+          throw new Error("No authenticated user");
+        }
+        
+        if (!fileId) {
+          throw new Error("No file ID provided");
+        }
+        
+        console.log("Starting chat with file:", fileId);
+        
+        // Verify the file exists without checking user_id
+        const { data: fileCheck, error: fileCheckError } = await supabase
+          .from("files")
+          .select("id")
+          .eq("id", fileId)
+          .maybeSingle();
+          
+        if (fileCheckError) {
+          console.error("Error checking file:", fileCheckError);
+        }
+        
+        if (!fileCheck) {
+          console.error("File not found:", { fileId });
+          throw new Error("File not found");
+        }
+        
+        console.log("File exists, creating chat");
+        
+        // Pass the userId to the createChat function
+        const chat = await createChatWithGemini(fileId, userId);
+        console.log("Chat created successfully:", chat);
         return chat;
       } catch (error) {
         console.error("Error creating chat with Gemini:", error);
+        
+        // Check if this is an authentication error
+        if (error instanceof Error && 
+            (error.message.includes("Authentication required") || 
+             error.message.includes("No authenticated user"))) {
+          // Handle authentication errors by navigating to login
+          router.push('/login');
+          throw new Error("Authentication required. Redirecting to login...");
+        }
+        
         throw error;
       }
     },
@@ -84,8 +124,9 @@ export const useChats = (chatId?: string) => {
         return oldData ? [newChat, ...oldData] : [newChat];
       });
       
-      // Navigate to the new chat
-      router.push(`/chat/${newChat.id}`);
+      // Don't navigate here as the component that called this will handle navigation
+      // This prevents double navigation attempts and potential loops
+      // router.push(`/chat/${newChat.id}`);
     },
   });
 

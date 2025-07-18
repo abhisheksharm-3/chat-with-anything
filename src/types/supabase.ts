@@ -28,9 +28,6 @@ export interface Database {
           size: number | null;
           url: string | null;
           uploaded_at: string;
-          context: Json | null;
-          full_text: string | null;
-          is_text_extracted: boolean;
         };
         Insert: {
           id?: string;
@@ -40,9 +37,6 @@ export interface Database {
           size?: number | null;
           url?: string | null;
           uploaded_at?: string;
-          context?: Json | null;
-          full_text?: string | null;
-          is_text_extracted?: boolean;
         };
         Update: Partial<Database['public']['Tables']['files']['Insert']>;
       };

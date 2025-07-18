@@ -15,7 +15,7 @@ export const MESSAGES_QUERY_KEY = ["messages"];
 export function useMessages(chatId: string) {
   const queryClient = useQueryClient();
   const supabase = supabaseBrowserClient();
-  const { isAuthenticated } = useUser();
+  const { isAuthenticated, userId } = useUser();
 
   // Ensure chatId is valid
   const isValidChatId = !!chatId && typeof chatId === 'string' && chatId.trim() !== '';
@@ -54,9 +54,14 @@ export function useMessages(chatId: string) {
         throw new Error("No chat ID provided");
       }
 
+      if (!userId) {
+        throw new Error("No authenticated user");
+      }
+
       try {
+        console.log("Sending message with userId:", userId);
         // Use the server action to send message to Gemini
-        const result = await sendMessageToGemini(chatId, content);
+        const result = await sendMessageToGemini(chatId, content, userId);
         return result;
       } catch (error) {
         console.error("Error sending message to Gemini:", error);
@@ -76,9 +81,11 @@ export function useMessages(chatId: string) {
         throw new Error("No chat ID provided");
       }
 
+      // Ensure we're only including fields that exist in the schema
       const newMessage = {
-        ...messageData,
         chat_id: chatId,
+        role: messageData.role,
+        content: messageData.content,
       };
 
       const { data, error } = await supabase
@@ -105,9 +112,12 @@ export function useMessages(chatId: string) {
         throw new Error("No chat ID provided");
       }
 
+      // Filter out any fields that don't exist in the schema
+      const { id, chat_id, user_id, ...validFields } = messageData;
+      
       const { data, error } = await supabase
         .from("messages")
-        .update(messageData)
+        .update(validFields)
         .eq("id", messageId)
         .eq("chat_id", chatId)
         .select()

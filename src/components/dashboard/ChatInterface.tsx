@@ -9,20 +9,40 @@ import { useMessages, useChats, useFileById } from '@/hooks';
 interface ChatInterfaceProps {
   title: string;
   chatId: string;
+  source?: string; // Optional, used for document type
 }
 
 const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) => {
-  const { messages: chatMessages, isLoading: messagesLoading, sendMessage, isSending, subscribeToMessages } = useMessages(chatId);
-  const { getChatById } = useChats();
+  const { messages: chatMessages, isLoading: messagesLoading, sendMessage, isSending, subscribeToMessages, createMessage } = useMessages(chatId);
+  const { getChatById, isChatLoading } = useChats();
   const [inputValue, setInputValue] = useState('');
   const [showPDF, setShowPDF] = useState(false); // For mobile view: false = show chat, true = show document
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [localMessages, setLocalMessages] = useState<any[]>([]);
   
   // Get chat data - getChatById returns the chat object directly, not wrapped in { data }
   const chat = getChatById(chatId);
   
   // Get file data if chat has a file_id - using the new hook structure
   const { data: file, isLoading: isFileLoading, isError: isFileError } = useFileById(chat?.file_id || '');
+
+  // Combine server messages with local messages
+  useEffect(() => {
+    if (chatMessages) {
+      setLocalMessages(chatMessages);
+    }
+  }, [chatMessages]);
+
+  // Log for debugging
+  useEffect(() => {
+    console.log('ChatInterface rendered with:', { 
+      chatId, 
+      chat: !!chat, 
+      fileId: chat?.file_id,
+      file: !!file,
+      messagesCount: chatMessages?.length 
+    });
+  }, [chatId, chat, file, chatMessages]);
 
   // Get source icon based on file type
   const getSourceIcon = () => {
@@ -59,17 +79,63 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
+  }, [localMessages]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
     
     try {
+      // Add message to local state immediately
+      const tempUserMessage = {
+        id: `temp-${Date.now()}`,
+        chat_id: chatId,
+        role: 'user',
+        content: inputValue,
+        created_at: new Date().toISOString(),
+      };
+      
+      setLocalMessages(prev => [...prev, tempUserMessage]);
+      
+      // Add AI thinking message
+      const tempAiMessage = {
+        id: `temp-ai-${Date.now()}`,
+        chat_id: chatId,
+        role: 'assistant',
+        content: '...',
+        created_at: new Date().toISOString(),
+        isLoading: true,
+      };
+      
+      setLocalMessages(prev => [...prev, tempAiMessage]);
+      
+      // Clear input immediately
+      setInputValue('');
+      
+      // Scroll to bottom
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+      
       // Use the Gemini-integrated sendMessage function
       await sendMessage(inputValue);
-      setInputValue('');
+      
+      // The real messages will be updated via the subscription
+      // Remove the temporary AI message after the real one arrives
+      setLocalMessages(prev => prev.filter(msg => msg.id !== tempAiMessage.id));
     } catch (error) {
       console.error('Failed to send message:', error);
+      // Remove the temporary AI message on error
+      setLocalMessages(prev => prev.filter(msg => !msg.id.startsWith('temp-ai-')));
+      
+      // Add error message
+      setLocalMessages(prev => [...prev, {
+        id: `error-${Date.now()}`,
+        chat_id: chatId,
+        role: 'assistant',
+        content: 'Sorry, there was an error processing your request.',
+        created_at: new Date().toISOString(),
+        isError: true,
+      }]);
     }
   };
 
@@ -120,20 +186,6 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
       const url = file.url || '';
       return (
         <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-            <div className="flex items-center">
-              <Globe className="text-purple-500 mr-2" size={18} />
-              <span className="text-sm font-medium truncate max-w-[200px]">{file.name}</span>
-            </div>
-            <a 
-              href={url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-xs text-primary hover:underline"
-            >
-              Open in new tab
-            </a>
-          </div>
           <div className="flex-1 p-4 overflow-auto">
             <iframe 
               src={url}
@@ -151,12 +203,6 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
     if (file.type === 'pdf') {
       return (
         <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-            <div className="flex items-center">
-              <FileText className="text-red-500 mr-2" size={18} />
-              <span className="text-sm font-medium truncate max-w-[200px]">{file.name}</span>
-            </div>
-          </div>
           <div className="flex-1 overflow-auto">
             {file.url && (
               <iframe
@@ -174,12 +220,6 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
     if (file.type === 'image') {
       return (
         <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-            <div className="flex items-center">
-              <ImageIcon className="text-green-500 mr-2" size={18} />
-              <span className="text-sm font-medium truncate max-w-[200px]">{file.name}</span>
-            </div>
-          </div>
           <div className="flex-1 flex items-center justify-center p-4">
             {file.url ? (
               <div className="relative w-full h-full">
@@ -204,24 +244,6 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
     // Default document view
     return (
       <div className="flex flex-col h-full">
-        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-          <div className="flex items-center">
-            {getSourceIcon()}
-            <span className="text-sm font-medium ml-2 truncate max-w-[200px]">{file.name}</span>
-          </div>
-        </div>
-        <div className="flex-1 p-4 overflow-auto">
-          {file.full_text ? (
-            <div className="whitespace-pre-wrap text-sm text-gray-300">
-              {file.full_text}
-            </div>
-          ) : (
-            <div className="text-center">
-              <FileText size={48} className="text-gray-500 mx-auto mb-2" />
-              <p className="text-sm text-gray-400">No text content available</p>
-            </div>
-          )}
-        </div>
       </div>
     );
   };
@@ -236,7 +258,7 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
         </div>
 
         {/* Right Panel - Chat Interface */}
-        <div className="bg-[#181818] flex flex-col border rounded-xl px-4 py-2">
+        <div className="bg-[#181818] flex flex-col border rounded-xl px-4 py-2 max-h-[calc(100vh-5rem)]">
           <div className="p-3 border border-[#333] rounded-xl">
             <h2 className="text-sm text-center text-gray-400">
               {file ? `// Chat with ${file.name} //` : '// Chat with the document //'}
@@ -245,19 +267,19 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
 
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messagesLoading ? (
+            {messagesLoading && localMessages.length === 0 ? (
               <div className="flex items-center justify-center h-full">
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 <span className="ml-2 text-gray-400">Loading messages...</span>
               </div>
-            ) : chatMessages.length === 0 ? (
+            ) : localMessages.length === 0 ? (
               <div className="flex items-center justify-center h-full">
                 <p className="text-gray-400 text-sm text-center">
                   No messages yet. Start chatting with the document!
                 </p>
               </div>
             ) : (
-              chatMessages.map((message) => (
+              localMessages.map((message) => (
                 <div
                   key={message.id}
                   className={`flex ${
@@ -268,10 +290,19 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
                     className={`max-w-[80%] rounded-lg p-3 ${
                       message.role === "user"
                         ? "bg-primary text-primary-foreground"
-                        : "bg-[#2a2a2a] text-foreground"
+                        : message.isError 
+                          ? "bg-red-900/20 text-red-400" 
+                          : "bg-[#2a2a2a] text-foreground"
                     }`}
                   >
-                    {message.content}
+                    {message.isLoading ? (
+                      <div className="flex items-center">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <span>AI is thinking...</span>
+                      </div>
+                    ) : (
+                      message.content
+                    )}
                   </div>
                 </div>
               ))
@@ -280,7 +311,7 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
           </div>
 
           {/* Chat Input */}
-          <div className="p-4 border-t border-[#333]">
+          <div className="p-4 border-t border-[#333] bg-[#181818]">
             <div className="relative">
               <textarea
                 value={inputValue}
@@ -292,14 +323,10 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
               />
               <Button
                 onClick={handleSendMessage}
-                disabled={isSending || !inputValue.trim()}
+                disabled={!inputValue.trim()}
                 className="absolute right-2 bottom-2 p-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md"
               >
-                {isSending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send size={16} />
-                )}
+                <Send size={16} />
               </Button>
             </div>
           </div>
@@ -309,7 +336,7 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
       {/* Mobile Layout */}
       <div className="md:hidden flex flex-col h-full">
         {/* Mobile Tabs */}
-        <div className="flex border-b border-[#333]">
+        <div className="flex border-b border-[#333] sticky top-0 bg-[#121212] z-10">
           <button
             className={`flex-1 py-2 text-center text-sm border-b-2 ${
               !showPDF
@@ -338,22 +365,22 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
             {renderDocumentContent()}
           </div>
         ) : (
-          <div className="flex-1 flex flex-col">
+          <div className="flex flex-col h-[calc(100vh-8rem)]">
             {/* Chat Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messagesLoading ? (
+              {messagesLoading && localMessages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                   <span className="ml-2 text-gray-400">Loading messages...</span>
                 </div>
-              ) : chatMessages.length === 0 ? (
+              ) : localMessages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <p className="text-gray-400 text-sm text-center">
                     No messages yet. Start chatting with the document!
                   </p>
                 </div>
               ) : (
-                chatMessages.map((message) => (
+                localMessages.map((message) => (
                   <div
                     key={message.id}
                     className={`flex ${
@@ -364,10 +391,19 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
                       className={`max-w-[80%] rounded-lg p-3 ${
                         message.role === "user"
                           ? "bg-primary text-primary-foreground"
-                          : "bg-[#2a2a2a] text-foreground"
+                          : message.isError 
+                            ? "bg-red-900/20 text-red-400" 
+                            : "bg-[#2a2a2a] text-foreground"
                       }`}
                     >
-                      {message.content}
+                      {message.isLoading ? (
+                        <div className="flex items-center">
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          <span>AI is thinking...</span>
+                        </div>
+                      ) : (
+                        message.content
+                      )}
                     </div>
                   </div>
                 ))
@@ -376,7 +412,7 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
             </div>
 
             {/* Chat Input */}
-            <div className="p-4 border-t border-[#333]">
+            <div className="p-4 border-t border-[#333] bg-[#121212] sticky bottom-0">
               <div className="relative">
                 <textarea
                   value={inputValue}
@@ -388,14 +424,10 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
                 />
                 <Button
                   onClick={handleSendMessage}
-                  disabled={isSending || !inputValue.trim()}
+                  disabled={!inputValue.trim()}
                   className="absolute right-2 bottom-2 p-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md"
                 >
-                  {isSending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send size={16} />
-                  )}
+                  <Send size={16} />
                 </Button>
               </div>
             </div>

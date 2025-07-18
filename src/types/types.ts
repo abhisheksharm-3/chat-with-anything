@@ -1,5 +1,6 @@
 import { buttonVariants } from "@/components/ui/button"
 import { VariantProps } from "class-variance-authority"
+import { StaticImageData } from "next/image"
 
 export interface TypeButtonCta extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   label?: string
@@ -41,4 +42,14 @@ export interface TypePricingData {
     personal: TypePricingTier;
     pro: TypePricingTier;
   };
+}
+
+export interface TypeFileTypeConfig {
+  type: string;
+  name: string;
+  image: StaticImageData;
+  accept: string;
+  maxSize: number;
+  comingSoon?: boolean;
+  urlOnly?: boolean;
 }

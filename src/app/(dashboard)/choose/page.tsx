@@ -15,7 +15,7 @@ const ChoosePage = () => {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-2xl">
         {fileTypes.map((fileType) => (
-          <div key={fileType.id} className="group">
+          <div key={fileType.type} className="group">
             {fileType.comingSoon ? (
               <Card className="h-32 w-full hover:bg-muted/50 transition-colors">
                 <CardContent className='flex flex-col items-center justify-center gap-3 h-full relative'>
@@ -38,7 +38,7 @@ const ChoosePage = () => {
               </Card>
             ) : (
               <UploadModal 
-                fileType={fileType.id}
+                fileType={fileType.type}
                 trigger={
                   <Card className="h-32 w-full hover:bg-muted/50 transition-colors cursor-pointer">
                     <CardContent className='flex flex-col items-center justify-center gap-3 h-full relative'>

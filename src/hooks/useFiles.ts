@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
 import { TypeFile } from "@/types/supabase";
 import { useUser } from "./useUser";
+import { processPdfDocument } from "@/utils/document-processor";
 
 // Define query keys as constants
 export const FILES_QUERY_KEY = ["files"];
@@ -51,9 +52,12 @@ export function useFiles() {
         // For URL-type uploads, we don't need to upload an actual file
         let fileUrl = null;
         
-        if (fileData.type !== 'url') {
+        if (fileData.type !== 'url' && fileData.type !== 'web' && fileData.type !== 'youtube') {
           // 1. Upload the file to storage only if it's not a URL
           const filePath = `${userId}/${Date.now()}_${file.name}`;
+          
+          console.log("Uploading file to storage path:", filePath);
+          
           const { error: uploadError } = await supabase.storage
             .from("file-storage")
             .upload(filePath, file, {
@@ -68,6 +72,8 @@ export function useFiles() {
           // 2. Get the public URL
           const { data: urlData } = supabase.storage.from("file-storage").getPublicUrl(filePath);
           fileUrl = urlData.publicUrl;
+          
+          console.log("File uploaded successfully, URL:", fileUrl);
         }
 
         // 3. Create a record in the files table
@@ -89,6 +95,7 @@ export function useFiles() {
         }
 
         // Then insert the record with the user_id
+        console.log("Creating file record with data:", newFileData);
         const { data, error } = await supabase
           .from("files")
           .insert({
@@ -101,6 +108,48 @@ export function useFiles() {
         if (error) {
           console.error("Database insert error:", error);
           throw new Error(`Database record creation failed: ${error.message}`);
+        }
+        
+        console.log("File record created successfully:", data);
+        
+        // 4. Process PDF with Pinecone if it's a PDF
+        if ((fileData.type === 'pdf' || file.type === 'application/pdf') && data.id) {
+          try {
+            console.log("Starting PDF processing with Pinecone...");
+            
+            // Show that we're processing the PDF
+            await supabase
+              .from("files")
+              .update({ processing_status: 'processing' })
+              .eq("id", data.id);
+              
+            // Process the PDF and index it with Pinecone
+            const result = await processPdfDocument(file, data.id);
+            console.log("PDF indexed successfully with Pinecone:", result);
+            
+            // Update the processing status
+            await supabase
+              .from("files")
+              .update({ 
+                processing_status: 'completed',
+                indexed_chunks: result.numDocs
+              })
+              .eq("id", data.id);
+              
+          } catch (indexError) {
+            console.error("Error indexing PDF with Pinecone:", indexError);
+            
+            // Update the processing status to failed
+            await supabase
+              .from("files")
+              .update({ 
+                processing_status: 'failed',
+                processing_error: String(indexError)
+              })
+              .eq("id", data.id);
+              
+            // Continue even if indexing fails - the file is still uploaded
+          }
         }
         
         return data as TypeFile;
@@ -250,10 +299,9 @@ export function useFileById(fileId: string) {
         .eq("user_id", userId)
         .single();
 
-      if (error) return null; // Return null instead of throwing to handle missing files gracefully
+      if (error) throw error;
       return data as TypeFile;
     },
     enabled: isAuthenticated && !!userId && isValidFileId,
-    staleTime: 30000, // Consider data fresh for 30 seconds
   });
 }
