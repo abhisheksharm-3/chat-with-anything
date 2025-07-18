@@ -1,361 +1,26 @@
 "use client";
+
 import React, { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname, useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import {
-  File,
-  Settings,
-  LogOut,
-  Plus,
-  ChevronsRight,
-  ChevronsLeft,
-  Loader2,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import SettingsDialog from "@/components/dashboard/SettingsDialog";
-import PricingDialog from "@/components/dashboard/PricingDialog";
-import LogoutDialog from "@/components/dashboard/LogoutDialog";
+import { usePathname, useParams } from "next/navigation";
 import { useUser, useChats, useFileById } from "@/hooks";
-import { MOBILE_NAV_ITEMS, NAVIGATION_ITEMS } from "@/constants/NavItems";
 import { TypeChat, TypeUser } from "@/types/supabase";
 import { TypeFileType } from "@/types/types";
-import { getFileTypeIcon, getUserInitials } from "@/utils/dashboard-utils";
+import { DesktopSidebar } from "@/components/dashboard/DesktopSidebar";
+import { MobileSidebar } from "@/components/dashboard/MobileSidebar";
+import { DesktopHeader, MobileHeader } from "@/components/dashboard/Headers";
 
-// Sub-components
-const Logo = () => (
-  <Link href="/choose">
-    <Image
-      src="/logo.png"
-      alt="Logo"
-      className="object-contain"
-      width={32}
-      height={32}
-      priority
-    />
-  </Link>
-);
-
-const MobileLogo = () => (
-  <div className="w-8 h-8 flex items-center justify-center">
-    <Image
-      src="/logo.png"
-      alt="Logo"
-      className="object-contain"
-      width={44}
-      height={40}
-      priority
-    />
-  </div>
-);
-
-const DesktopNavigation = ({ pathname }: { pathname: string }) => (
-  <nav className="flex flex-col space-y-2">
-    {NAVIGATION_ITEMS.map(({ href, icon: IconComponent }) => {
-      const LucideIconComponent = IconComponent as LucideIcon;
-      return (
-        <Link
-          key={href}
-          href={href}
-          className={`p-2 rounded-md transition-colors ${
-            pathname === href
-              ? "text-white"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <LucideIconComponent size={20} />
-        </Link>
-      );
-    })}
-    <SettingsDialog
-      trigger={
-        <button className="p-2 rounded-md text-muted-foreground hover:text-foreground cursor-pointer">
-          <Settings size={20} />
-        </button>
-      }
-    />
-  </nav>
-);
-
-const MobileNavigation = ({
-  pathname,
-  onItemClick,
-}: {
-  pathname: string;
-  onItemClick: () => void;
-}) => (
-  <nav className="flex-1 p-4">
-    <div className="space-y-2">
-      {MOBILE_NAV_ITEMS.map(({ href, icon: IconComponent, title, description }) => {
-        const Icon = IconComponent as LucideIcon;
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-              pathname === href
-                ? "bg-[#2a2a2a] text-white"
-                : "text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
-            }`}
-            onClick={onItemClick}
-          >
-            <Icon size={20} />
-            <div>
-              <div className="text-sm font-medium">{title}</div>
-              <div className="text-xs text-gray-500">{description}</div>
-            </div>
-          </Link>
-        );
-      })}
-    </div>
-  </nav>
-);
-
-const UserProfile = ({
-  user,
-  isLoading,
-}: {
-  user: TypeUser | null | undefined;
-  isLoading: boolean;
-}) => {
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2">
-        <Loader2 className="h-5 w-5 animate-spin text-primary" />
-        <span className="text-gray-400 text-sm">Loading...</span>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
-        <span className="text-white text-sm">{getUserInitials(user)}</span>
-      </div>
-      <div>
-        <div className="text-white text-sm font-medium">
-          {user?.name || "User"}
-        </div>
-        <div className="text-gray-400 text-xs">{user?.email || "No email"}</div>
-      </div>
-      <div className="ml-auto">
-        <span className="bg-primary text-xs px-2 py-1 rounded">FREE</span>
-      </div>
-    </>
-  );
-};
-
-const ActiveTab = ({
-  isChatPage,
-  chat,
-  file,
-}: {
-  isChatPage: boolean;
-  chat: TypeChat | null;
-  file: TypeFileType | null;
-}) => (
-  <div className="flex items-center gap-2 bg-[#2a2a2a] px-4 py-2 rounded-l-md border-l-4 border-l-purple-500">
-    {isChatPage && chat ? (
-      <>
-        <span className="text-white">
-          {getFileTypeIcon(file?.data?.type || chat.type)}
-        </span>
-        <span className="text-sm text-white truncate max-w-[200px]">
-          {file?.data?.name || chat.title || "Untitled Chat"}
-        </span>
-      </>
-    ) : (
-      <>
-        <span className="text-white">
-          <File size={16} />
-        </span>
-        <span className="text-sm text-white">New Note</span>
-      </>
-    )}
-  </div>
-);
-
-const FileTypeTab = ({
-  chat,
-  file,
-}: {
-  chat: TypeChat | null;
-  file: TypeFileType | null;
-}) => (
-  <div className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a]">
-    <span className="text-sm text-gray-400 uppercase">
-      {file?.data?.type || chat?.type || "Document"}
-    </span>
-  </div>
-);
-
-const AddTabButton = () => (
-  <Link
-    href="/choose"
-    className="flex items-center justify-center px-3 py-2 rounded-r-md bg-[#1a1a1a] hover:bg-[#2a2a2a] transition-colors"
-  >
-    <Plus size={16} className="text-gray-400 hover:text-white" />
-  </Link>
-);
-
-const MobileHeader = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
-  const pathname = usePathname();
-  const isSettingsPage = pathname === '/settings';
-  const router = useRouter();
-
-  return (
-    <header className="md:hidden h-16 flex items-center justify-between px-4">
-      <div className="flex items-center gap-3 bg-[#181818] rounded-lg border">
-        {isSettingsPage ? (
-          <button
-            onClick={() => router.back()}
-            className="p-1 text-gray-400 hover:text-white"
-          >
-            <ChevronsLeft />
-          </button>
-        ) : (
-          <button
-            onClick={onMenuToggle}
-            className="p-1 text-gray-400 hover:text-white"
-          >
-            <ChevronsRight />
-          </button>
-        )}
-      </div>
-      <MobileLogo />
-      <div className="flex items-center gap-2">
-        <PricingDialog
-          trigger={
-            <Button
-              size="sm"
-              className="bg-primary hover:bg-primary/90 text-white rounded-lg px-3 py-1"
-            >
-              Upgrade
-            </Button>
-          }
-        />
-      </div>
-    </header>
-  );
-};
-
-const DesktopHeader = ({
-  isHistoryPage,
-  isChatPage,
-  chat,
-  file,
-}: {
-  isHistoryPage: boolean;
-  isChatPage: boolean;
-  chat: TypeChat | null;
-  file: TypeFileType | null;
-}) => (
-  <header className="hidden md:flex h-16 items-center justify-between px-6">
-    {!isHistoryPage && (
-      <div className="flex items-center">
-        <ActiveTab isChatPage={isChatPage} chat={chat} file={file} />
-        {isChatPage && chat && <FileTypeTab chat={chat} file={file} />}
-        <AddTabButton />
-      </div>
-    )}
-    {isHistoryPage && <div></div>}
-    <PricingDialog
-      trigger={
-        <Button
-          size="sm"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-5 cursor-pointer"
-        >
-          Upgrade plan
-          <span className="ml-2 text-xs bg-primary-foreground/20 text-primary-foreground font-semibold px-1.5 py-0.5 rounded">
-            PRO
-          </span>
-        </Button>
-      }
-    />
-  </header>
-);
-
-const DesktopSidebar = ({ pathname }: { pathname: string }) => (
-  <aside className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 w-12 bg-[#181818] rounded-xl flex-col items-center justify-between py-2 px-2 h-[calc(100vh-1rem)]">
-    <Logo />
-    <DesktopNavigation pathname={pathname} />
-    <LogoutDialog
-      trigger={
-        <button className="p-2 rounded-md text-muted-foreground hover:text-destructive cursor-pointer">
-          <LogOut size={20} />
-        </button>
-      }
-    />
-  </aside>
-);
-
-const MobileSidebar = ({
-  isOpen,
-  onClose,
-  pathname,
-  user,
-  isLoading,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  pathname: string;
-  user: TypeUser | null | undefined;
-  isLoading: boolean;
-}) => (
-  <>
-    {isOpen && (
-      <div
-        className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
-        onClick={onClose}
-      />
-    )}
-    <aside
-      className={`md:hidden fixed left-0 top-0 h-full w-full bg-[#181818] z-50 transform transition-transform duration-300 ${
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      }`}
-    >
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-[#121212]">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-              <Image
-                src="/logo.png"
-                alt="Logo"
-                className="object-contain"
-                width={44}
-                height={40}
-                priority
-              />
-            </div>
-            <span className="text-white font-medium">chatwithanything</span>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white border rounded-lg"
-          >
-            <ChevronsLeft size={20} />
-          </button>
-        </div>
-        <MobileNavigation pathname={pathname} onItemClick={onClose} />
-        <div className="p-4 border-t border-gray-700">
-          <div className="flex items-center gap-3 mb-4">
-            <UserProfile user={user} isLoading={isLoading} />
-          </div>
-          <PricingDialog
-            trigger={
-              <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg py-3">
-                Upgrade to pro
-              </Button>
-            }
-          />
-        </div>
-      </div>
-    </aside>
-  </>
-);
-
-// Main component
+/**
+ * Provides the main layout structure for the authenticated dashboard area.
+ *
+ * This component wraps all dashboard pages, rendering the appropriate sidebars
+ * and headers for both mobile and desktop views. It determines the current
+ * page context (e.g., history page, specific chat page) based on the URL
+ * and fetches necessary data to pass down to its children, such as the header.
+ *
+ * @param {object} props - The component props.
+ * @param {React.ReactNode} props.children - The specific page content to render within the layout.
+ * @returns {React.ReactElement} The complete dashboard layout.
+ */
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const params = useParams();
@@ -363,22 +28,28 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { getChatById } = useChats();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Derived values
+  // --- Derived Values ---
+  // Determine the current page context based on the URL.
   const isHistoryPage = pathname === "/history";
   const isChatPage = pathname?.startsWith("/chat/");
   const chatId = isChatPage && params?.id ? params.id.toString() : null;
   const chat = chatId ? getChatById(chatId) : null;
 
-  // Use the separate hook for file fetching
+  // Fetch file details associated with the current chat, if any.
   const fileQuery = useFileById(chat?.file_id || "");
   const file = fileQuery.data;
 
+  // --- Handlers ---
+  /** Toggles the visibility of the mobile sidebar. */
   const handleMobileMenuToggle = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+  /** Closes the mobile sidebar. */
   const handleMobileMenuClose = () => setIsMobileMenuOpen(false);
 
   return (
     <div className="relative flex h-screen bg-[#121212] text-foreground">
+      {/* Sidebar for desktop view, always visible. */}
       <DesktopSidebar pathname={pathname} />
+      {/* Sidebar for mobile view, visibility is controlled by state. */}
       <MobileSidebar
         isOpen={isMobileMenuOpen}
         onClose={handleMobileMenuClose}
@@ -388,7 +59,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       />
 
       <div className="flex-1 flex flex-col md:pl-14">
+        {/* Header for mobile view, includes menu toggle button. */}
         <MobileHeader onMenuToggle={handleMobileMenuToggle} />
+        {/* Header for desktop view, displays contextual information. */}
         <DesktopHeader
           isHistoryPage={isHistoryPage}
           isChatPage={isChatPage}

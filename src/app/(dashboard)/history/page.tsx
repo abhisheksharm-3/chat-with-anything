@@ -5,38 +5,18 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Search, Plus, Send, MoreVertical } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
-import { useChats } from '@/hooks';
-import { useFileById } from '@/hooks';
+import { useChats, useFileById } from '@/hooks';
 import { TypeChat } from '@/types/supabase';
+import { formatFileSize, formatTimeAgo } from '@/utils/history-page-utils';
+import { Input } from '@/components/ui/input';
 
-// Helper function to format file size
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-};
-
-// Helper function to format time ago
-const formatTimeAgo = (dateString: string): string => {
-  const now = new Date();
-  const date = new Date(dateString);
-  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-  
-  if (diffInMinutes < 1) return 'Just now';
-  if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
-  
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-  
-  const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-  
-  return date.toLocaleDateString();
-};
-
-// Individual chat item component
+/**
+ * Renders a single item in the chat history list.
+ * It displays chat metadata and links to the specific chat page.
+ * @param {{ chat: TypeChat }} props - The component props.
+ * @param {TypeChat} props.chat - The chat object containing its details.
+ * @returns {React.ReactElement} A linkable list item for a single chat.
+ */
 const ChatItem = ({ chat }: { chat: TypeChat }) => {
   const { data: file } = useFileById(chat.file_id || '');
 
@@ -74,6 +54,7 @@ const ChatItem = ({ chat }: { chat: TypeChat }) => {
             variant="ghost"
             size="sm"
             onClick={(e) => {
+              // Prevent link navigation to allow for future actions like a dropdown menu.
               e.preventDefault();
               e.stopPropagation();
             }}
@@ -87,15 +68,21 @@ const ChatItem = ({ chat }: { chat: TypeChat }) => {
   );
 };
 
+/**
+ * Displays the user's complete chat history with search and filtering capabilities.
+ * It handles loading, empty, and data-filled states.
+ * @returns {React.ReactElement} The chat history page.
+ */
 const HistoryPage = () => {
   const { chats, isLoading } = useChats();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Filter chats based on search query
+  // Filters chats client-side based on the search query matching the chat title.
   const filteredChats = chats.filter(chat => 
     chat.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  /** Renders a loading skeleton UI while chat data is being fetched. */
   const renderLoadingSkeleton = () => (
     <div className="w-full space-y-1">
       {[1, 2, 3].map((item) => (
@@ -114,6 +101,7 @@ const HistoryPage = () => {
     </div>
   );
 
+  /** Renders an empty state message when no chats are available or found. */
   const renderEmptyState = () => (
     <div className="flex flex-col items-center justify-center text-center px-4 py-8 sm:py-12">
       <h3 className="text-sm sm:text-base font-medium mb-2">No chat yet</h3>
@@ -132,6 +120,7 @@ const HistoryPage = () => {
     </div>
   );
 
+  /** Renders the list of filtered chat items. */
   const renderChatList = () => (
     <div className="w-full space-y-2 sm:space-y-3">
       {filteredChats.map((chat) => (
@@ -153,23 +142,23 @@ const HistoryPage = () => {
           </div>
           
           {/* Search Bar */}
-          <div className="relative w-full max-w-sm sm:max-w-lg mx-auto mb-4 sm:mb-6">
+            <div className="relative w-full max-w-sm sm:max-w-lg mx-auto mb-4 sm:mb-6">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
-            <input
+            <Input
               type="text"
               placeholder="Search chat"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-[#333] py-2.5 sm:py-3 pl-10 pr-10 text-sm text-gray-300 focus:outline-none focus:border-[#555] rounded-xl transition-colors"
+              className="pl-10 pr-10 text-sm text-gray-300 bg-[#1a1a1a] border-[#333] focus:border-[#555] rounded-xl"
             />
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
               <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded">
-                <Send size={14} className='sm:w-4 sm:h-4 text-gray-500 cursor-pointer hover:text-gray-400 transition-colors' />
+              <Send size={14} className='sm:w-4 sm:h-4 text-gray-500 cursor-pointer hover:text-gray-400 transition-colors' />
               </div>
             </div>
-          </div>
+            </div>
           
-          {/* Content */}
+          {/* Content area that conditionally renders based on state */}
           <div className="w-full">
             {isLoading ? renderLoadingSkeleton() : 
              filteredChats.length === 0 ? renderEmptyState() : 

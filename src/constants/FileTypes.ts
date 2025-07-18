@@ -8,7 +8,7 @@ import githubIcon from '@/assets/images/logos/github.png';
 import notionIcon from '@/assets/images/logos/notion.png'
 import { TypeFileTypeConfig } from '@/types/types';
 
-export const fileTypes: TypeFileTypeConfig[] = [
+export const FileTypes: TypeFileTypeConfig[] = [
   {
     type: 'pdf',
     name: 'PDF',
@@ -74,5 +74,5 @@ export const fileTypes: TypeFileTypeConfig[] = [
 
 // Helper function to get file type config
 export const getFileTypeConfig = (fileType: string): TypeFileTypeConfig => {
-  return fileTypes.find(ft => ft.type === fileType) || fileTypes[0];
+  return FileTypes.find(ft => ft.type === fileType) || FileTypes[0];
 };

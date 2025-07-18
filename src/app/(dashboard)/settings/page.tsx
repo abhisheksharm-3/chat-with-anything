@@ -7,47 +7,71 @@ import PricingDialog from '@/components/dashboard/PricingDialog';
 import LogoutDialog from '@/components/dashboard/LogoutDialog';
 import { useUser, useIsMobile } from '@/hooks';
 import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/input';
 
+/**
+ * Renders the user account settings page, designed specifically for mobile devices.
+ *
+ * This component allows users to view their account details, edit their display name,
+ * upgrade their plan, and log out. It includes logic to redirect desktop users
+ * to the main dashboard to ensure a mobile-optimized experience.
+ *
+ * @returns {React.ReactElement | null} The rendered settings page or null if on a desktop device.
+ */
 const SettingsPage = () => {
   const { user, isLoading, updateUser, isUpdating } = useUser();
   const [isEditing, setIsEditing] = React.useState(false);
   const [name, setName] = React.useState("");
   const isMobile = useIsMobile();
   const router = useRouter();
+  // State to track if the component has mounted on the client, preventing hydration errors.
   const [isMounted, setIsMounted] = useState(false);
 
-  // Set mounted state after hydration
+  /**
+   * Effect to confirm that the component has mounted on the client side.
+   * This is crucial for running client-only logic like device detection.
+   */
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Redirect to dashboard if on desktop, but only after client-side hydration
+  /**
+   * Effect to handle redirection for non-mobile users.
+   * If the component is mounted and the device is not mobile, it redirects
+   * to the '/choose' page, making this view mobile-only.
+   */
   useEffect(() => {
     if (isMounted && !isMobile) {
       router.push('/choose');
     }
   }, [isMobile, router, isMounted]);
 
-  // Set name when user data is loaded
+  /**
+   * Effect to synchronize the local 'name' state with the user data once it loads.
+   */
   React.useEffect(() => {
     if (user?.name) {
       setName(user.name);
     }
   }, [user?.name]);
 
+  /**
+   * Handles the form submission to update the user's display name.
+   * @param {React.FormEvent} e - The form event.
+   */
   const handleUpdateName = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       await updateUser({ name });
-      setIsEditing(false);
+      setIsEditing(false); // Exit editing mode on success
     } catch (error) {
       console.error("Failed to update name:", error);
     }
   };
 
-  // If on desktop, don't render the page content (but only after hydration)
-  if (isMounted && !isMobile) {
+  // Avoid rendering the page on the server or on desktop to prevent a UI flash before redirect.
+  if (!isMounted || (isMounted && !isMobile)) {
     return null;
   }
 
@@ -71,6 +95,7 @@ const SettingsPage = () => {
             </div>
           ) : (
             <>
+              {/* Display Name Section */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <p className="text-[#A9A9A9] text-sm">Display name</p>
@@ -88,12 +113,13 @@ const SettingsPage = () => {
                 
                 {isEditing ? (
                   <form onSubmit={handleUpdateName} className="flex gap-2 items-center">
-                    <input
+                    <Input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="bg-[#1a1a1a] border border-gray-700 rounded px-2 py-1 text-sm w-full"
                       placeholder="Your name"
+                      className="text-sm w-full"
+                      disabled={isUpdating}
                     />
                     <Button
                       type="submit"
@@ -102,12 +128,12 @@ const SettingsPage = () => {
                       className="text-xs"
                     >
                       {isUpdating ? (
-                        <>
-                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                          Saving...
-                        </>
+                      <>
+                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        Saving...
+                      </>
                       ) : (
-                        "Save"
+                      "Save"
                       )}
                     </Button>
                     <Button
@@ -116,7 +142,7 @@ const SettingsPage = () => {
                       size="sm"
                       onClick={() => {
                         setIsEditing(false);
-                        setName(user?.name || "");
+                        setName(user?.name || ""); // Reset to original name
                       }}
                       className="text-xs"
                       disabled={isUpdating}
@@ -129,16 +155,17 @@ const SettingsPage = () => {
                 )}
               </div>
               
+              {/* Email and Plan Sections */}
               <div className="space-y-1">
                 <p className="text-[#A9A9A9] text-sm">Email Address</p>
                 <p>{user?.email || "Not available"}</p>
               </div>
-              
               <div className="space-y-1">
                 <p className="text-[#A9A9A9] text-sm">Current Plan</p>
                 <p>Free</p>
               </div>
               
+              {/* Upgrade Plan Button */}
               <div className="mt-4">
                 <PricingDialog
                   trigger={
@@ -171,4 +198,4 @@ const SettingsPage = () => {
   );
 };
 
-export default SettingsPage; 
+export default SettingsPage;
