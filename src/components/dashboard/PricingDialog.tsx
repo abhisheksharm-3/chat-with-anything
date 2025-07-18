@@ -10,22 +10,38 @@ import {
 import { Button } from '@/components/ui/button';
 import { X, Check } from 'lucide-react';
 import { PricingData } from '@/constants/PricingData';
-import { TypePricingTier } from '@/types/types';
+import { TypeDialogProps, TypePricingTier } from '@/types/types';
 
-interface PricingDialogProps {
-  trigger?: React.ReactNode;
-  defaultOpen?: boolean;
-}
-
-const PricingDialog = ({ trigger, defaultOpen = false }: PricingDialogProps) => {
+/**
+ * A client-side modal dialog for displaying and selecting from various pricing plans.
+ * It allows users to toggle between 'annual' and 'lifetime' billing cycles and
+ * select a specific pricing tier (e.g., Free, Personal, Pro).
+ *
+ * @component
+ * @param {TypeDialogProps} props - The properties for the component.
+ * @param {React.ReactNode} props.trigger - The clickable element that opens the dialog.
+ * @param {boolean} [props.defaultOpen=false] - If true, the dialog will be open on initial render.
+ * @returns {JSX.Element} The rendered pricing dialog component.
+ */
+const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   const [open, setOpen] = useState(defaultOpen);
   const [selectedPlan, setSelectedPlan] = useState<'annual' | 'lifetime'>('annual');
   const [selectedPricing, setSelectedPricing] = useState<'free' | 'personal' | 'pro'>('personal');
 
   const handleClose = () => setOpen(false);
 
+  // Get the pricing data based on the selected billing cycle (annual/lifetime)
   const currentPricing = PricingData[selectedPlan];
 
+  /**
+   * A helper function to render a single pricing tier card.
+   * It handles the display of features, price, and applies conditional styling
+   * based on whether it is the currently selected plan.
+   *
+   * @param {'free' | 'personal' | 'pro'} tier - The identifier for the pricing tier.
+   * @param {TypePricingTier} tierData - The data object containing details for the tier.
+   * @returns {JSX.Element} A rendered pricing card.
+   */
   const renderPricingCard = (tier: 'free' | 'personal' | 'pro', tierData: TypePricingTier) => {
     const isSelected = selectedPricing === tier;
     
@@ -85,6 +101,7 @@ const PricingDialog = ({ trigger, defaultOpen = false }: PricingDialogProps) => 
           <button 
             onClick={handleClose}
             className="text-muted-foreground hover:text-foreground"
+            aria-label="Close dialog"
           >
             <X size={20} />
           </button>

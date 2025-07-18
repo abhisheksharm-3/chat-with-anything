@@ -1,4 +1,3 @@
-import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronsLeft, Loader2 } from "lucide-react";
@@ -9,6 +8,13 @@ import { MOBILE_NAV_ITEMS } from "@/constants/NavItems";
 import { TypeUser } from "@/types/supabase";
 import { getUserInitials } from "@/utils/dashboard-utils";
 
+/**
+ * Renders the list of navigation links for the mobile sidebar.
+ * @component
+ * @param {object} props - The component's properties.
+ * @param {string} props.pathname - The current URL path to highlight the active link.
+ * @param {() => void} props.onItemClick - Callback executed when a navigation item is clicked, used to close the sidebar.
+ */
 const MobileNavigation = ({
   pathname,
   onItemClick,
@@ -43,6 +49,14 @@ const MobileNavigation = ({
   </nav>
 );
 
+/**
+ * Displays the user's profile information, including an avatar with initials, name, and email.
+ * It also shows a loading state while user data is being fetched.
+ * @component
+ * @param {object} props - The component's properties.
+ * @param {TypeUser | null | undefined} props.user - The user object containing profile details.
+ * @param {boolean} props.isLoading - If true, a loading indicator is displayed instead of the profile info.
+ */
 const UserProfile = ({
   user,
   isLoading,
@@ -77,12 +91,23 @@ const UserProfile = ({
   );
 };
 
-export const MobileSidebar = ({
+/**
+ * The main sidebar component for mobile views, which slides in from the left.
+ * It contains the navigation, user profile, and other actions.
+ * @component
+ * @param {object} props - The component's properties.
+ * @param {boolean} props.isOpen - Controls the visibility of the sidebar.
+ * @param {() => void} props.onClose - Callback function to close the sidebar.
+ * @param {string} props.pathname - The current URL path, passed to the navigation component.
+ * @param {TypeUser | null | undefined} props.user - The user object, passed to the user profile component.
+ * @param {boolean} props.isLoading - The user loading state, passed to the user profile component.
+ */
+export const DashboardMobileSidebar = ({
   isOpen,
   onClose,
   pathname,
   user,
-  isLoading,
+isLoading,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -91,12 +116,14 @@ export const MobileSidebar = ({
   isLoading: boolean;
 }) => (
   <>
+    {/* Overlay */}
     {isOpen && (
       <div
         className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
         onClick={onClose}
       />
     )}
+    {/* Sidebar */}
     <aside
       className={`md:hidden fixed left-0 top-0 h-full w-full bg-[#181818] z-50 transform transition-transform duration-300 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
@@ -117,12 +144,14 @@ export const MobileSidebar = ({
             </div>
             <span className="text-white font-medium">chatwithanything</span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white border rounded-lg"
-          >
-            <ChevronsLeft size={20} />
-          </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="text-gray-400 hover:text-white border rounded-lg"
+            >
+              <ChevronsLeft size={20} />
+            </Button>
         </div>
         <MobileNavigation pathname={pathname} onItemClick={onClose} />
         <div className="p-4 border-t border-gray-700">

@@ -3,11 +3,10 @@
 import React, { useState } from "react";
 import { usePathname, useParams } from "next/navigation";
 import { useUser, useChats, useFileById } from "@/hooks";
-import { TypeChat, TypeUser } from "@/types/supabase";
-import { TypeFileType } from "@/types/types";
-import { DesktopSidebar } from "@/components/dashboard/DesktopSidebar";
-import { MobileSidebar } from "@/components/dashboard/MobileSidebar";
-import { DesktopHeader, MobileHeader } from "@/components/dashboard/Headers";
+import { TypeChat, TypeFile, TypeUser } from "@/types/supabase";
+import { DashboardDesktopSidebar } from "@/components/dashboard/DashboardDesktopSidebar";
+import { DashboardMobileSidebar } from "@/components/dashboard/DashboardMobileSidebar";
+import { DashboardDesktopHeader, DashboardMobileHeader } from "@/components/dashboard/DashboardHeaders";
 
 /**
  * Provides the main layout structure for the authenticated dashboard area.
@@ -48,9 +47,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="relative flex h-screen bg-[#121212] text-foreground">
       {/* Sidebar for desktop view, always visible. */}
-      <DesktopSidebar pathname={pathname} />
+      <DashboardDesktopSidebar pathname={pathname} />
       {/* Sidebar for mobile view, visibility is controlled by state. */}
-      <MobileSidebar
+      <DashboardMobileSidebar
         isOpen={isMobileMenuOpen}
         onClose={handleMobileMenuClose}
         pathname={pathname}
@@ -60,13 +59,13 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
       <div className="flex-1 flex flex-col md:pl-14">
         {/* Header for mobile view, includes menu toggle button. */}
-        <MobileHeader onMenuToggle={handleMobileMenuToggle} />
+        <DashboardMobileHeader onMenuToggle={handleMobileMenuToggle} />
         {/* Header for desktop view, displays contextual information. */}
-        <DesktopHeader
+        <DashboardDesktopHeader
           isHistoryPage={isHistoryPage}
           isChatPage={isChatPage}
           chat={chat as TypeChat | null}
-          file={file as TypeFileType | null}
+          file={file as TypeFile | null}
         />
         <main className="flex-1 overflow-auto p-2">{children}</main>
       </div>

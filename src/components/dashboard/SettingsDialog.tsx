@@ -1,10 +1,9 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogContent, 
-  DialogHeader, 
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
@@ -13,13 +12,24 @@ import { Loader2, X } from 'lucide-react';
 import PricingDialog from './PricingDialog';
 import { useUser, useIsMobile } from '@/hooks';
 import { useRouter } from 'next/navigation';
+import { TypeDialogProps } from '@/types/types';
+import { Input } from '../ui/input';
 
-interface SettingsDialogProps {
-  trigger?: React.ReactNode;
-  defaultOpen?: boolean;
-}
-
-const SettingsDialog = ({ trigger, defaultOpen = false }: SettingsDialogProps) => {
+/**
+ * A dialog for viewing and editing user account settings.
+ *
+ * This component exhibits responsive behavior:
+ * - On desktop, it opens as a modal dialog.
+ * - On mobile, clicking the trigger redirects the user to the dedicated '/settings' page
+ * instead of showing the dialog. This is handled by client-side logic after hydration.
+ *
+ * @component
+ * @param {TypeDialogProps} props - The properties for the component.
+ * @param {React.ReactNode} props.trigger - The clickable element that opens the dialog or initiates the redirect on mobile.
+ * @param {boolean} [props.defaultOpen=false] - If true, the dialog attempts to open on initial render (on desktop).
+ * @returns {JSX.Element | null} The rendered dialog component for desktop, or just the trigger for mobile.
+ */
+const SettingsDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   const [open, setOpen] = useState(defaultOpen);
   const { user, isLoading, updateUser, isUpdating } = useUser();
   const [isEditing, setIsEditing] = useState(false);
@@ -28,12 +38,18 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: SettingsDialogProps) =
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
-  // Set mounted state after hydration
+  /**
+   * Effect to safely update state only after the component has mounted on the client.
+   * This prevents hydration mismatches between server and client renders.
+   */
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // If on mobile, redirect to settings page, but only after client-side hydration
+  /**
+   * Effect to handle the mobile-specific behavior. If the dialog is triggered on a mobile
+   * device, it closes itself and redirects to the full-page settings route.
+   */
   useEffect(() => {
     if (isMounted && isMobile && open) {
       setOpen(false);
@@ -41,15 +57,25 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: SettingsDialogProps) =
     }
   }, [isMobile, open, router, isMounted]);
 
-  // Set name when user data is loaded
+  /**
+   * Effect to populate the local name state once the user data is loaded.
+   */
   useEffect(() => {
     if (user?.name) {
       setName(user.name);
     }
   }, [user?.name]);
 
+  /**
+   * Handles the form submission to update the user's display name.
+   * @param {React.FormEvent} e - The form event.
+   */
   const handleUpdateName = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (name.trim() === user?.name) {
+        setIsEditing(false);
+        return;
+    }
     
     try {
       await updateUser({ name });
@@ -59,7 +85,7 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: SettingsDialogProps) =
     }
   };
 
-  // If on mobile, don't render the dialog (but only after hydration)
+  // On mobile, render only the trigger. The redirection is handled by the useEffect hook.
   if (isMounted && isMobile) {
     return trigger ? <>{trigger}</> : null;
   }
@@ -74,12 +100,15 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: SettingsDialogProps) =
               <DialogTitle className="text-lg font-semibold mt-1">Account Settings</DialogTitle>
               <p className="text-[#A9A9A9] text-sm">Everything about your account at one place</p>
             </div>
-            <button 
+            <Button 
+              variant="ghost"
+              size="icon"
               onClick={() => setOpen(false)}
-              className="text-gray-400 hover:text-white mt-2 cursor-pointer"
+              className="text-gray-400 hover:text-white mt-2"
+              aria-label="Close settings dialog"
             >
               <X size={24} />
-            </button>
+            </Button>
           </div>
         </div>
         
@@ -91,6 +120,7 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: SettingsDialogProps) =
             </div>
           ) : (
             <>
+              {/* Display Name Section */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <p className="text-[#A9A9A9] text-sm">Display name</p>
@@ -108,52 +138,43 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: SettingsDialogProps) =
                 
                 {isEditing ? (
                   <form onSubmit={handleUpdateName} className="flex gap-2 items-center">
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="bg-[#1a1a1a] border border-gray-700 rounded px-2 py-1 text-sm w-full"
-                      placeholder="Your name"
-                    />
-                    <Button
-                      type="submit"
-                      size="sm"
-                      disabled={isUpdating}
-                      className="text-xs"
-                    >
-                      {isUpdating ? (
-                        <>
-                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        "Save"
-                      )}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setIsEditing(false);
-                        setName(user?.name || "");
-                      }}
-                      className="text-xs"
-                      disabled={isUpdating}
-                    >
-                      Cancel
-                    </Button>
+                  <Input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="bg-[#1a1a1a] border border-gray-700 rounded px-2 py-1 text-sm w-full"
+                    placeholder="Your name"
+                    disabled={isUpdating}
+                  />
+                  <Button type="submit" size="sm" disabled={isUpdating} className="text-xs">
+                    {isUpdating ? <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Saving...</> : "Save"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setName(user?.name || "");
+                    }}
+                    className="text-xs"
+                    disabled={isUpdating}
+                  >
+                    Cancel
+                  </Button>
                   </form>
                 ) : (
                   <p>{user?.name || "Not set"}</p>
                 )}
               </div>
               
+              {/* Email Address Section */}
               <div className="space-y-1">
                 <p className="text-[#A9A9A9] text-sm">Email Address</p>
                 <p>{user?.email || "Not available"}</p>
               </div>
               
+              {/* Current Plan Section */}
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <p className="text-[#A9A9A9] text-sm">Current Plan</p>
@@ -177,4 +198,4 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: SettingsDialogProps) =
   );
 };
 
-export default SettingsDialog; 
+export default SettingsDialog;

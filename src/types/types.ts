@@ -60,3 +60,8 @@ export interface TypeFileType {
     name?: string;
   } | null;
 }
+
+export interface TypeDialogProps {
+  trigger?: React.ReactNode;
+  defaultOpen?: boolean;
+}

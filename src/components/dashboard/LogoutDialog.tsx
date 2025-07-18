@@ -10,17 +10,27 @@ import { Button } from '@/components/ui/button';
 import { Loader2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks';
+import { TypeDialogProps } from '@/types/types';
 
-interface LogoutDialogProps {
-  trigger?: React.ReactNode;
-  defaultOpen?: boolean;
-}
-
-const LogoutDialog = ({ trigger, defaultOpen = false }: LogoutDialogProps) => {
+/**
+ * A modal dialog component that prompts the user for confirmation before signing out.
+ * This is a client component that utilizes hooks to handle state and the sign-out process.
+ *
+ * @component
+ * @param {TypeDialogProps} props - The properties for the component.
+ * @param {React.ReactNode} props.trigger - The clickable element that opens the dialog.
+ * @param {boolean} [props.defaultOpen=false] - If true, the dialog will be open on initial render.
+ * @returns {JSX.Element} The rendered dialog component.
+ */
+const LogoutDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   const [open, setOpen] = useState(defaultOpen);
   const router = useRouter();
   const { signOut, isSigningOut } = useUser();
 
+  /**
+   * Handles the user logout process, redirects to the login page on success,
+   * and logs any errors.
+   */
   const handleLogout = async () => {
     try {
       await signOut();
@@ -31,6 +41,9 @@ const LogoutDialog = ({ trigger, defaultOpen = false }: LogoutDialogProps) => {
     }
   };
 
+  /**
+   * Closes the dialog without logging out.
+   */
   const handleCancel = () => {
     setOpen(false);
   };
@@ -45,6 +58,7 @@ const LogoutDialog = ({ trigger, defaultOpen = false }: LogoutDialogProps) => {
             onClick={handleCancel}
             className="text-gray-400 hover:text-white cursor-pointer"
             disabled={isSigningOut}
+            aria-label="Close dialog"
           >
             <X size={24} />
           </button>
@@ -82,4 +96,4 @@ const LogoutDialog = ({ trigger, defaultOpen = false }: LogoutDialogProps) => {
   );
 };
 
-export default LogoutDialog; 
+export default LogoutDialog;
