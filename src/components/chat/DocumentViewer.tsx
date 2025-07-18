@@ -1,50 +1,189 @@
-import React from 'react';
-import { Loader2, FileText, Image as ImageIcon, Globe, FileSpreadsheet, Presentation } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Loader2, 
+  FileText, 
+  Image as ImageIcon, 
+  Globe, 
+  FileSpreadsheet, 
+  Presentation, 
+  ZoomIn, 
+  ZoomOut, 
+  MoreVertical, 
+  Download, 
+  ExternalLink
+} from 'lucide-react';
 import Image from 'next/image';
-import { TypeFile } from '@/types/supabase';
 
-interface DocumentViewerProps {
-  file: TypeFile;
-  isLoading: boolean;
-  isError: boolean;
-  title: string;
+interface FileType {
+  type?: string;
+  url?: string;
+  name: string;
+  processing_status?: 'processing' | 'failed' | 'completed';
+  processing_error?: string;
 }
 
-export const DocumentViewer: React.FC<DocumentViewerProps> = ({ 
-  file, 
-  isLoading, 
-  isError, 
-  title 
+export interface DocumentViewerProps {
+  file?: FileType;
+  isLoading?: boolean;
+  isError?: boolean;
+  title?: string;
+}
+
+interface ControlsProps {
+  zoomLevel: number;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onDownload: () => void;
+  onOpenInNewTab: () => void;
+  showControls: boolean;
+  file?: FileType;
+}
+
+const Controls: React.FC<ControlsProps> = ({
+  zoomLevel,
+  onZoomIn,
+  onZoomOut,
+  onDownload,
+  onOpenInNewTab,
+  showControls,
+  file
 }) => {
-  const getSourceIcon = () => {
-    if (!file) return <FileText size={24} className="text-gray-500" />;
-    
-    switch (file.type) {
-      case 'pdf':
-        return <FileText size={24} className="text-red-500" />;
-      case 'docs':
-      case 'doc':
-        return <FileText size={24} className="text-blue-500" />;
-      case 'image':
-        return <ImageIcon size={24} className="text-green-500" />;
-      case 'web':
-      case 'youtube':
-      case 'url':
-        return <Globe size={24} className="text-purple-500" />;
-      case 'sheets':
-      case 'sheet':
-        return <FileSpreadsheet size={24} className="text-green-500" />;
-      case 'slides':
-        return <Presentation size={24} className="text-orange-500" />;
-      default:
-        return <FileText size={24} className="text-gray-500" />;
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  if (!file || ['youtube', 'image'].includes(file.type || '')) return null;
+
+  return (
+    <div 
+      className={`absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 bg-gray-900/90 rounded-lg p-2 shadow-lg transition-opacity duration-300 z-50 ${
+        showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}
+    >
+      <button
+        onClick={onZoomOut}
+        className="p-1.5 hover:bg-gray-700 rounded transition-colors duration-200"
+        title="Zoom out"
+      >
+        <ZoomOut size={18} className="text-gray-300" />
+      </button>
+      <span className="text-sm text-gray-300 min-w-[48px] text-center bg-gray-800 rounded px-2 py-1">
+        {zoomLevel}%
+      </span>
+      <button
+        onClick={onZoomIn}
+        className="p-1.5 hover:bg-gray-700 rounded transition-colors duration-200"
+        title="Zoom in"
+      >
+        <ZoomIn size={18} className="text-gray-300" />
+      </button>
+      <div className="w-px h-6 bg-gray-700 mx-1" />
+      <div className="relative" ref={menuRef}>
+        <button
+          onClick={() => setShowMenu(!showMenu)}
+          className="p-1.5 hover:bg-gray-700 rounded transition-colors duration-200"
+          title="More options"
+        >
+          <MoreVertical size={18} className="text-gray-300" />
+        </button>
+        {showMenu && (
+          <div className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-md shadow-lg border border-gray-800">
+            <div className="py-1">
+              <button
+                onClick={() => {
+                  onDownload();
+                  setShowMenu(false);
+                }}
+                className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 w-full transition-colors duration-200"
+              >
+                <Download size={16} className="mr-2" />
+                Download
+              </button>
+              <button
+                onClick={() => {
+                  onOpenInNewTab();
+                  setShowMenu(false);
+                }}
+                className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 w-full transition-colors duration-200"
+              >
+                <ExternalLink size={16} className="mr-2" />
+                Open in new tab
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const DocumentViewer: React.FC<DocumentViewerProps> = ({
+  file,
+  isLoading,
+  isError,
+  title
+}) => {
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const [showControls, setShowControls] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const handleMouseMove = () => {
+      setShowControls(true);
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setShowControls(false);
+      }, 3000);
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('mousemove', handleMouseMove);
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('mousemove', handleMouseMove);
+      }
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 10, 200));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 10, 20));
+  };
+
+  const handleDownload = () => {
+    if (file?.url) {
+      const link = document.createElement('a');
+      link.href = file.url;
+      link.download = file.name;
+      link.target = '_blank';
+      link.click();
     }
   };
 
-  const getYouTubeVideoId = (url: string): string | null => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
+  const handleOpenInNewTab = () => {
+    if (file?.url) {
+      window.open(file.url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   if (isLoading) {
@@ -72,15 +211,14 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <div className="bg-gray-800 rounded-full p-4 mb-4">
-          {getSourceIcon()}
+          <FileText size={24} className="text-gray-500" />
         </div>
         <h3 className="text-lg font-medium mb-2">{title}</h3>
-        <p className="text-sm text-gray-400">No document attached to this chat</p>
+        <p className="text-sm text-gray-400">No document attached</p>
       </div>
     );
   }
 
-  // Show processing error
   if (file.processing_status === 'failed') {
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -95,7 +233,6 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
     );
   }
 
-  // Show processing status
   if (file.processing_status === 'processing') {
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -108,22 +245,21 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
     );
   }
 
-  // Handle YouTube or web URL type
+  // Document viewer implementations
   if (file.type === 'web' || file.type === 'youtube' || file.type === 'url') {
     const url = file.url || '';
     
     if (file.type === 'youtube' || url.includes('youtube.com') || url.includes('youtu.be')) {
-      const videoId = getYouTubeVideoId(url);
+      const videoId = url.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([^&?]+)/);
       
-      if (videoId) {
+      if (videoId?.[1]) {
         return (
           <div className="flex flex-col h-full">
             <div className="flex-1 p-4 overflow-auto">
               <iframe 
-                src={`https://www.youtube.com/embed/${videoId}`}
+                src={`https://www.youtube.com/embed/${videoId[1]}`}
                 className="w-full h-full border-0 rounded-lg"
                 title="YouTube video player"
-                frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
@@ -148,41 +284,48 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
     );
   }
 
-  // Handle PDF type
-  if (file.type === 'pdf') {
+  if (file.type === 'pdf' || ['doc', 'docs', 'sheet', 'sheets', 'slides'].includes(file.type || '')) {
     return (
-      <div className="flex flex-col h-full">
-        <div className="flex-1 overflow-auto">
-          {file.url && (
-            <iframe
-              src={`https://docs.google.com/viewer?url=${encodeURIComponent(file.url)}&embedded=true`}
-              className="w-full h-full border-0"
-              title={`PDF: ${file.name}`}
-            />
-          )}
+      <div className="flex flex-col h-full relative" ref={containerRef}>
+        <Controls
+          zoomLevel={zoomLevel}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onDownload={handleDownload}
+          onOpenInNewTab={handleOpenInNewTab}
+          showControls={showControls}
+          file={file}
+        />
+        <div 
+          className="flex-1 overflow-auto"
+          ref={contentRef}
+          style={{
+            height: '100%',
+            width: '100%',
+          }}
+        >
+          <div
+            style={{
+              transform: `scale(${zoomLevel / 100})`,
+              transformOrigin: '0 0',
+              width: `${(100 / zoomLevel) * 100}%`,
+              height: `${(100 / zoomLevel) * 100}%`,
+              minHeight: '100%',
+            }}
+          >
+            {file.url && (
+              <iframe
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(file.url)}&embedded=true`}
+                className="w-full h-full border-0"
+                title={`Document: ${file.name}`}
+              />
+            )}
+          </div>
         </div>
       </div>
     );
   }
 
-  // Handle Google Docs, Sheets, Slides
-  if (['doc', 'docs', 'sheet', 'sheets', 'slides'].includes(file.type || '')) {
-    return (
-      <div className="flex flex-col h-full">
-        <div className="flex-1 overflow-auto">
-          {file.url && (
-            <iframe
-              src={`https://docs.google.com/viewer?url=${encodeURIComponent(file.url)}&embedded=true`}
-              className="w-full h-full border-0"
-              title={`Document: ${file.name}`}
-            />
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Handle image type
   if (file.type === 'image') {
     return (
       <div className="flex flex-col h-full">
@@ -207,15 +350,17 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
     );
   }
 
-  // Default document view
+  // Default fallback view
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-center h-full">
         <div className="bg-gray-800 rounded-full p-4 mb-4">
-          {getSourceIcon()}
+          <FileText size={24} className="text-gray-500" />
         </div>
         <h3 className="text-lg font-medium ml-2">{file.name}</h3>
       </div>
     </div>
   );
 };
+
+export default DocumentViewer;

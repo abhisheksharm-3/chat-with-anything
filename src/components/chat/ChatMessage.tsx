@@ -1,12 +1,6 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
-import { TypeMessage } from '@/types/supabase';
-
-interface ChatMessagesProps {
-  messages: TypeMessage[];
-  messagesLoading: boolean;
-  messagesEndRef: React.RefObject<HTMLDivElement | null>;
-}
+import { ChatMessagesProps } from '@/types/chat';
 
 export const ChatMessages: React.FC<ChatMessagesProps> = ({ 
   messages, 
@@ -80,7 +74,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
       {messagesLoading && messages.length === 0 ? (
         <div className="flex items-center justify-center h-full">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -96,10 +90,41 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${
+            className={`flex items-start gap-3 ${
               message.role === "user" ? "justify-end" : "justify-start"
             }`}
           >
+            {message.role === 'assistant' && (
+              <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-5 h-5 text-white"
+                  fill="currentColor"
+                >
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+                </svg>
+              </div>
+            )}
+            <div
+              className={`max-w-[80%] rounded-lg p-3 ${
+                message.role === "user"
+                  ? "bg-purple-600 text-white"
+                  : message.isError 
+                    ? "bg-red-900/20 text-red-400" 
+                    : "bg-[#1E1E1E] text-white"
+              }`}
+            >
+              {message.content === '...' ? (
+                <div className="flex items-center">
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <span>AI is thinking...</span>
+                </div>
+              ) : (
+                <div className="whitespace-pre-wrap break-words">
+                  {renderMessageContent(message.content)}
+                </div>
+              )}
+            </div>
           </div>
         ))
       )}

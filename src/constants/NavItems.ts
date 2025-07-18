@@ -1,4 +1,4 @@
-import { Clock, FileText, Settings } from "lucide-react";
+import { Clock, File, Settings } from "lucide-react";
 
 export const NAVIGATION_ITEMS = [
   { href: "/choose", icon: File },
@@ -8,7 +8,7 @@ export const NAVIGATION_ITEMS = [
 export const MOBILE_NAV_ITEMS = [
   {
     href: "/choose",
-    icon: FileText,
+    icon: File,
     title: "New Note",
     description: "Record and create new note",
   },

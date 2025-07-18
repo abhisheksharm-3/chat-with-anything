@@ -98,4 +98,6 @@ export interface Database {
 export type TypeUser = Database['public']['Tables']['users']['Row'];
 export type TypeChat = Database['public']['Tables']['chats']['Row'];
 export type TypeFile = Database['public']['Tables']['files']['Row'];
-export type TypeMessage = Database['public']['Tables']['messages']['Row'];
+export type TypeMessage = Database['public']['Tables']['messages']['Row'] & {
+  isError?: boolean;
+};

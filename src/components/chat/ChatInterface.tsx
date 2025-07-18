@@ -3,18 +3,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMessages, useChats, useFileById } from '@/hooks';
 import { TypeMessage } from '@/types/supabase';
+import { TypeChatInterfaceProps } from '@/types/chat';
 import { ChatMessages } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { DocumentViewer } from './DocumentViewer';
 import { MobileTabs } from './MobileTabs';
 
-interface ChatInterfaceProps {
-  title: string;
-  chatId: string;
-  source?: string;
-}
-
-const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) => {
+const ChatInterface: React.FC<TypeChatInterfaceProps> = ({ 
+  title = "Untitled Chat", 
+  chatId 
+}) => {
   const { messages: chatMessages, isLoading: messagesLoading, sendMessage, subscribeToMessages } = useMessages(chatId);
   const { getChatById } = useChats();
   const [inputValue, setInputValue] = useState('');
@@ -29,23 +27,43 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
                                    file?.processing_status === 'failed' && 
                                    file?.processing_error;
 
-  // Combine server messages with local messages
+  // Combine server messages with local messages - fixed to prevent infinite loop
   useEffect(() => {
-    if (chatMessages) {
-      setLocalMessages(chatMessages);
+    // Only update if chatMessages is different from localMessages
+    // This prevents infinite loops when setting state in useEffect
+    if (chatMessages && JSON.stringify(chatMessages) !== JSON.stringify(localMessages)) {
+      // Filter out any temporary messages
+      const filteredMessages = localMessages.filter(msg => 
+        msg.id.startsWith('temp-') || msg.id.startsWith('error-')
+      );
+      
+      if (filteredMessages.length > 0) {
+        // If we have temporary messages, keep them and add the server messages
+        const serverMessageIds = chatMessages.map(msg => msg.id);
+        const uniqueTempMessages = filteredMessages.filter(
+          msg => !serverMessageIds.includes(msg.id)
+        );
+        
+        setLocalMessages([...chatMessages, ...uniqueTempMessages]);
+      } else {
+        // If no temporary messages, just use the server messages
+        setLocalMessages(chatMessages);
+      }
     }
   }, [chatMessages]);
 
   // Add error message for YouTube processing failures
   useEffect(() => {
     if (hasYouTubeProcessingError && localMessages.length === 0) {
-      setLocalMessages([{
+      const errorMessage = {
         id: `error-${Date.now()}`,
         chat_id: chatId,
-        role: 'assistant',
+        role: 'assistant' as const,
         content: `I couldn't process this YouTube video: ${file?.processing_error || 'No transcript available'}`,
         created_at: new Date().toISOString(),
-      }]);
+      };
+      
+      setLocalMessages([errorMessage]);
     }
   }, [hasYouTubeProcessingError, file?.processing_error, chatId, localMessages.length]);
 
@@ -57,7 +75,9 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [localMessages]);
 
   const handleSendMessage = async () => {
@@ -72,8 +92,6 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
         created_at: new Date().toISOString(),
       };
       
-      setLocalMessages(prev => [...prev, tempUserMessage]);
-      
       const tempAiMessage: TypeMessage = {
         id: `temp-ai-${Date.now()}`,
         chat_id: chatId,
@@ -82,27 +100,34 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
         created_at: new Date().toISOString(),
       };
       
-      setLocalMessages(prev => [...prev, tempAiMessage]);
+      // Update state once with both messages
+      setLocalMessages(prev => [...prev, tempUserMessage, tempAiMessage]);
+      
+      // Clear input immediately
       setInputValue('');
       
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-      
+      // Send the message
       await sendMessage(inputValue);
+      
+      // Remove the temporary AI message after the real one arrives
       setLocalMessages(prev => prev.filter(msg => msg.id !== tempAiMessage.id));
     } catch (error) {
       console.error('Failed to send message:', error);
-      setLocalMessages(prev => prev.filter(msg => !msg.id.startsWith('temp-ai-')));
       
-      setLocalMessages(prev => [...prev, {
-        id: `error-${Date.now()}`,
-        chat_id: chatId,
-        role: 'assistant',
-        content: 'Sorry, there was an error processing your request.',
-        created_at: new Date().toISOString(),
-        isError: true,
-      }]);
+      // Remove any temporary AI messages
+      setLocalMessages(prev => {
+        const filtered = prev.filter(msg => !msg.id.startsWith('temp-ai-'));
+        
+        // Add error message
+        return [...filtered, {
+          id: `error-${Date.now()}`,
+          chat_id: chatId,
+          role: 'assistant' as const,
+          content: 'Sorry, there was an error processing your request.',
+          created_at: new Date().toISOString(),
+          isError: true,
+        }];
+      });
     }
   };
 
@@ -112,6 +137,18 @@ const ChatInterface = ({ title = "Untitled Chat", chatId }: ChatInterfaceProps) 
       handleSendMessage();
     }
   };
+
+  // Show loading state if we're still loading messages
+  if (messagesLoading && !localMessages.length) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-64px)]">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-solid border-current border-r-transparent" />
+          <p className="mt-2">Loading chat...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

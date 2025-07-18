@@ -1,40 +1,32 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
-
-interface ChatInputProps {
-  inputValue: string;
-  setInputValue: (value: string) => void;
-  onSendMessage: () => void;
-  onKeyPress: (e: React.KeyboardEvent) => void;
-  className?: string;
-}
+import { ChatInputProps } from '@/types/chat';
 
 export const ChatInput: React.FC<ChatInputProps> = ({
   inputValue,
   setInputValue,
   onSendMessage,
   onKeyPress,
-  className = "p-4 border-t border-[#333] bg-[#181818]"
+  className = "py-2"
 }) => {
   return (
-    <div className={className}>
-      <div className="relative">
-        <textarea
+    <div className={`${className} sticky bottom-0 border-t`}>
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={onKeyPress}
-          placeholder="Type your message..."
-          className="w-full bg-[#2a2a2a] border border-[#333] rounded-lg py-3 pl-4 pr-12 text-sm text-foreground focus:outline-none focus:border-primary resize-none"
-          rows={2}
+          placeholder="Message"
+          className="flex-1 bg-[#1E1E1E] text-white rounded-lg px-4 py-3 text-sm outline-none border-1"
         />
-        <Button
+        <button
           onClick={onSendMessage}
           disabled={!inputValue.trim()}
-          className="absolute right-2 bottom-2 p-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md"
+          className="p-3 rounded-lg bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Send size={16} />
-        </Button>
+          <Send className="w-5 h-5 text-white" />
+        </button>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname, useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
-  FileText,
+  File,
   Settings,
   LogOut,
   Plus,
@@ -53,7 +53,7 @@ const MobileLogo = () => (
 const DesktopNavigation = ({ pathname }: { pathname: string }) => (
   <nav className="flex flex-col space-y-2">
     {NAVIGATION_ITEMS.map(({ href, icon: IconComponent }) => {
-      const Icon = IconComponent as LucideIcon;
+      const LucideIconComponent = IconComponent as LucideIcon;
       return (
         <Link
           key={href}
@@ -64,7 +64,7 @@ const DesktopNavigation = ({ pathname }: { pathname: string }) => (
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Icon size={20} />
+          <LucideIconComponent size={20} />
         </Link>
       );
     })}
@@ -168,7 +168,7 @@ const ActiveTab = ({
     ) : (
       <>
         <span className="text-white">
-          <FileText size={16} />
+          <File size={16} />
         </span>
         <span className="text-sm text-white">New Note</span>
       </>
