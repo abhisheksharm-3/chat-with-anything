@@ -2,7 +2,7 @@
 
 import { AuthContainer } from "@/components/auth/AuthContainer";
 import { AuthLink } from "@/components/auth/AuthLink";
-import { SignupForm } from "@/components/auth/SignupForm";
+import { AuthSignupForm } from "@/components/auth/AuthSignupForm";
 import { useAuth } from "@/hooks/useAuth";
 
 /**
@@ -33,7 +33,7 @@ const SignupPage = () => {
       errorMessage={errorMessage}
       successMessage={successMessage}
     >
-      <SignupForm onSubmit={handleSignup} isLoading={isLoading} />
+      <AuthSignupForm onSubmit={handleSignup} isLoading={isLoading} />
       <AuthLink
         text="Already have an account?"
         linkText="Sign in"

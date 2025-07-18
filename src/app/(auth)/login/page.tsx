@@ -1,6 +1,6 @@
 "use client";
 
-import { LoginForm } from "@/components/auth/LoginForm";
+import { AuthLoginForm } from "@/components/auth/AuthLoginForm";
 import { AuthLink } from "@/components/auth/AuthLink";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthContainer } from "@/components/auth/AuthContainer";
@@ -31,7 +31,7 @@ const LoginPage = () => {
       subtitle="Sign in to your account to continue"
       errorMessage={errorMessage}
     >
-      <LoginForm onSubmit={handleLogin} isLoading={isLoading} />
+      <AuthLoginForm onSubmit={handleLogin} isLoading={isLoading} />
       <AuthLink
         text="Don't have an account?"
         linkText="Sign up"

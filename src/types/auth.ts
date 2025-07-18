@@ -1,4 +1,4 @@
-import { LoginFormValues, SignupFormValues } from "@/schemas/auth";
+import { TypeLoginFormValues, TypeSignupFormValues } from "@/schemas/auth";
 
 export interface TypeLoginFormData {
   email: string;
@@ -22,12 +22,12 @@ export interface TypePasswordInputProps {
 }
 
 export interface TypeLoginFormProps {
-  onSubmit: (data: LoginFormValues) => void;
+  onSubmit: (data: TypeLoginFormValues) => void;
   isLoading: boolean;
 }
 
 export interface TypeSignupFormProps {
-  onSubmit: (data: SignupFormValues) => void;
+  onSubmit: (data: TypeSignupFormValues) => void;
   isLoading: boolean;
 }
 
@@ -43,4 +43,9 @@ export interface TypeAuthContainerProps {
   children: React.ReactNode;
   errorMessage?: string | null;
   successMessage?: string | null;
+}
+
+export interface TypeAuthHeaderProps {
+  title: string;
+  subtitle: string;
 }

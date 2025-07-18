@@ -11,14 +11,29 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { signupSchema, SignupFormValues } from "../../schemas/auth";
-import { PasswordInput } from "./PasswordInput";
+import { signupSchema, TypeSignupFormValues } from "../../schemas/auth";
+import { AuthPasswordInput } from "./AuthPasswordInput";
 import { TypeSignupFormProps } from "@/types/auth";
 
+/**
+ * Defines shared CSS classes for the form's input fields to ensure a consistent style.
+ */
 const inputClassName = "bg-[#1a1a1a] border-gray-700 text-white focus-visible:ring-primary";
 
-export const SignupForm: React.FC<TypeSignupFormProps> = ({ onSubmit, isLoading }) => {
-  const form = useForm<SignupFormValues>({
+/**
+ * Renders a user registration form with fields for full name, email, and password.
+ *
+ * This component leverages `react-hook-form` for form state management and `zod`
+ * for validation, including a check to ensure the password and confirm password fields match.
+ * It also handles the UI loading state during form submission.
+ *
+ * @param {TypeSignupFormProps} props - The component's properties.
+ * @param {(values: TypeSignupFormValues) => void} props.onSubmit - The callback function to execute upon successful form validation and submission.
+ * @param {boolean} props.isLoading - If true, the form is disabled and a loading indicator is shown on the submit button.
+ * @returns {React.ReactElement} The rendered signup form.
+ */
+export const AuthSignupForm: React.FC<TypeSignupFormProps> = ({ onSubmit, isLoading }) => {
+  const form = useForm<TypeSignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
       fullName: "",
@@ -74,7 +89,7 @@ export const SignupForm: React.FC<TypeSignupFormProps> = ({ onSubmit, isLoading 
             <FormItem>
               <FormLabel className="text-sm text-gray-300">Password</FormLabel>
               <FormControl>
-                <PasswordInput
+                <AuthPasswordInput
                   field={field}
                   className={inputClassName}
                 />
@@ -91,7 +106,7 @@ export const SignupForm: React.FC<TypeSignupFormProps> = ({ onSubmit, isLoading 
             <FormItem>
               <FormLabel className="text-sm text-gray-300">Confirm Password</FormLabel>
               <FormControl>
-                <PasswordInput
+                <AuthPasswordInput
                   field={field}
                   className={inputClassName}
                 />

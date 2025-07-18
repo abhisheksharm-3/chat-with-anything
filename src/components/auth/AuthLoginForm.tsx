@@ -11,14 +11,29 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { loginSchema, LoginFormValues } from "../../schemas/auth";
-import { PasswordInput } from "./PasswordInput";
+import { loginSchema, TypeLoginFormValues } from "../../schemas/auth";
+import { AuthPasswordInput } from "./AuthPasswordInput";
 import { TypeLoginFormProps } from "@/types/auth";
 
+/**
+ * Defines the shared CSS classes for the form's input fields for a consistent look.
+ */
 const inputClassName = "bg-[#1a1a1a] border-gray-700 text-white focus-visible:ring-primary";
 
-export const LoginForm: React.FC<TypeLoginFormProps> = ({ onSubmit, isLoading }) => {
-  const form = useForm<LoginFormValues>({
+/**
+ * Renders a user login form with email and password fields.
+ *
+ * This component uses `react-hook-form` for state management and `zod` for
+ * validation. It handles UI state for submission, such as displaying a loader
+ * and disabling the submit button.
+ *
+ * @param {TypeLoginFormProps} props - The component's properties.
+ * @param {(values: TypeLoginFormValues) => void} props.onSubmit - The callback executed upon successful form submission.
+ * @param {boolean} props.isLoading - When true, disables the form and shows a loading state.
+ * @returns {React.ReactElement} The rendered login form.
+ */
+export const AuthLoginForm: React.FC<TypeLoginFormProps> = ({ onSubmit, isLoading }) => {
+  const form = useForm<TypeLoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
@@ -54,7 +69,7 @@ export const LoginForm: React.FC<TypeLoginFormProps> = ({ onSubmit, isLoading })
             <FormItem>
               <FormLabel className="text-sm text-gray-300">Password</FormLabel>
               <FormControl>
-                <PasswordInput
+                <AuthPasswordInput
                   field={field}
                   className={inputClassName}
                 />
