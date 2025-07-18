@@ -12,6 +12,17 @@ import slidesImg from '@/assets/images/logos/slides.png';
 import { WordRotate } from '../magicui/word-rotate';
 import GlowBackground from '../shared/GlowBackground';
 
+/**
+ * The main hero section component for the application's landing page.
+ *
+ * It features a prominent headline with a dynamic word rotator to showcase
+ * the various types of content users can interact with. The section also includes
+ * a descriptive sub-headline, a primary call-to-action button, and a visually
+ * engaging background with a grid pattern, a glow effect, and decorative floating logos.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered hero section.
+ */
 const Hero = () => {
   return (
     <section className='relative mx-auto space-y-20 px-4 overflow-hidden min-h-[80vh] flex items-center border-b border-primary/10'>

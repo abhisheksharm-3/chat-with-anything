@@ -12,13 +12,28 @@ const NavbarRoutes = [
   { label: "Contact Us", url: "/#contact-us" },
 ];
 
-export default function Navbar() {
+/**
+ * The main responsive navigation bar for the application's landing page.
+ *
+ * This client component manages its own state to provide a standard horizontal
+ * layout on desktop screens and a full-screen overlay menu on mobile devices.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered navigation bar.
+ */
+const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
+  /**
+   * Toggles the visibility of the mobile menu.
+   */
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
+  /**
+   * Closes the mobile menu.
+   */
   const closeMenu = () => {
     setIsOpen(false);
   };
@@ -146,4 +161,6 @@ export default function Navbar() {
       )}
     </div>
   );
-}
+};
+
+export default Navbar;

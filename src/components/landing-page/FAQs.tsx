@@ -1,11 +1,21 @@
 "use client"
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Plus, Minus } from 'lucide-react';
 import SectionHeader from '../shared/SectionHeader';
 import { FaqData } from '@/constants/FaqData';
 import GlowBackground from '../shared/GlowBackground';
 
+/**
+ * A client-side component that displays a list of Frequently Asked Questions (FAQs)
+ * in an interactive accordion layout.
+ *
+ * It uses a controlled `Accordion` component from shadcn/ui, managing the currently
+ * open item with its own state. The FAQ content is mapped from a static array.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered FAQs section.
+ */
 const FAQs = () => {
   const [openAccordion, setOpenAccordion] = useState('');
 
