@@ -110,3 +110,8 @@ export type TypeFaqItem = {
   question: string;
   answer: string;
 };
+
+export interface TypeUseUploadLogicProps {
+  fileType: string;
+  onClose: () => void;
+}

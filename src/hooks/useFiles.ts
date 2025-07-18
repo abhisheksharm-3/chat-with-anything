@@ -6,36 +6,53 @@ import { TypeFile } from "@/types/supabase";
 import { useUser } from "./useUser";
 import { processPdfDocument, processGenericDocument } from "@/utils/processors";
 
-// Define query keys as constants
+/** The base query key for all file-related queries in React Query. */
 export const FILES_QUERY_KEY = ["files"];
 
 /**
- * Custom hook to fetch and manage user files
+ * A custom hook for fetching and managing all of a user's files.
+ * It handles fetching the list of files and provides mutations for uploading,
+ * updating, and deleting files, including handling Supabase storage and database records.
+ *
+ * @returns {object} An object containing the file list, loading/error states, and mutation functions.
+ * @property {TypeFile[]} files - The array of user files.
+ * @property {boolean} isLoading - True if the files are being fetched.
+ * @property {Error | null} error - The error object if fetching fails.
+ * @property {(params: {file: File, fileData: Omit<TypeFile, 'id'|'user_id'|'uploaded_at'|'url'>}) => void} uploadFile - Mutation fn to upload a new file.
+ * @property {(params: {file: File, fileData: Omit<TypeFile, 'id'|'user_id'|'uploaded_at'|'url'>}) => Promise<TypeFile>} uploadFileAsync - Async version of `uploadFile`.
+ * @property {boolean} isUploading - True if a file upload is in progress.
+ * @property {(params: {fileId: string, fileData: Partial<TypeFile>}) => void} updateFile - Mutation fn to update a file.
+ * @property {boolean} isUpdating - True if a file update is in progress.
+ * @property {(fileId: string) => void} deleteFile - Mutation fn to delete a file.
+ * @property {boolean} isDeleting - True if a file deletion is in progress.
  */
-export function useFiles() {
+export const useFiles = () => {
   const queryClient = useQueryClient();
   const supabase = supabaseBrowserClient();
   const { userId, isAuthenticated } = useUser();
 
-  // Fetch all user files
+  /** Query to fetch all files for the authenticated user. */
   const filesQuery = useQuery({
     queryKey: FILES_QUERY_KEY,
     queryFn: async () => {
       if (!userId) return [];
-
       const { data, error } = await supabase
         .from("files")
         .select("*")
         .eq("user_id", userId)
         .order("uploaded_at", { ascending: false });
-
       if (error) throw error;
       return data as TypeFile[];
     },
     enabled: isAuthenticated && !!userId,
   });
 
-  // Upload a new file
+  /**
+   * Mutation to handle the entire file upload process:
+   * 1. Uploads the file to Supabase Storage (if applicable).
+   * 2. Creates a corresponding record in the 'files' database table.
+   * 3. Kicks off background processing/indexing for certain document types.
+   */
   const uploadFileMutation = useMutation({
     mutationFn: async ({
       file,
@@ -44,36 +61,38 @@ export function useFiles() {
       file: File;
       fileData: Omit<TypeFile, "id" | "user_id" | "uploaded_at" | "url">;
     }) => {
-      if (!userId) {
-        throw new Error("No authenticated user");
-      }
+      if (!userId) throw new Error("No authenticated user");
 
       try {
-        // For URL-type uploads, we don't need to upload an actual file
         let fileUrl = null;
-        
-        if (fileData.type !== 'url' && fileData.type !== 'web' && fileData.type !== 'youtube') {
-          // 1. Upload the file to storage only if it's not a URL
+        if (fileData.type === "url") {
+          // If file is actually a URL object, ensure it has a 'url' property
+          if (
+            "url" in file &&
+            typeof (file as { url?: string }).url === "string"
+          ) {
+            fileUrl = (file as { url: string }).url;
+          }
+        }
+
+        if (
+          fileData.type !== "url" &&
+          fileData.type !== "web" &&
+          fileData.type !== "youtube"
+        ) {
+          // 1. Upload the file to storage
           const filePath = `${userId}/${Date.now()}_${file.name}`;
-          
-          console.log("Uploading file to storage path:", filePath);
-          
           const { error: uploadError } = await supabase.storage
             .from("file-storage")
-            .upload(filePath, file, {
-              cacheControl: "3600",
-            });
-
-          if (uploadError) {
-            console.error("Storage upload error:", uploadError);
+            .upload(filePath, file);
+          if (uploadError)
             throw new Error(`File upload failed: ${uploadError.message}`);
-          }
 
           // 2. Get the public URL
-          const { data: urlData } = supabase.storage.from("file-storage").getPublicUrl(filePath);
+          const { data: urlData } = supabase.storage
+            .from("file-storage")
+            .getPublicUrl(filePath);
           fileUrl = urlData.publicUrl;
-          
-          console.log("File uploaded successfully, URL:", fileUrl);
         }
 
         // 3. Create a record in the files table
@@ -83,142 +102,96 @@ export function useFiles() {
           url: fileUrl,
           uploaded_at: new Date().toISOString(),
         };
-
-        // Ensure user_id is explicitly set and matches the authenticated user
-        console.log("Inserting file with user_id:", userId);
-        
-        // First, check if the user is authenticated
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !session) {
-          throw new Error("Authentication required: No active session found");
-        }
-
-        // Then insert the record with the user_id
-        console.log("Creating file record with data:", newFileData);
         const { data, error } = await supabase
           .from("files")
-          .insert({
-            ...newFileData,
-            user_id: userId, // Explicitly set user_id to match RLS policy
-          })
+          .insert(newFileData)
           .select()
           .single();
-
-        if (error) {
-          console.error("Database insert error:", error);
+        if (error)
           throw new Error(`Database record creation failed: ${error.message}`);
-        }
-        
-        console.log("File record created successfully:", data);
-        
-        // 4. Process document files with Pinecone
+
+        // 4. Process document files for vector indexing (e.g., with Pinecone)
         if (data.id) {
-          // Process PDFs
-          if (fileData.type === 'pdf' || file.type === 'application/pdf') {
+          const processableDocTypes = [
+            "doc",
+            "docs",
+            "sheet",
+            "sheets",
+            "slides",
+          ];
+          if (fileData.type === "pdf" || file.type === "application/pdf") {
+            // Process PDFs
             try {
-              console.log("Starting PDF processing with Pinecone...");
-              
-              // Show that we're processing the PDF
               await supabase
                 .from("files")
-                .update({ processing_status: 'processing' })
+                .update({ processing_status: "processing" })
                 .eq("id", data.id);
-                
-              // Process the PDF and index it with Pinecone
               const result = await processPdfDocument(file, data.id);
-              console.log("PDF indexed successfully with Pinecone:", result);
-              
-              // Update the processing status
               await supabase
                 .from("files")
-                .update({ 
-                  processing_status: 'completed',
-                  indexed_chunks: result.numDocs
+                .update({
+                  processing_status: "completed",
+                  indexed_chunks: result.numDocs,
                 })
                 .eq("id", data.id);
-                
             } catch (indexError) {
-              console.error("Error indexing PDF with Pinecone:", indexError);
-              
-              // Update the processing status to failed
+              console.error("Error indexing PDF:", indexError);
               await supabase
                 .from("files")
-                .update({ 
-                  processing_status: 'failed',
-                  processing_error: String(indexError)
+                .update({
+                  processing_status: "failed",
+                  processing_error: String(indexError),
                 })
                 .eq("id", data.id);
-                
-              // Continue even if indexing fails - the file is still uploaded
             }
-          }
-          
-          // Process docs, sheets, and slides
-          if (fileData.type === 'doc' || fileData.type === 'docs' || 
-              fileData.type === 'sheet' || fileData.type === 'sheets' || 
-              fileData.type === 'slides') {
+          } else if (processableDocTypes.includes(fileData.type || "")) {
+            // Process other document types
             try {
-              console.log(`Starting ${fileData.type} processing with Pinecone...`);
-              
-              // Show that we're processing the document
               await supabase
                 .from("files")
-                .update({ processing_status: 'processing' })
+                .update({ processing_status: "processing" })
                 .eq("id", data.id);
-                
-              // Process the document and index it with Pinecone
-              const result = await processGenericDocument(file, data.id, fileData.type);
-              console.log(`${fileData.type} indexed successfully with Pinecone:`, result);
-              
-              // Update the processing status
+              const result = await processGenericDocument(
+                file,
+                data.id,
+                fileData.type!
+              );
               await supabase
                 .from("files")
-                .update({ 
-                  processing_status: 'completed',
-                  indexed_chunks: result.numDocs
+                .update({
+                  processing_status: "completed",
+                  indexed_chunks: result.numDocs,
                 })
                 .eq("id", data.id);
-                
             } catch (indexError) {
-              console.error(`Error indexing ${fileData.type} with Pinecone:`, indexError);
-              
-              // Update the processing status to failed
+              console.error(`Error indexing ${fileData.type}:`, indexError);
               await supabase
                 .from("files")
-                .update({ 
-                  processing_status: 'failed',
-                  processing_error: String(indexError)
+                .update({
+                  processing_status: "failed",
+                  processing_error: String(indexError),
                 })
                 .eq("id", data.id);
-                
-              // Continue even if indexing fails - the file is still uploaded
             }
           }
         }
-        
-        // 5. For YouTube URLs, trigger transcript processing
-        if ((fileData.type === 'youtube' || fileData.type === 'video') && 
-            data.id && data.url && 
-            (data.url.includes('youtube.com') || data.url.includes('youtu.be'))) {
+
+        // 5. For YouTube URLs, set status for later processing
+        if (
+          (fileData.type === "youtube" || fileData.type === "video") &&
+          data.id &&
+          data.url
+        ) {
           try {
-            console.log("Setting up YouTube processing for later...");
-            
-            // Set the processing status to idle - actual processing will happen in the chat creation
             await supabase
               .from("files")
-              .update({ 
-                processing_status: 'idle',
-                type: 'youtube' // Ensure type is set to youtube
-              })
+              .update({ processing_status: "idle", type: "youtube" })
               .eq("id", data.id);
-              
           } catch (youtubeError) {
             console.error("Error setting up YouTube processing:", youtubeError);
-            // Continue even if setup fails
           }
         }
-        
+
         return data as TypeFile;
       } catch (error) {
         console.error("Upload process failed:", error);
@@ -226,20 +199,25 @@ export function useFiles() {
       }
     },
     onSuccess: (newFile) => {
-      // Update the files list in the cache
-      queryClient.setQueryData(FILES_QUERY_KEY, (oldData: TypeFile[] | undefined) => {
-        return oldData ? [newFile, ...oldData] : [newFile];
-      });
+      // Optimistically update the files list in the cache
+      queryClient.setQueryData(
+        FILES_QUERY_KEY,
+        (oldData: TypeFile[] | undefined) =>
+          oldData ? [newFile, ...oldData] : [newFile]
+      );
     },
   });
 
-  // Update an existing file
+  /** Mutation to update an existing file's metadata. */
   const updateFileMutation = useMutation({
-    mutationFn: async ({ fileId, fileData }: { fileId: string; fileData: Partial<TypeFile> }) => {
-      if (!userId) {
-        throw new Error("No authenticated user");
-      }
-
+    mutationFn: async ({
+      fileId,
+      fileData,
+    }: {
+      fileId: string;
+      fileData: Partial<TypeFile>;
+    }) => {
+      if (!userId) throw new Error("No authenticated user");
       const { data, error } = await supabase
         .from("files")
         .update(fileData)
@@ -247,55 +225,50 @@ export function useFiles() {
         .eq("user_id", userId)
         .select()
         .single();
-
       if (error) throw error;
       return data as TypeFile;
     },
     onSuccess: (updatedFile) => {
-      // Update the specific file in the cache
-      queryClient.setQueryData([...FILES_QUERY_KEY, updatedFile.id], updatedFile);
-
-      // Update the file in the files list
-      queryClient.setQueryData(FILES_QUERY_KEY, (oldData: TypeFile[] | undefined) => {
-        if (!oldData) return [updatedFile];
-        return oldData.map((file) => (file.id === updatedFile.id ? updatedFile : file));
-      });
+      // Update both the specific file cache and the list cache
+      queryClient.setQueryData(
+        [...FILES_QUERY_KEY, updatedFile.id],
+        updatedFile
+      );
+      queryClient.setQueryData(
+        FILES_QUERY_KEY,
+        (oldData: TypeFile[] | undefined) =>
+          oldData?.map((file) =>
+            file.id === updatedFile.id ? updatedFile : file
+          ) || [updatedFile]
+      );
     },
   });
 
-  // Delete a file
+  /** Mutation to delete a file from both storage and the database. */
   const deleteFileMutation = useMutation({
     mutationFn: async (fileId: string) => {
-      if (!userId) {
-        throw new Error("No authenticated user");
-      }
+      if (!userId) throw new Error("No authenticated user");
 
-      // 1. Get the file to find its path
+      // 1. Get the file to find its storage path
       const { data: file, error: fetchError } = await supabase
         .from("files")
         .select("url")
         .eq("id", fileId)
         .eq("user_id", userId)
         .single();
-
       if (fetchError) throw fetchError;
 
-      // Extract the path from the URL
+      // 2. Delete from storage if it has a URL
       if (file.url) {
         const url = new URL(file.url);
         const pathMatch = url.pathname.match(/\/file-storage\/([^?]+)/);
         const filePath = pathMatch ? pathMatch[1] : null;
-
-        // 2. Delete from storage if we have a path
         if (filePath) {
           const { error: storageError } = await supabase.storage
             .from("file-storage")
             .remove([filePath]);
-
-          if (storageError) {
+          if (storageError)
             console.error("Storage deletion error:", storageError);
-            // Continue with database deletion even if storage deletion fails
-          }
         }
       }
 
@@ -305,19 +278,17 @@ export function useFiles() {
         .delete()
         .eq("id", fileId)
         .eq("user_id", userId);
-
       if (error) throw error;
       return fileId;
     },
     onSuccess: (fileId) => {
-      // Remove the file from the cache
+      // Remove the file from all relevant caches
       queryClient.removeQueries({ queryKey: [...FILES_QUERY_KEY, fileId] });
-
-      // Update the files list in the cache
-      queryClient.setQueryData(FILES_QUERY_KEY, (oldData: TypeFile[] | undefined) => {
-        if (!oldData) return [];
-        return oldData.filter((file) => file.id !== fileId);
-      });
+      queryClient.setQueryData(
+        FILES_QUERY_KEY,
+        (oldData: TypeFile[] | undefined) =>
+          oldData?.filter((file) => file.id !== fileId) || []
+      );
     },
   });
 
@@ -341,32 +312,37 @@ export function useFiles() {
     deleteFileAsync: deleteFileMutation.mutateAsync,
     isDeleting: deleteFileMutation.isPending,
   };
-}
+};
 
 /**
- * Custom hook to fetch a single file by ID
- * This is a separate hook to follow the rules of hooks
+ * Custom hook to fetch a single file by its ID.
+ * This is separated from `useFiles` for focused data fetching and to follow the rules of hooks.
+ *
+ * @param {string} fileId - The ID of the file to fetch. Can be an empty string if no file is selected.
+ * @returns {import('@tanstack/react-query').UseQueryResult<TypeFile | null, Error>} The result object from React Query, containing the file data, loading states, and error states.
  */
 export function useFileById(fileId: string) {
   const supabase = supabaseBrowserClient();
   const { userId, isAuthenticated } = useUser();
 
-  // Validate fileId
-  const isValidFileId = !!fileId && typeof fileId === 'string' && fileId.trim() !== '';
-  
+  const isValidFileId =
+    !!fileId && typeof fileId === "string" && fileId.trim() !== "";
+
   return useQuery({
     queryKey: [...FILES_QUERY_KEY, fileId],
     queryFn: async () => {
       if (!userId || !isValidFileId) return null;
-
       const { data, error } = await supabase
         .from("files")
         .select("*")
         .eq("id", fileId)
         .eq("user_id", userId)
         .single();
-
-      if (error) throw error;
+      if (error) {
+        // If the error is that no rows were found, it's not a hard error, just return null
+        if (error.code === "PGRST116") return null;
+        throw error;
+      }
       return data as TypeFile;
     },
     enabled: isAuthenticated && !!userId && isValidFileId,
