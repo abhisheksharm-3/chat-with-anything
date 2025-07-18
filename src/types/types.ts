@@ -53,3 +53,10 @@ export interface TypeFileTypeConfig {
   comingSoon?: boolean;
   urlOnly?: boolean;
 }
+
+export interface TypeFileType {
+  data?: {
+    type?: string | null;
+    name?: string;
+  } | null;
+}

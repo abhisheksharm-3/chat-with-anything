@@ -3,8 +3,8 @@
 import React from 'react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
-import UploadModal from '@/components/dashboard/UploadModal';
 import { fileTypes } from '@/constants/FileTypes';
+import UploadModal from '@/components/upload/UploadModal';
 
 const ChoosePage = () => {
   return (

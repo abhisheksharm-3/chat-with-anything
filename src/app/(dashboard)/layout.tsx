@@ -6,96 +6,22 @@ import { usePathname, useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   FileText,
-  Clock,
   Settings,
   LogOut,
-  File,
   Plus,
   ChevronsRight,
   ChevronsLeft,
   Loader2,
-  FileIcon,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import SettingsDialog from "@/components/dashboard/SettingsDialog";
 import PricingDialog from "@/components/dashboard/PricingDialog";
 import LogoutDialog from "@/components/dashboard/LogoutDialog";
 import { useUser, useChats, useFileById } from "@/hooks";
-
-interface DashboardLayoutProps {
-  children: React.ReactNode;
-}
-
-interface FileType {
-  data?: {
-    type?: string | null;
-    name?: string;
-  } | null;
-}
-
-interface Chat {
-  file_id?: string | null;
-  type?: string | null;
-  title?: string | null;
-}
-
-interface User {
-  name?: string | null;
-  email?: string;
-}
-
-// Constants
-const NAVIGATION_ITEMS = [
-  { href: "/choose", icon: File },
-  { href: "/history", icon: Clock },
-] as const;
-
-const MOBILE_NAV_ITEMS = [
-  {
-    href: "/choose",
-    icon: FileText,
-    title: "New Note",
-    description: "Record and create new note",
-  },
-  {
-    href: "/history",
-    icon: Clock,
-    title: "History",
-    description: "Record and create new note",
-  },
-  {
-    href: "/settings",
-    icon: Settings,
-    title: "Account Settings",
-    description: "Manage your account preferences",
-  },
-] as const;
-
-// Utility functions
-const getFileTypeIcon = (type: string | null | undefined) => {
-  const iconMap = {
-    pdf: <FileText size={16} className="text-red-500" />,
-    doc: <FileText size={16} className="text-blue-500" />,
-    image: <FileIcon size={16} className="text-green-500" />,
-    web: <FileIcon size={16} className="text-purple-500" />,
-    url: <FileIcon size={16} className="text-purple-500" />,
-    sheet: <FileIcon size={16} className="text-green-500" />,
-    slides: <FileIcon size={16} className="text-orange-500" />,
-    default: <FileText size={16} className="text-gray-500" />,
-  };
-
-  return iconMap[type as keyof typeof iconMap] || iconMap.default;
-};
-
-const getUserInitials = (user: User | null | undefined): string => {
-  if (!user?.name) return "U";
-
-  const nameParts = user.name.split(" ");
-  if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
-
-  return (
-    nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)
-  ).toUpperCase();
-};
+import { MOBILE_NAV_ITEMS, NAVIGATION_ITEMS } from "@/constants/NavItems";
+import { TypeChat, TypeUser } from "@/types/supabase";
+import { TypeFileType } from "@/types/types";
+import { getFileTypeIcon, getUserInitials } from "@/utils/dashboard-utils";
 
 // Sub-components
 const Logo = () => (
@@ -126,19 +52,22 @@ const MobileLogo = () => (
 
 const DesktopNavigation = ({ pathname }: { pathname: string }) => (
   <nav className="flex flex-col space-y-2">
-    {NAVIGATION_ITEMS.map(({ href, icon: Icon }) => (
-      <Link
-        key={href}
-        href={href}
-        className={`p-2 rounded-md transition-colors ${
-          pathname === href
-            ? "text-white"
-            : "text-muted-foreground hover:text-foreground"
-        }`}
-      >
-        <Icon size={20} />
-      </Link>
-    ))}
+    {NAVIGATION_ITEMS.map(({ href, icon: IconComponent }) => {
+      const Icon = IconComponent as LucideIcon;
+      return (
+        <Link
+          key={href}
+          href={href}
+          className={`p-2 rounded-md transition-colors ${
+            pathname === href
+              ? "text-white"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Icon size={20} />
+        </Link>
+      );
+    })}
     <SettingsDialog
       trigger={
         <button className="p-2 rounded-md text-muted-foreground hover:text-foreground cursor-pointer">
@@ -158,24 +87,27 @@ const MobileNavigation = ({
 }) => (
   <nav className="flex-1 p-4">
     <div className="space-y-2">
-      {MOBILE_NAV_ITEMS.map(({ href, icon: Icon, title, description }) => (
-        <Link
-          key={href}
-          href={href}
-          className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-            pathname === href
-              ? "bg-[#2a2a2a] text-white"
-              : "text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
-          }`}
-          onClick={onItemClick}
-        >
-          <Icon size={20} />
-          <div>
-            <div className="text-sm font-medium">{title}</div>
-            <div className="text-xs text-gray-500">{description}</div>
-          </div>
-        </Link>
-      ))}
+      {MOBILE_NAV_ITEMS.map(({ href, icon: IconComponent, title, description }) => {
+        const Icon = IconComponent as LucideIcon;
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
+              pathname === href
+                ? "bg-[#2a2a2a] text-white"
+                : "text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
+            }`}
+            onClick={onItemClick}
+          >
+            <Icon size={20} />
+            <div>
+              <div className="text-sm font-medium">{title}</div>
+              <div className="text-xs text-gray-500">{description}</div>
+            </div>
+          </Link>
+        );
+      })}
     </div>
   </nav>
 );
@@ -184,7 +116,7 @@ const UserProfile = ({
   user,
   isLoading,
 }: {
-  user: User | null | undefined;
+  user: TypeUser | null | undefined;
   isLoading: boolean;
 }) => {
   if (isLoading) {
@@ -220,8 +152,8 @@ const ActiveTab = ({
   file,
 }: {
   isChatPage: boolean;
-  chat: Chat | null;
-  file: FileType | null;
+  chat: TypeChat | null;
+  file: TypeFileType | null;
 }) => (
   <div className="flex items-center gap-2 bg-[#2a2a2a] px-4 py-2 rounded-l-md border-l-4 border-l-purple-500">
     {isChatPage && chat ? (
@@ -248,8 +180,8 @@ const FileTypeTab = ({
   chat,
   file,
 }: {
-  chat: Chat | null;
-  file: FileType | null;
+  chat: TypeChat | null;
+  file: TypeFileType | null;
 }) => (
   <div className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a]">
     <span className="text-sm text-gray-400 uppercase">
@@ -273,8 +205,8 @@ const MobileHeader = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
   const router = useRouter();
 
   return (
-  <header className="md:hidden h-16 flex items-center justify-between px-4">
-    <div className="flex items-center gap-3 bg-[#181818] rounded-lg border">
+    <header className="md:hidden h-16 flex items-center justify-between px-4">
+      <div className="flex items-center gap-3 bg-[#181818] rounded-lg border">
         {isSettingsPage ? (
           <button
             onClick={() => router.back()}
@@ -283,29 +215,29 @@ const MobileHeader = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
             <ChevronsLeft />
           </button>
         ) : (
-      <button
-        onClick={onMenuToggle}
-        className="p-1 text-gray-400 hover:text-white"
-      >
-        <ChevronsRight />
-      </button>
-        )}
-    </div>
-    <MobileLogo />
-    <div className="flex items-center gap-2">
-      <PricingDialog
-        trigger={
-          <Button
-            size="sm"
-            className="bg-primary hover:bg-primary/90 text-white rounded-lg px-3 py-1"
+          <button
+            onClick={onMenuToggle}
+            className="p-1 text-gray-400 hover:text-white"
           >
-            Upgrade
-          </Button>
-        }
-      />
-    </div>
-  </header>
-);
+            <ChevronsRight />
+          </button>
+        )}
+      </div>
+      <MobileLogo />
+      <div className="flex items-center gap-2">
+        <PricingDialog
+          trigger={
+            <Button
+              size="sm"
+              className="bg-primary hover:bg-primary/90 text-white rounded-lg px-3 py-1"
+            >
+              Upgrade
+            </Button>
+          }
+        />
+      </div>
+    </header>
+  );
 };
 
 const DesktopHeader = ({
@@ -316,8 +248,8 @@ const DesktopHeader = ({
 }: {
   isHistoryPage: boolean;
   isChatPage: boolean;
-  chat: Chat | null;
-  file: FileType | null;
+  chat: TypeChat | null;
+  file: TypeFileType | null;
 }) => (
   <header className="hidden md:flex h-16 items-center justify-between px-6">
     {!isHistoryPage && (
@@ -368,7 +300,7 @@ const MobileSidebar = ({
   isOpen: boolean;
   onClose: () => void;
   pathname: string;
-  user: User | null | undefined;
+  user: TypeUser | null | undefined;
   isLoading: boolean;
 }) => (
   <>
@@ -424,7 +356,7 @@ const MobileSidebar = ({
 );
 
 // Main component
-const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const params = useParams();
   const { user, isLoading } = useUser();
@@ -451,7 +383,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         isOpen={isMobileMenuOpen}
         onClose={handleMobileMenuClose}
         pathname={pathname}
-        user={user as User | null | undefined}
+        user={user as TypeUser | null | undefined}
         isLoading={isLoading}
       />
 
@@ -460,8 +392,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <DesktopHeader
           isHistoryPage={isHistoryPage}
           isChatPage={isChatPage}
-          chat={chat as Chat | null}
-          file={file as FileType | null}
+          chat={chat as TypeChat | null}
+          file={file as TypeFileType | null}
         />
         <main className="flex-1 overflow-auto p-2">{children}</main>
       </div>

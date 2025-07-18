@@ -13,11 +13,11 @@ import { getFileTypeConfig } from '@/constants/FileTypes';
 import { useUser } from '@/hooks/useUser';
 
 // Components
-import UploadArea from './upload/UploadArea';
-import UploadProgress from './upload/UploadProgress';
-import UploadSuccess from './upload/UploadSuccess';
-import UploadError from './upload/UploadError';
-import UrlInput from './upload/UrlInput';
+import UploadArea from '../upload/UploadArea';
+import UploadProgress from '../upload/UploadProgress';
+import UploadSuccess from '../upload/UploadSuccess';
+import UploadError from '../upload/UploadError';
+import UrlInput from '../upload/UrlInput';
 
 // Types
 interface UploadModalProps {

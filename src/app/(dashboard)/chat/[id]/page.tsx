@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import ChatInterface from '@/components/dashboard/ChatInterface';
+import ChatInterface from '@/components/chat/ChatInterface';
 import { useChats } from '@/hooks';
 import { Loader2 } from 'lucide-react';
 
-export default function ChatPage() {
+const ChatPage: React.FC = () => {
   const params = useParams();
   const router = useRouter();
   const chatId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
@@ -56,4 +56,6 @@ export default function ChatPage() {
       />
     </div>
   );
-}
+};
+
+export default ChatPage;
