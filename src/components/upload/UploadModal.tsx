@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   Dialog, 
   DialogContent,
@@ -13,21 +13,32 @@ import { getFileTypeConfig } from '@/constants/FileTypes';
 import { useUser } from '@/hooks/useUser';
 
 // Components
-import UploadArea from '../upload/UploadArea';
-import UploadProgress from '../upload/UploadProgress';
-import UploadSuccess from '../upload/UploadSuccess';
-import UploadError from '../upload/UploadError';
-import UrlInput from '../upload/UrlInput';
+import UploadModalArea from './UploadModalArea';
+import UploadModalProgress from './UploadModalProgress';
+import UploadModalSuccess from './UploadModalSuccess';
+import UploadModalError from './UploadModalError';
+import UploadModalUrlInput from './UploadModalUrlInput';
+import { TypeUploadModalProps } from '@/types/types';
 
-// Types
-interface UploadModalProps {
-  trigger?: React.ReactNode;
-  defaultOpen?: boolean;
-  fileType: string;
-}
-
-// Component
-const UploadModal: React.FC<UploadModalProps> = ({ 
+/**
+ * A comprehensive modal dialog for handling various file and URL uploads.
+ *
+ * This client component acts as a state machine for the upload process. It orchestrates
+ * the UI by rendering different child components based on the current upload status
+ * (e.g., idle, uploading, success, error). The core business logic is encapsulated
+ * in the `useUploadLogic` custom hook.
+ *
+ * It also includes render guards to handle states like unauthenticated users or
+ * features that are marked as "coming soon".
+ *
+ * @component
+ * @param {TypeUploadModalProps} props - The properties for the component.
+ * @param {React.ReactNode} props.trigger - The UI element that opens the modal.
+ * @param {boolean} [props.defaultOpen=false] - If true, the modal opens on initial render.
+ * @param {string} props.fileType - A key specifying the type of upload (e.g., 'pdf', 'youtube'), used to get configuration.
+ * @returns {JSX.Element} The rendered upload modal component.
+ */
+const UploadModal: React.FC<TypeUploadModalProps> = ({ 
   trigger, 
   defaultOpen = false, 
   fileType 
@@ -41,12 +52,14 @@ const UploadModal: React.FC<UploadModalProps> = ({
   const isComingSoon = fileTypeConfig.comingSoon === true;
   const isUrlOnly = fileTypeConfig.urlOnly === true;
 
-  // Close handler with state reset
+  /**
+   * Closes the dialog and resets the internal state of the upload logic.
+   */
   const handleClose = () => {
     setOpen(false);
   };
   
-  // Upload logic
+  // Upload logic hook
   const {
     uploadStatus,
     fileName,
@@ -66,7 +79,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
     onClose: handleClose 
   });
 
-  // Render guards
+  // Render guards for authentication and feature availability
   if (!isAuthenticated) {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
@@ -129,6 +142,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
           <button 
             onClick={handleClose}
             className="text-gray-400 hover:text-white cursor-pointer"
+            aria-label="Close dialog"
           >
             <X size={18} />
           </button>
@@ -138,7 +152,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
         <div className="p-6">
           {/* File upload area */}
           {!isUrlOnly && uploadStatus === 'idle' && (
-            <UploadArea 
+            <UploadModalArea 
               fileTypeConfig={fileTypeConfig}
               selectedFile={selectedFile}
               handleFileChange={handleFileChange}
@@ -146,12 +160,12 @@ const UploadModal: React.FC<UploadModalProps> = ({
           )}
 
           {/* Upload states */}
-          {uploadStatus === 'uploading' && <UploadProgress />}
+          {uploadStatus === 'uploading' && <UploadModalProgress />}
           {uploadStatus === 'uploaded' && (
-            <UploadSuccess fileName={fileName} handleRemoveFile={handleRemoveFile} />
+            <UploadModalSuccess fileName={fileName} handleRemoveFile={handleRemoveFile} />
           )}
           {uploadStatus === 'error' && (
-            <UploadError error={error} handleRetry={handleRetry} />
+            <UploadModalError error={error} handleRetry={handleRetry} />
           )}
 
           {/* OR divider */}
@@ -164,7 +178,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
           )}
 
           {/* URL input */}
-          <UrlInput
+          <UploadModalUrlInput
             url={url}
             fileTypeConfig={fileTypeConfig}
             isUrlOnly={isUrlOnly}
@@ -195,7 +209,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
           <Button
             onClick={handleSubmit}
             className="flex-1 py-2 text-center bg-primary hover:bg-primary/90 text-white rounded-lg cursor-pointer"
-            disabled={isUploading || (uploadStatus !== 'idle' && uploadStatus !== 'error')}
+            disabled={isUploading || uploadStatus === 'uploaded'}
           >
             {isUploading ? 'Uploading...' : 'Upload'}
           </Button>

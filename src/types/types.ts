@@ -65,3 +65,42 @@ export interface TypeDialogProps {
   trigger?: React.ReactNode;
   defaultOpen?: boolean;
 }
+
+export interface TypeSectionHeaderProps {
+  subtitle?: string;
+  title?: string;
+  subtitleClassName?: string;
+  titleClassName?: string;
+}
+
+export interface TypeUploadModalAreaProps {
+  fileTypeConfig: TypeFileTypeConfig;
+  selectedFile: File | null;
+  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+export interface TypeUploadModalSuccessProps {
+  fileName: string;
+  handleRemoveFile: () => void;
+}
+
+export interface TypeUploadModalUrlInputProps {
+  url: string;
+  fileTypeConfig: TypeFileTypeConfig;
+  isUrlOnly: boolean;
+  handleUrlChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleUrlSubmit: () => void;
+  handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  isUploading: boolean;
+}
+
+export interface TypeUploadModalErrorProps {
+  error: string;
+  handleRetry: () => void;
+}
+
+export interface TypeUploadModalProps {
+  trigger?: React.ReactNode;
+  defaultOpen?: boolean;
+  fileType: string;
+}
