@@ -138,7 +138,7 @@ export const useUploadLogic = ({
       // Special check for YouTube to verify transcript availability before proceeding
       if (urlType === "youtube") {
         const { checkYoutubeTranscriptAvailability } = await import(
-          "@/utils/processors/youtube-utils"
+          "@/utils/gemini/youtube-utils"
         );
         const { available, error: transcriptError } =
           await checkYoutubeTranscriptAvailability(url);

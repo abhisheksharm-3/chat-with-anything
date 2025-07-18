@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { createRagSystemPrompt, createYoutubeSystemPrompt } from "@/utils/processors";
+import { createYoutubeSystemPrompt } from "./youtube-utils";
+import { createRagSystemPrompt } from "../query-utils";
 
 // Initialize the Gemini API with the API key from environment variables
 // Use server-side environment variable instead of NEXT_PUBLIC
