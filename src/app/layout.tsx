@@ -41,9 +41,7 @@ const RootLayout = ({
   <html lang="en" className="dark">
     <body className={`${inter.variable} antialiased`}>
       {/* QueryProvider wraps the app to provide a client-side cache for server data */}
-      <QueryProvider>
-        {children}
-      </QueryProvider>
+      <QueryProvider>{children}</QueryProvider>
     </body>
   </html>
 );

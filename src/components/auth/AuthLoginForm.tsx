@@ -18,7 +18,8 @@ import { TypeLoginFormProps } from "@/types/auth";
 /**
  * Defines the shared CSS classes for the form's input fields for a consistent look.
  */
-const inputClassName = "bg-[#1a1a1a] border-gray-700 text-white focus-visible:ring-primary";
+const inputClassName =
+  "bg-[#1a1a1a] border-gray-700 text-white focus-visible:ring-primary";
 
 /**
  * Renders a user login form with email and password fields.
@@ -32,7 +33,10 @@ const inputClassName = "bg-[#1a1a1a] border-gray-700 text-white focus-visible:ri
  * @param {boolean} props.isLoading - When true, disables the form and shows a loading state.
  * @returns {React.ReactElement} The rendered login form.
  */
-export const AuthLoginForm: React.FC<TypeLoginFormProps> = ({ onSubmit, isLoading }) => {
+export const AuthLoginForm: React.FC<TypeLoginFormProps> = ({
+  onSubmit,
+  isLoading,
+}) => {
   const form = useForm<TypeLoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -69,10 +73,7 @@ export const AuthLoginForm: React.FC<TypeLoginFormProps> = ({ onSubmit, isLoadin
             <FormItem>
               <FormLabel className="text-sm text-gray-300">Password</FormLabel>
               <FormControl>
-                <AuthPasswordInput
-                  field={field}
-                  className={inputClassName}
-                />
+                <AuthPasswordInput field={field} className={inputClassName} />
               </FormControl>
               <FormMessage />
             </FormItem>

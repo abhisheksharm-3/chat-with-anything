@@ -25,10 +25,11 @@ export const useAuth = () => {
   const createUserProfile = async (signupData: TypeSignupFormData) => {
     try {
       // Get the current session to retrieve the newly created user's ID
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+
       if (sessionError) throw sessionError;
-      
+
       if (!sessionData.session?.user?.id) {
         throw new Error("No authenticated user found after signup");
       }
@@ -69,23 +70,23 @@ export const useAuth = () => {
       formData.append("password", data.password);
 
       const result = await signIn(formData);
-      
+
       if (result) {
         throw new Error(result); // Throw an error if signIn returns an error message
       }
-      
+
       return { success: true };
     },
     onSuccess: () => {
       // On success, invalidate user-related queries to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-      queryClient.invalidateQueries({ queryKey: ['auth'] });
-      
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      queryClient.invalidateQueries({ queryKey: ["auth"] });
+
       router.push("/choose");
     },
     onError: (error) => {
       console.error("Login error:", error);
-    }
+    },
   });
 
   /**
@@ -100,21 +101,21 @@ export const useAuth = () => {
       formData.append("password", data.password);
 
       const result = await signUp(formData);
-      
+
       if (result) {
         throw new Error(result); // Throw an error if signUp returns an error message
       }
 
       // After successful signup, create the user profile in the database
       const userProfile = await createUserProfile(data);
-      
+
       return { success: true, userProfile };
     },
     onSuccess: () => {
       // Invalidate queries to ensure fresh data on next load
-      queryClient.invalidateQueries({ queryKey: ['user'] });
-      queryClient.invalidateQueries({ queryKey: ['auth'] });
-      
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      queryClient.invalidateQueries({ queryKey: ["auth"] });
+
       // Redirect to login page after a short delay to show success message
       setTimeout(() => {
         router.push("/login");
@@ -122,7 +123,7 @@ export const useAuth = () => {
     },
     onError: (error) => {
       console.error("Signup error:", error);
-    }
+    },
   });
 
   /**
@@ -144,7 +145,7 @@ export const useAuth = () => {
   return {
     /** A general loading state, true if either login or signup is pending. */
     isLoading: loginMutation.isPending || signupMutation.isPending,
-    
+
     // Login specific state
     /** The error message from the login mutation, or null if no error. */
     loginError: loginMutation.error?.message || null,
@@ -152,7 +153,7 @@ export const useAuth = () => {
     loginSuccess: loginMutation.isSuccess,
     /** True if the login mutation is currently pending. */
     isLoginLoading: loginMutation.isPending,
-    
+
     // Signup specific state
     /** The error message from the signup mutation, or null if no error. */
     signupError: signupMutation.error?.message || null,
@@ -160,19 +161,22 @@ export const useAuth = () => {
     signupSuccess: signupMutation.isSuccess,
     /** True if the signup mutation is currently pending. */
     isSignupLoading: signupMutation.isPending,
-    
+
     // Legacy compatibility messages
     /** A combined error message from either mutation. */
-    errorMessage: loginMutation.error?.message || signupMutation.error?.message || null,
+    errorMessage:
+      loginMutation.error?.message || signupMutation.error?.message || null,
     /** A success message displayed after successful signup. */
-    successMessage: signupMutation.isSuccess ? "Account created successfully! You can now sign in." : null,
-    
+    successMessage: signupMutation.isSuccess
+      ? "Account created successfully! You can now sign in."
+      : null,
+
     // Actions
     /** Function to initiate the login process. */
     handleLogin,
     /** Function to initiate the signup process. */
     handleSignup,
-    
+
     // Reset functions
     /** Resets the state of the login mutation (error, success, etc.). */
     resetLoginState: () => loginMutation.reset(),

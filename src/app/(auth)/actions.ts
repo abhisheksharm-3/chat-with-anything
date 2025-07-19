@@ -1,6 +1,6 @@
-'use server';
+"use server";
 
-import { supabaseServerClient } from '@/utils/supabase/server';
+import { supabaseServerClient } from "@/utils/supabase/server";
 
 /**
  * Signs in a user using their email and password credentials.
@@ -9,8 +9,8 @@ import { supabaseServerClient } from '@/utils/supabase/server';
  * @returns {Promise<string | void>} Returns an error message as a string if sign-in fails, otherwise returns nothing on success.
  */
 export const signIn = async (formData: FormData) => {
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
 
   const supabase = await supabaseServerClient();
 
@@ -36,9 +36,9 @@ export const signIn = async (formData: FormData) => {
  * @returns {Promise<string | void>} Returns an error message as a string if sign-up fails, otherwise returns nothing on success.
  */
 export const signUp = async (formData: FormData) => {
-  const fullName = formData.get('full-name') as string;
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
+  const fullName = formData.get("full-name") as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
 
   const supabase = await supabaseServerClient();
 

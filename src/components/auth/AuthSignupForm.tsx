@@ -18,7 +18,8 @@ import { TypeSignupFormProps } from "@/types/auth";
 /**
  * Defines shared CSS classes for the form's input fields to ensure a consistent style.
  */
-const inputClassName = "bg-[#1a1a1a] border-gray-700 text-white focus-visible:ring-primary";
+const inputClassName =
+  "bg-[#1a1a1a] border-gray-700 text-white focus-visible:ring-primary";
 
 /**
  * Renders a user registration form with fields for full name, email, and password.
@@ -32,7 +33,10 @@ const inputClassName = "bg-[#1a1a1a] border-gray-700 text-white focus-visible:ri
  * @param {boolean} props.isLoading - If true, the form is disabled and a loading indicator is shown on the submit button.
  * @returns {React.ReactElement} The rendered signup form.
  */
-export const AuthSignupForm: React.FC<TypeSignupFormProps> = ({ onSubmit, isLoading }) => {
+export const AuthSignupForm: React.FC<TypeSignupFormProps> = ({
+  onSubmit,
+  isLoading,
+}) => {
   const form = useForm<TypeSignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -89,10 +93,7 @@ export const AuthSignupForm: React.FC<TypeSignupFormProps> = ({ onSubmit, isLoad
             <FormItem>
               <FormLabel className="text-sm text-gray-300">Password</FormLabel>
               <FormControl>
-                <AuthPasswordInput
-                  field={field}
-                  className={inputClassName}
-                />
+                <AuthPasswordInput field={field} className={inputClassName} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -104,12 +105,11 @@ export const AuthSignupForm: React.FC<TypeSignupFormProps> = ({ onSubmit, isLoad
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm text-gray-300">Confirm Password</FormLabel>
+              <FormLabel className="text-sm text-gray-300">
+                Confirm Password
+              </FormLabel>
               <FormControl>
-                <AuthPasswordInput
-                  field={field}
-                  className={inputClassName}
-                />
+                <AuthPasswordInput field={field} className={inputClassName} />
               </FormControl>
               <FormMessage />
             </FormItem>

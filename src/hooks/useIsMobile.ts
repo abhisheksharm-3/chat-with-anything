@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 /**
  * A client-side custom hook to detect if the current device viewport is of a mobile size.
@@ -26,10 +26,10 @@ export const useIsMobile = (breakpoint = 768): boolean => {
     checkIsMobile();
 
     // Update the value on window resize
-    window.addEventListener('resize', checkIsMobile);
+    window.addEventListener("resize", checkIsMobile);
 
     // Clean up the event listener on component unmount
-    return () => window.removeEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener("resize", checkIsMobile);
   }, [breakpoint]);
 
   // Return a default of `false` during SSR and initial hydration

@@ -6,7 +6,10 @@ import { useUser, useChats, useFileById } from "@/hooks";
 import { TypeChat, TypeFile, TypeUser } from "@/types/supabase";
 import { DashboardDesktopSidebar } from "@/components/dashboard/DashboardDesktopSidebar";
 import { DashboardMobileSidebar } from "@/components/dashboard/DashboardMobileSidebar";
-import { DashboardDesktopHeader, DashboardMobileHeader } from "@/components/dashboard/DashboardHeaders";
+import {
+  DashboardDesktopHeader,
+  DashboardMobileHeader,
+} from "@/components/dashboard/DashboardHeaders";
 
 /**
  * Provides the main layout structure for the authenticated dashboard area.

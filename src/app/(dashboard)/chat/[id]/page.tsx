@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import ChatInterface from '@/components/chat/ChatInterface';
-import { useChats } from '@/hooks';
-import { Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import ChatInterface from "@/components/chat/ChatInterface";
+import { useChats } from "@/hooks";
+import { Loader2 } from "lucide-react";
 
 /**
  * Renders the page for an individual chat session.
@@ -21,11 +21,16 @@ const ChatPage: React.FC = () => {
   const router = useRouter();
 
   // Extracts the chat ID from the dynamic URL, handling different router return types.
-  const chatId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
-  
+  const chatId =
+    typeof params.id === "string"
+      ? params.id
+      : Array.isArray(params.id)
+        ? params.id[0]
+        : "";
+
   // Fetches chat data and its loading/error status using a custom hook.
   const { chat, isChatLoading, isChatError } = useChats(chatId);
-  
+
   // State to trigger the redirection after a brief delay.
   const [shouldRedirect, setShouldRedirect] = useState(false);
 
@@ -38,7 +43,7 @@ const ChatPage: React.FC = () => {
       const timer = setTimeout(() => {
         setShouldRedirect(true);
       }, 2000); // Wait 2 seconds before redirecting.
-      
+
       // Cleanup function to clear the timer if the component unmounts.
       return () => clearTimeout(timer);
     }
@@ -49,7 +54,7 @@ const ChatPage: React.FC = () => {
    */
   useEffect(() => {
     if (shouldRedirect) {
-      router.push('/not-found');
+      router.push("/not-found");
     }
   }, [shouldRedirect, router]);
 
@@ -62,24 +67,26 @@ const ChatPage: React.FC = () => {
       </div>
     );
   }
-  
+
   // Display an error/redirect message if the chat could not be loaded.
   if (isChatError || !chat) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-gray-400">Chat not found, redirecting...</span>
+        <span className="ml-2 text-gray-400">
+          Chat not found, redirecting...
+        </span>
       </div>
     );
   }
-  
+
   // Render the main chat interface once data is successfully loaded.
   return (
     <div className="h-full">
-      <ChatInterface 
-        title={chat.title || "Untitled Chat"} 
-        source={chat.type || "document"} 
-        chatId={chat.id} 
+      <ChatInterface
+        title={chat.title || "Untitled Chat"}
+        source={chat.type || "document"}
+        chatId={chat.id}
       />
     </div>
   );

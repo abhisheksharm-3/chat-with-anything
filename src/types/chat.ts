@@ -30,7 +30,7 @@ export interface TypeChatInterfaceDocumentViewerProps {
 export interface TypeChatInterfaceMobileTabsProps {
   showPDF: boolean;
   setShowPDF: (show: boolean) => void;
-} 
+}
 
 export interface TypeControlsProps {
   zoomLevel: number;

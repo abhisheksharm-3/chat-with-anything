@@ -135,7 +135,10 @@ const SettingsPage = () => {
       <div className="px-12 pb-16 pt-4">
         <LogoutDialog
           trigger={
-            <Button variant="outline" className="w-full py-5 font-semibold text-lg text-destructive border-1 !border-destructive bg-[#1e1e1f] rounded-xl">
+            <Button
+              variant="outline"
+              className="w-full py-5 font-semibold text-lg text-destructive border-1 !border-destructive bg-[#1e1e1f] rounded-xl"
+            >
               Log out
             </Button>
           }

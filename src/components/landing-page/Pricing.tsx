@@ -49,7 +49,7 @@ const Pricing = () => {
 
         <ButtonCta className="py-6" showArrow />
       </div>
-      
+
       <GlowBackground />
     </div>
   );

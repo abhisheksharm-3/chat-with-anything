@@ -1,4 +1,10 @@
-export type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json }
+  | Json[];
 
 export interface Database {
   public: {
@@ -16,7 +22,7 @@ export interface Database {
           name?: string | null;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['users']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["users"]["Insert"]>;
       };
 
       files: {
@@ -28,7 +34,12 @@ export interface Database {
           size: number | null;
           url: string | null;
           uploaded_at: string;
-          processing_status?: 'idle' | 'processing' | 'completed' | 'failed' | null;
+          processing_status?:
+            | "idle"
+            | "processing"
+            | "completed"
+            | "failed"
+            | null;
           processing_error?: string | null;
           indexed_chunks?: number | null;
           full_text?: string | null;
@@ -41,12 +52,17 @@ export interface Database {
           size?: number | null;
           url?: string | null;
           uploaded_at?: string;
-          processing_status?: 'idle' | 'processing' | 'completed' | 'failed' | null;
+          processing_status?:
+            | "idle"
+            | "processing"
+            | "completed"
+            | "failed"
+            | null;
           processing_error?: string | null;
           indexed_chunks?: number | null;
           full_text?: string | null;
         };
-        Update: Partial<Database['public']['Tables']['files']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["files"]["Insert"]>;
       };
 
       chats: {
@@ -56,7 +72,7 @@ export interface Database {
           file_id: string | null;
           title: string | null;
           created_at: string;
-          type: 'pdf' | 'image' | 'doc' | 'video' | 'sheet' | 'slides' | null;
+          type: "pdf" | "image" | "doc" | "video" | "sheet" | "slides" | null;
         };
         Insert: {
           id?: string;
@@ -64,27 +80,27 @@ export interface Database {
           file_id?: string | null;
           title?: string | null;
           created_at?: string;
-          type?: 'pdf' | 'image' | 'doc' | 'video' | 'sheet' | 'slides' | null;
+          type?: "pdf" | "image" | "doc" | "video" | "sheet" | "slides" | null;
         };
-        Update: Partial<Database['public']['Tables']['chats']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["chats"]["Insert"]>;
       };
 
       messages: {
         Row: {
           id: string;
           chat_id: string;
-          role: 'user' | 'assistant';
+          role: "user" | "assistant";
           content: string;
           created_at: string;
         };
         Insert: {
           id?: string;
           chat_id: string;
-          role: 'user' | 'assistant';
+          role: "user" | "assistant";
           content: string;
           created_at?: string;
         };
-        Update: Partial<Database['public']['Tables']['messages']['Insert']>;
+        Update: Partial<Database["public"]["Tables"]["messages"]["Insert"]>;
       };
     };
 
@@ -95,9 +111,9 @@ export interface Database {
   };
 }
 
-export type TypeUser = Database['public']['Tables']['users']['Row'];
-export type TypeChat = Database['public']['Tables']['chats']['Row'];
-export type TypeFile = Database['public']['Tables']['files']['Row'];
-export type TypeMessage = Database['public']['Tables']['messages']['Row'] & {
+export type TypeUser = Database["public"]["Tables"]["users"]["Row"];
+export type TypeChat = Database["public"]["Tables"]["chats"]["Row"];
+export type TypeFile = Database["public"]["Tables"]["files"]["Row"];
+export type TypeMessage = Database["public"]["Tables"]["messages"]["Row"] & {
   isError?: boolean;
 };

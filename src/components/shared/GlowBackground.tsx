@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { TypeGlowProps } from '@/types/types';
+import { TypeGlowProps } from "@/types/types";
 
 /**
  * A reusable client-side component for creating soft, glowing background effects.
@@ -18,39 +18,41 @@ import { TypeGlowProps } from '@/types/types';
  * @param {string} props.glowElements[].color - The color of the glow, typically an rgba value.
  * @returns {JSX.Element} The rendered container with glow effects.
  */
-const GlowBackground: React.FC<TypeGlowProps> = ({ 
+const GlowBackground: React.FC<TypeGlowProps> = ({
   className = "",
   glowElements = [
     {
       position: "left-[20%] top-1/2",
       size: { width: 500, height: 500 },
       blur: 150,
-      color: "rgba(84, 99, 255, 0.15)"
+      color: "rgba(84, 99, 255, 0.15)",
     },
     {
       position: "right-[20%] top-1/2",
       size: { width: 500, height: 500 },
       blur: 150,
-      color: "rgba(84, 99, 255, 0.15)"
-    }
-  ]
+      color: "rgba(84, 99, 255, 0.15)",
+    },
+  ],
 }) => {
   return (
-    <div className={`absolute inset-0 z-0 h-max min-h-screen overflow-hidden ${className}`}>
-        {glowElements.map((glow, index) => (
-          <div
-            key={index}
-            className={`absolute ${glow.position}`}
-            style={{
-              width: `${glow.size.width}px`,
-              height: `${glow.size.height}px`,
-              background: `radial-gradient(circle, ${glow.color} 0%, transparent 90%)`,
-              filter: `blur(${glow.blur}px)`,
-              transform: `translate(${index === 0 ? '-15%' : '15%'}, -50%)`,
-              borderRadius: '50%'
-            }}
-          />
-        ))}
+    <div
+      className={`absolute inset-0 z-0 h-max min-h-screen overflow-hidden ${className}`}
+    >
+      {glowElements.map((glow, index) => (
+        <div
+          key={index}
+          className={`absolute ${glow.position}`}
+          style={{
+            width: `${glow.size.width}px`,
+            height: `${glow.size.height}px`,
+            background: `radial-gradient(circle, ${glow.color} 0%, transparent 90%)`,
+            filter: `blur(${glow.blur}px)`,
+            transform: `translate(${index === 0 ? "-15%" : "15%"}, -50%)`,
+            borderRadius: "50%",
+          }}
+        />
+      ))}
     </div>
   );
 };

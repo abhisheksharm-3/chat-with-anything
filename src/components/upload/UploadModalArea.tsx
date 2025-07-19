@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,8 @@ const UploadModalArea: React.FC<TypeUploadModalAreaProps> = ({
           or drag and drop
         </p>
         <p className="text-xs text-gray-400 mt-1">
-          {fileTypeConfig.name} (max. {fileTypeConfig.maxSize / (1024 * 1024)}MB)
+          {fileTypeConfig.name} (max. {fileTypeConfig.maxSize / (1024 * 1024)}
+          MB)
         </p>
       </Label>
       {selectedFile && (

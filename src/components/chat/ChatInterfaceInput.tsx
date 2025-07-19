@@ -1,8 +1,8 @@
-import React from 'react';
-import { Send } from 'lucide-react';
-import { TypeChatInputProps } from '@/types/chat';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React from "react";
+import { Send } from "lucide-react";
+import { TypeChatInputProps } from "@/types/chat";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 /**
  * A controlled input component for a chat interface, including a text field and a send button.
@@ -21,10 +21,12 @@ export const ChatInterfaceInput: React.FC<TypeChatInputProps> = ({
   setInputValue,
   onSendMessage,
   onKeyPress,
-  className = "py-2"
+  className = "py-2",
 }) => {
   return (
-    <div className={`${className} sticky bottom-0 border-t border-[#272626] px-2 sm:px-4 lg:px-6`}>
+    <div
+      className={`${className} sticky bottom-0 border-t border-[#272626] px-2 sm:px-4 lg:px-6`}
+    >
       <div className="flex items-center gap-1 sm:gap-2 max-w-4xl mx-auto">
         <Input
           type="text"

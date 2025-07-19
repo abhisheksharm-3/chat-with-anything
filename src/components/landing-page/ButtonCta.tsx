@@ -1,8 +1,8 @@
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/utils/utils'
-import { TypeButtonCta } from '@/types/types'
-import { ArrowRight } from 'lucide-react'
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/utils/utils";
+import { TypeButtonCta } from "@/types/types";
+import { ArrowRight } from "lucide-react";
 
 /**
  * A reusable call-to-action (CTA) button component.
@@ -20,10 +20,10 @@ import { ArrowRight } from 'lucide-react'
  * @param {object} [props...props] - Any other props to be spread onto the underlying Button component.
  * @returns {JSX.Element} The rendered CTA button component.
  */
-const ButtonCta = ({ 
-  label = "Get Started", 
-  link = "#", 
-  variant = "default", 
+const ButtonCta = ({
+  label = "Get Started",
+  link = "#",
+  variant = "default",
   size = "lg",
   showArrow = false,
   className,
@@ -31,12 +31,12 @@ const ButtonCta = ({
 }: TypeButtonCta) => {
   return (
     <Link href={link} className="inline-block w-full">
-      <Button 
-        variant={variant} 
-        size={size} 
+      <Button
+        variant={variant}
+        size={size}
         className={cn(
-          "font-medium cursor-pointer bg-primary hover:bg-primary/80 rounded-lg px-8 py-4 text-base w-full", 
-          className
+          "font-medium cursor-pointer bg-primary hover:bg-primary/80 rounded-lg px-8 py-4 text-base w-full",
+          className,
         )}
         {...props}
       >
@@ -44,7 +44,7 @@ const ButtonCta = ({
         {showArrow && <ArrowRight className="ml-2 h-4 w-4" />}
       </Button>
     </Link>
-  )
-}
+  );
+};
 
-export default ButtonCta
+export default ButtonCta;

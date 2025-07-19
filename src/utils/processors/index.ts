@@ -1,17 +1,17 @@
 /**
  * Processors index file
- * 
+ *
  * This file exports all processors and utilities for easier imports
  */
 
 // Export document processor
-export * from './document-processor';
+export * from "./document-processor";
 
 // Export image processor and utilities
-export * from './image-processor';
+export * from "./image-processor";
 
 // Export YouTube processor and utilities
-export * from './youtube-processor';
+export * from "./youtube-processor";
 
 // Export query processor and utilities
-export * from './query-processor';
+export * from "./query-processor";

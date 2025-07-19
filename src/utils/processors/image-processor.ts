@@ -2,7 +2,7 @@
 
 /**
  * Image processor module
- * 
+ *
  * This module handles image processing for chat interactions.
  * Unlike document processors, images don't need to be chunked or indexed.
  * Instead, they are sent directly to the model with appropriate context.
@@ -15,24 +15,24 @@
  */
 export async function processImage(
   fileBlob: Blob,
-  fileName: string
+  fileName: string,
 ): Promise<{ success: boolean }> {
   console.log(`Processing image: ${fileName}`);
-  
+
   try {
     // Validate that this is actually an image file
-    if (!fileBlob.type.startsWith('image/')) {
+    if (!fileBlob.type.startsWith("image/")) {
       throw new Error(`File is not an image: ${fileBlob.type}`);
     }
-    
+
     // For now, we don't need to do any processing for images
     // They are sent directly to the model with the appropriate context
     // This function exists for future expansion and consistency with other processors
-    
+
     console.log(`Image processed successfully: ${fileName}`);
-    
+
     return {
-      success: true
+      success: true,
     };
   } catch (error) {
     console.error("Error processing image:", error);
@@ -45,7 +45,9 @@ export async function processImage(
  * Get image file information
  * This is a placeholder for future expansion
  */
-export async function getImageInfo(fileBlob: Blob): Promise<{ width: number; height: number; format: string }> {
+export async function getImageInfo(
+  fileBlob: Blob,
+): Promise<{ width: number; height: number; format: string }> {
   return new Promise((resolve, reject) => {
     try {
       const img = new Image();
@@ -54,16 +56,16 @@ export async function getImageInfo(fileBlob: Blob): Promise<{ width: number; hei
         resolve({
           width: img.width,
           height: img.height,
-          format: fileBlob.type.split('/')[1] || 'unknown'
+          format: fileBlob.type.split("/")[1] || "unknown",
         });
       };
       img.onerror = () => {
         URL.revokeObjectURL(img.src);
-        reject(new Error('Failed to load image'));
+        reject(new Error("Failed to load image"));
       };
       img.src = URL.createObjectURL(fileBlob);
     } catch (error) {
       reject(error);
     }
   });
-} 
+}

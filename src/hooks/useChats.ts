@@ -120,7 +120,7 @@ export const useChats = (chatId?: string) => {
       queryClient.setQueryData(
         CHATS_QUERY_KEY,
         (oldData: TypeChat[] | undefined) =>
-          oldData ? [newChat, ...oldData] : [newChat]
+          oldData ? [newChat, ...oldData] : [newChat],
       );
     },
   });
@@ -128,7 +128,7 @@ export const useChats = (chatId?: string) => {
   /** Mutation to create a new chat record directly. */
   const createChatMutation = useMutation({
     mutationFn: async (
-      chatData: Omit<TypeChat, "id" | "user_id" | "created_at">
+      chatData: Omit<TypeChat, "id" | "user_id" | "created_at">,
     ) => {
       if (!userId) throw new Error("No authenticated user");
       const newChat = { ...chatData, user_id: userId };
@@ -144,7 +144,7 @@ export const useChats = (chatId?: string) => {
       queryClient.setQueryData(
         CHATS_QUERY_KEY,
         (oldData: TypeChat[] | undefined) =>
-          oldData ? [newChat, ...oldData] : [newChat]
+          oldData ? [newChat, ...oldData] : [newChat],
       );
     },
   });
@@ -172,14 +172,14 @@ export const useChats = (chatId?: string) => {
     onSuccess: (updatedChat) => {
       queryClient.setQueryData(
         [...CHATS_QUERY_KEY, updatedChat.id],
-        updatedChat
+        updatedChat,
       ); // Update single chat cache
       queryClient.setQueryData(
         CHATS_QUERY_KEY,
         (oldData: TypeChat[] | undefined) =>
           oldData?.map((chat) =>
-            chat.id === updatedChat.id ? updatedChat : chat
-          ) || [updatedChat]
+            chat.id === updatedChat.id ? updatedChat : chat,
+          ) || [updatedChat],
       ); // Update list cache
     },
   });
@@ -201,7 +201,7 @@ export const useChats = (chatId?: string) => {
       queryClient.setQueryData(
         CHATS_QUERY_KEY,
         (oldData: TypeChat[] | undefined) =>
-          oldData?.filter((chat) => chat.id !== chatId) || []
+          oldData?.filter((chat) => chat.id !== chatId) || [],
       ); // Update list cache
     },
   });

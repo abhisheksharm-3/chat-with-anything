@@ -1,12 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Send, AlertCircle } from 'lucide-react';
-import { TypeUploadModalUrlInputProps } from '@/types/types';
-import { isYoutubeUrl } from '@/utils/gemini/youtube-utils';
-import { Input } from '../ui/input';
-import { Button } from '../ui/button';
-
+import { useState, useEffect } from "react";
+import { Send, AlertCircle } from "lucide-react";
+import { TypeUploadModalUrlInputProps } from "@/types/types";
+import { isYoutubeUrl } from "@/utils/gemini/youtube-utils";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 
 /**
  * A controlled input component for users to submit a URL for processing.
@@ -33,10 +32,10 @@ const UploadModalUrlInput: React.FC<TypeUploadModalUrlInputProps> = ({
   handleUrlChange,
   handleUrlSubmit,
   handleKeyDown,
-  isUploading
+  isUploading,
 }) => {
   const [isYouTube, setIsYouTube] = useState(false);
-  
+
   /**
    * Effect to check if the currently entered URL is a YouTube link
    * and update the state accordingly.
@@ -44,43 +43,43 @@ const UploadModalUrlInput: React.FC<TypeUploadModalUrlInputProps> = ({
   useEffect(() => {
     setIsYouTube(isYoutubeUrl(url));
   }, [url]);
-  
+
   return (
     <div className="mb-4">
       <p className="text-xs text-gray-400 mb-1">
-      {isUrlOnly ? `Enter ${fileTypeConfig.name} URL` : 'Import from URL'}
+        {isUrlOnly ? `Enter ${fileTypeConfig.name} URL` : "Import from URL"}
       </p>
       <div className="relative">
-      <Input
-        type="text"
-        placeholder="https://"
-        value={url}
-        onChange={handleUrlChange}
-        onKeyDown={handleKeyDown}
-        className="pr-10"
-        disabled={isUploading}
-      />
-      <Button
-        size="icon"
-        variant="ghost"
-        className={`absolute right-3 top-1/2 -translate-y-1/2 ${
-        url.trim() ? 'text-white' : 'text-gray-400'
-        } hover:text-white`}
-        onClick={handleUrlSubmit}
-        disabled={!url.trim() || isUploading}
-        aria-label="Submit URL"
-      >
-        <Send size={16} />
-      </Button>
+        <Input
+          type="text"
+          placeholder="https://"
+          value={url}
+          onChange={handleUrlChange}
+          onKeyDown={handleKeyDown}
+          className="pr-10"
+          disabled={isUploading}
+        />
+        <Button
+          size="icon"
+          variant="ghost"
+          className={`absolute right-3 top-1/2 -translate-y-1/2 ${
+            url.trim() ? "text-white" : "text-gray-400"
+          } hover:text-white`}
+          onClick={handleUrlSubmit}
+          disabled={!url.trim() || isUploading}
+          aria-label="Submit URL"
+        >
+          <Send size={16} />
+        </Button>
       </div>
-      
+
       {/* YouTube-specific message */}
       {isYouTube && (
         <div className="mt-2 flex items-start gap-2 bg-blue-900/20 p-2 rounded-md">
           <AlertCircle size={16} className="text-blue-400 mt-0.5" />
           <p className="text-xs text-blue-400">
-            Note: Only YouTube videos with available captions/transcripts can be processed. 
-            Private or automatically generated captions may not work.
+            Note: Only YouTube videos with available captions/transcripts can be
+            processed. Private or automatically generated captions may not work.
           </p>
         </div>
       )}

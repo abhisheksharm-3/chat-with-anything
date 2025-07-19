@@ -92,7 +92,7 @@ export const useMessages = (chatId: string) => {
       queryClient.setQueryData(
         [...MESSAGES_QUERY_KEY, chatId],
         (oldData: TypeMessage[] | undefined) =>
-          oldData ? [...oldData, newMessage] : [newMessage]
+          oldData ? [...oldData, newMessage] : [newMessage],
       );
     },
   });
@@ -123,8 +123,8 @@ export const useMessages = (chatId: string) => {
         [...MESSAGES_QUERY_KEY, chatId],
         (oldData: TypeMessage[] | undefined) =>
           oldData?.map((msg) =>
-            msg.id === updatedMessage.id ? updatedMessage : msg
-          ) || [updatedMessage]
+            msg.id === updatedMessage.id ? updatedMessage : msg,
+          ) || [updatedMessage],
       );
     },
   });
@@ -146,7 +146,7 @@ export const useMessages = (chatId: string) => {
       queryClient.setQueryData(
         [...MESSAGES_QUERY_KEY, chatId],
         (oldData: TypeMessage[] | undefined) =>
-          oldData?.filter((msg) => msg.id !== messageId) || []
+          oldData?.filter((msg) => msg.id !== messageId) || [],
       );
     },
   });
@@ -185,7 +185,7 @@ export const useMessages = (chatId: string) => {
               if (payload.eventType === "UPDATE") {
                 const updatedMessage = payload.new as TypeMessage;
                 return oldData.map((msg) =>
-                  msg.id === updatedMessage.id ? updatedMessage : msg
+                  msg.id === updatedMessage.id ? updatedMessage : msg,
                 );
               }
               if (payload.eventType === "DELETE") {
@@ -193,9 +193,9 @@ export const useMessages = (chatId: string) => {
                 return oldData.filter((msg) => msg.id !== deletedMessageId);
               }
               return oldData;
-            }
+            },
           );
-        }
+        },
       )
       .subscribe();
 

@@ -154,7 +154,7 @@ export const useFiles = () => {
               const result = await processGenericDocument(
                 file,
                 data.id,
-                fileData.type!
+                fileData.type!,
               );
               await supabase
                 .from("files")
@@ -203,7 +203,7 @@ export const useFiles = () => {
       queryClient.setQueryData(
         FILES_QUERY_KEY,
         (oldData: TypeFile[] | undefined) =>
-          oldData ? [newFile, ...oldData] : [newFile]
+          oldData ? [newFile, ...oldData] : [newFile],
       );
     },
   });
@@ -232,14 +232,14 @@ export const useFiles = () => {
       // Update both the specific file cache and the list cache
       queryClient.setQueryData(
         [...FILES_QUERY_KEY, updatedFile.id],
-        updatedFile
+        updatedFile,
       );
       queryClient.setQueryData(
         FILES_QUERY_KEY,
         (oldData: TypeFile[] | undefined) =>
           oldData?.map((file) =>
-            file.id === updatedFile.id ? updatedFile : file
-          ) || [updatedFile]
+            file.id === updatedFile.id ? updatedFile : file,
+          ) || [updatedFile],
       );
     },
   });
@@ -287,7 +287,7 @@ export const useFiles = () => {
       queryClient.setQueryData(
         FILES_QUERY_KEY,
         (oldData: TypeFile[] | undefined) =>
-          oldData?.filter((file) => file.id !== fileId) || []
+          oldData?.filter((file) => file.id !== fileId) || [],
       );
     },
   });

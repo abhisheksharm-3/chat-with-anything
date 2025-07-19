@@ -1,9 +1,9 @@
-import React from 'react';
-import { Loader2 } from 'lucide-react';
-import { TypeChatInterfaceMessagesProps } from '@/types/chat';
-import Image from 'next/image';
-import { getUserInitials } from '@/utils/dashboard-utils';
-import { useUser } from '@/hooks';
+import React from "react";
+import { Loader2 } from "lucide-react";
+import { TypeChatInterfaceMessagesProps } from "@/types/chat";
+import Image from "next/image";
+import { getUserInitials } from "@/utils/dashboard-utils";
+import { useUser } from "@/hooks";
 
 /**
  * Renders the main message display area for the chat interface.
@@ -18,12 +18,10 @@ import { useUser } from '@/hooks';
  * @param {React.RefObject<HTMLDivElement>} props.messagesEndRef - A ref attached to a div at the end of the message list to enable auto-scrolling.
  * @returns {JSX.Element} The rendered chat message container.
  */
-export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = ({
-  messages,
-  messagesLoading,
-  messagesEndRef
-}) => {
-  const { user } = useUser()
+export const ChatInterfaceMessages: React.FC<
+  TypeChatInterfaceMessagesProps
+> = ({ messages, messagesLoading, messagesEndRef }) => {
+  const { user } = useUser();
 
   /**
    * Parses and renders the string content of a single message.
@@ -35,14 +33,19 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
    */
   const renderMessageContent = (content: string): React.ReactNode => {
     // Check for specific, known error messages to provide better user feedback.
-    if (content.startsWith("I couldn't process this YouTube video:") ||
-        content.startsWith("ERROR: No transcript available for this YouTube video")) {
+    if (
+      content.startsWith("I couldn't process this YouTube video:") ||
+      content.startsWith(
+        "ERROR: No transcript available for this YouTube video",
+      )
+    ) {
       return (
         <div className="text-red-400">
           <p>{content}</p>
           <p className="mt-2 text-sm">
-            This video doesn&apos;t have available captions or transcripts. Please try a different video
-            that has manually added captions. Videos with auto-generated captions may not work.
+            This video doesn&apos;t have available captions or transcripts.
+            Please try a different video that has manually added captions.
+            Videos with auto-generated captions may not work.
           </p>
         </div>
       );
@@ -53,8 +56,9 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
         <div className="text-red-400">
           <p>{content}</p>
           <p className="mt-2 text-sm">
-            The document might be empty, scanned, corrupted, or in an unsupported format. 
-            For best results, try uploading a different file or ensure the document contains readable text.
+            The document might be empty, scanned, corrupted, or in an
+            unsupported format. For best results, try uploading a different file
+            or ensure the document contains readable text.
           </p>
         </div>
       );
@@ -72,15 +76,15 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
           <span className="ml-2 text-gray-400">Loading messages...</span>
         </div>
-        /* Empty chat state */
-      ) : messages.length === 0 ? (
+      ) : /* Empty chat state */
+      messages.length === 0 ? (
         <div className="flex items-center justify-center h-full">
           <p className="text-gray-400 text-sm text-center">
             No messages yet. Start chatting with the document!
           </p>
         </div>
-        /* Render messages */
       ) : (
+        /* Render messages */
         messages.map((message) => (
           <div
             key={message.id}
@@ -89,7 +93,7 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
             }`}
           >
             {/* Assistant avatar */}
-            {message.role === 'assistant' && (
+            {message.role === "assistant" && (
               <div className="w-11 h-11 rounded-lg bg-[#272626] flex items-center justify-center flex-shrink-0 p-2">
                 <Image
                   src="/logo.png"
@@ -101,7 +105,7 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
                 />
               </div>
             )}
-            
+
             <div
               className={`max-w-[80%] rounded-lg p-3 text-sm ${
                 message.role === "user"
@@ -112,7 +116,7 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
               }`}
             >
               {/* "Thinking" indicator */}
-              {message.content === '...' ? (
+              {message.content === "..." ? (
                 <div className="flex items-center">
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   <span>AI is thinking...</span>
@@ -125,7 +129,7 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
             </div>
 
             {/* User avatar with initials */}
-            {message.role === 'user' && (
+            {message.role === "user" && (
               <div className="w-11 h-11 rounded-lg bg-[#272626] flex items-center justify-center flex-shrink-0 text-sm">
                 {getUserInitials(user)}
               </div>

@@ -66,7 +66,7 @@ async function getFileContent(fileId: string) {
       // First check processing status in the database
       if (file.processing_status === "completed") {
         console.log(
-          "YouTube transcript already processed according to database"
+          "YouTube transcript already processed according to database",
         );
         return "YOUTUBE_TRANSCRIPT";
       }
@@ -74,7 +74,7 @@ async function getFileContent(fileId: string) {
       if (file.processing_status === "failed") {
         console.error(
           "YouTube transcript processing previously failed:",
-          file.processing_error
+          file.processing_error,
         );
         return `ERROR: ${
           file.processing_error || "Failed to process YouTube transcript"
@@ -172,7 +172,7 @@ async function getFileContent(fileId: string) {
       if (file.processing_status === "failed") {
         console.error(
           "PDF processing previously failed:",
-          file.processing_error
+          file.processing_error,
         );
         return `ERROR: ${file.processing_error || "Failed to process PDF"}`;
       }
@@ -290,7 +290,7 @@ async function getFileContent(fileId: string) {
       // First check processing status in the database
       if (file.processing_status === "completed") {
         console.log(
-          `${file.type.toUpperCase()} already processed according to database`
+          `${file.type.toUpperCase()} already processed according to database`,
         );
         return `${file.type.toUpperCase()}_CONTENT`;
       }
@@ -298,7 +298,7 @@ async function getFileContent(fileId: string) {
       if (file.processing_status === "failed") {
         console.error(
           `${file.type} processing previously failed:`,
-          file.processing_error
+          file.processing_error,
         );
         return `ERROR: ${
           file.processing_error || `Failed to process ${file.type}`
@@ -311,7 +311,7 @@ async function getFileContent(fileId: string) {
 
       if (namespaceExists) {
         console.log(
-          `${file.type.toUpperCase()} content found in Pinecone, returning placeholder`
+          `${file.type.toUpperCase()} content found in Pinecone, returning placeholder`,
         );
 
         // Update status to completed if not already
@@ -374,7 +374,7 @@ async function getFileContent(fileId: string) {
         const result = await processGenericDocument(
           fileBlob,
           file.id,
-          file.type
+          file.type,
         );
 
         if (!result.success) {
@@ -403,7 +403,7 @@ async function getFileContent(fileId: string) {
           .eq("id", file.id);
 
         console.log(
-          `${file.type.toUpperCase()} processed and indexed successfully`
+          `${file.type.toUpperCase()} processed and indexed successfully`,
         );
         return `${file.type.toUpperCase()}_CONTENT`;
       }
@@ -428,7 +428,7 @@ async function getFileContent(fileId: string) {
  */
 async function getFileBlob(
   supabase: SupabaseClient,
-  file: TypeFile
+  file: TypeFile,
 ): Promise<Blob | null> {
   // Try with direct URL if available
   if (file.url && file.url.includes("file-storage")) {
@@ -501,7 +501,7 @@ export async function createChat(fileId: string, userId?: string) {
   if (!isConfigured()) {
     console.error("Gemini API not configured");
     throw new Error(
-      "Gemini API is not configured. Please set the GEMINI_API_KEY environment variable."
+      "Gemini API is not configured. Please set the GEMINI_API_KEY environment variable.",
     );
   }
 
@@ -550,7 +550,7 @@ export async function createChat(fileId: string, userId?: string) {
       chatType = "sheet";
     } else if (
       !["pdf", "image", "doc", "video", "sheet", "slides"].includes(
-        file.type || ""
+        file.type || "",
       )
     ) {
       // If it's not a recognized type, set to null
@@ -605,12 +605,12 @@ export async function createChat(fileId: string, userId?: string) {
 export async function sendMessage(
   chatId: string,
   content: string,
-  userId?: string
+  userId?: string,
 ) {
   // Check if Gemini API is configured
   if (!isConfigured()) {
     throw new Error(
-      "Gemini API is not configured. Please set the GEMINI_API_KEY environment variable."
+      "Gemini API is not configured. Please set the GEMINI_API_KEY environment variable.",
     );
   }
 
@@ -708,7 +708,7 @@ export async function sendMessage(
       // Special handling for image files - don't use RAG, just send to Gemini directly
       if (chat.files?.type === "image") {
         console.log(
-          "Image file detected, using direct Gemini query without RAG"
+          "Image file detected, using direct Gemini query without RAG",
         );
 
         // If we have a URL for the image, use it directly with Gemini
@@ -716,9 +716,8 @@ export async function sendMessage(
           console.log("Using image URL for Gemini:", chat.files.url);
 
           // For image files, we'll handle them differently by adding context to the user message
-          formattedMessages[
-            formattedMessages.length - 1
-          ].content = `I'm looking at an image at URL: ${chat.files.url}. ${content}`;
+          formattedMessages[formattedMessages.length - 1].content =
+            `I'm looking at an image at URL: ${chat.files.url}. ${content}`;
         } else {
           // If we don't have a URL, just use text description
           console.log("No image URL available, using text description only");
@@ -765,7 +764,7 @@ export async function sendMessage(
         // Continue with normal processing if we have a transcript
         if (fileContent === "YOUTUBE_TRANSCRIPT") {
           console.log(
-            "YouTube transcript detected, using RAG with indexed transcript"
+            "YouTube transcript detected, using RAG with indexed transcript",
           );
 
           try {
@@ -780,7 +779,7 @@ export async function sendMessage(
 
               console.log(
                 "Retrieved relevant transcript sections:",
-                combinedContent.length
+                combinedContent.length,
               );
               fileContent = combinedContent;
             } else {
@@ -810,7 +809,7 @@ export async function sendMessage(
 
             console.log(
               "Retrieved relevant PDF sections:",
-              combinedContent.length
+              combinedContent.length,
             );
             fileContent = combinedContent;
           } else {
@@ -840,7 +839,7 @@ export async function sendMessage(
         docPlaceholders.includes(fileContent)
       ) {
         console.log(
-          `${chat.type.toUpperCase()} content detected, using RAG with indexed content`
+          `${chat.type.toUpperCase()} content detected, using RAG with indexed content`,
         );
 
         try {
@@ -855,7 +854,7 @@ export async function sendMessage(
 
             console.log(
               `Retrieved relevant ${chat.type} sections:`,
-              combinedContent.length
+              combinedContent.length,
             );
             fileContent = combinedContent;
           } else {
@@ -873,7 +872,7 @@ export async function sendMessage(
     console.log("Sending message to Gemini...");
     const response = await sendMessageToGemini(
       formattedMessages,
-      fileContent || undefined
+      fileContent || undefined,
     );
     console.log("Received response from Gemini");
 

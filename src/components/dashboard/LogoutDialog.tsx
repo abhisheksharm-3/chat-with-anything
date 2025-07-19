@@ -1,16 +1,12 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent,
-  DialogTrigger
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Loader2, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useUser } from '@/hooks';
-import { TypeDialogProps } from '@/types/types';
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Loader2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/hooks";
+import { TypeDialogProps } from "@/types/types";
 
 /**
  * A modal dialog component that prompts the user for confirmation before signing out.
@@ -35,9 +31,9 @@ const LogoutDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
     try {
       await signOut();
       setOpen(false);
-      router.push('/login');
+      router.push("/login");
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     }
   };
 
@@ -51,10 +47,13 @@ const LogoutDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="bg-[#121212] border border-[#333] max-w-md p-6 rounded-xl gap-2" showCloseButton={false}>
+      <DialogContent
+        className="bg-[#121212] border border-[#333] max-w-md p-6 rounded-xl gap-2"
+        showCloseButton={false}
+      >
         <div className="flex justify-between items-start">
           <h2 className="text-lg font-semibold">Logout?</h2>
-          <button 
+          <button
             onClick={handleCancel}
             className="text-gray-400 hover:text-white cursor-pointer"
             disabled={isSigningOut}
@@ -63,11 +62,11 @@ const LogoutDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
             <X size={24} />
           </button>
         </div>
-        
+
         <p className="text-gray-400 text-sm mb-6">
           Are you sure you want to logout? This action cannot be undone.
         </p>
-        
+
         <div className="flex gap-3">
           <Button
             onClick={handleCancel}

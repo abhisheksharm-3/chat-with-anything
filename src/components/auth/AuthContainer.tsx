@@ -29,8 +29,12 @@ export const AuthContainer = ({
       <AuthHeader title={title} subtitle={subtitle} />
 
       {/* Conditionally render status messages */}
-      {errorMessage && <AuthStatusMessage message={errorMessage} type="error" />}
-      {successMessage && <AuthStatusMessage message={successMessage} type="success" />}
+      {errorMessage && (
+        <AuthStatusMessage message={errorMessage} type="error" />
+      )}
+      {successMessage && (
+        <AuthStatusMessage message={successMessage} type="success" />
+      )}
 
       {/* Render the main content, such as a login or signup form */}
       {children}

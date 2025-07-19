@@ -24,39 +24,45 @@ const MobileNavigation = ({
 }) => (
   <nav className="flex-1 p-6">
     <div className="space-y-1">
-      {MobileNavItems.map(({ href, icon: IconComponent, title, description }) => {
-        const Icon = IconComponent as LucideIcon;
-        const isActive = pathname === href;
-        
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-200 ${
-              isActive
-                ? "bg-[#2a2a2a] text-white shadow-sm"
-                : "text-gray-400 hover:text-white hover:bg-[#1f1f1f] active:bg-[#2a2a2a]"
-            }`}
-            onClick={onItemClick}
-          >
-            <div className={`flex-shrink-0 w-10 h-10 rounded-full bg-[#181818] flex items-center justify-center ${
-              isActive ? 'text-white' : 'text-gray-400'
-            }`}>
-              <Icon size={20} strokeWidth={1.5} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className={`text-base font-medium leading-5 ${
-                isActive ? 'text-white' : 'text-gray-300'
-              }`}>
-                {title}
+      {MobileNavItems.map(
+        ({ href, icon: IconComponent, title, description }) => {
+          const Icon = IconComponent as LucideIcon;
+          const isActive = pathname === href;
+
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-200 ${
+                isActive
+                  ? "bg-[#2a2a2a] text-white shadow-sm"
+                  : "text-gray-400 hover:text-white hover:bg-[#1f1f1f] active:bg-[#2a2a2a]"
+              }`}
+              onClick={onItemClick}
+            >
+              <div
+                className={`flex-shrink-0 w-10 h-10 rounded-full bg-[#181818] flex items-center justify-center ${
+                  isActive ? "text-white" : "text-gray-400"
+                }`}
+              >
+                <Icon size={20} strokeWidth={1.5} />
               </div>
-              <div className="text-sm text-gray-500 leading-4 mt-0.5">
-                {description}
+              <div className="flex-1 min-w-0">
+                <div
+                  className={`text-base font-medium leading-5 ${
+                    isActive ? "text-white" : "text-gray-300"
+                  }`}
+                >
+                  {title}
+                </div>
+                <div className="text-sm text-gray-500 leading-4 mt-0.5">
+                  {description}
+                </div>
               </div>
-            </div>
-          </Link>
-        );
-      })}
+            </Link>
+          );
+        },
+      )}
     </div>
   </nav>
 );
@@ -89,32 +95,34 @@ const UserProfile = ({
     <div className="flex items-center gap-6 flex-col justify-center w-screen">
       <div className="flex items-start gap-3 w-full">
         <div className="w-16 h-16 rounded-full flex items-center justify-center">
-        <Image
-          src={avatarImage}
-          alt="User Avatar"
-          className="object-contain"
-          width={64}
-          height={64}
-          priority
-        />
-      </div>
-      <div className="flex flex-col text-left gap-2">
-        <div className="text-white text-lg font-bold">
-          {user?.name || "User"}
+          <Image
+            src={avatarImage}
+            alt="User Avatar"
+            className="object-contain"
+            width={64}
+            height={64}
+            priority
+          />
         </div>
-        <div className="text-gray-400 text-sm">{user?.email || "No email"}</div>
-      </div>
-      <div className="ml-auto">
-        <span className="bg-primary text-xs px-2 py-1 rounded">FREE</span>
-      </div>
+        <div className="flex flex-col text-left gap-2">
+          <div className="text-white text-lg font-bold">
+            {user?.name || "User"}
+          </div>
+          <div className="text-gray-400 text-sm">
+            {user?.email || "No email"}
+          </div>
+        </div>
+        <div className="ml-auto">
+          <span className="bg-primary text-xs px-2 py-1 rounded">FREE</span>
+        </div>
       </div>
       <PricingDialog
-            trigger={
-              <Button className="w-full font-bold text-lg bg-primary hover:bg-primary/90 text-white rounded-lg py-8">
-                Upgrade to pro
-              </Button>
-            }
-          />
+        trigger={
+          <Button className="w-full font-bold text-lg bg-primary hover:bg-primary/90 text-white rounded-lg py-8">
+            Upgrade to pro
+          </Button>
+        }
+      />
     </div>
   );
 };
@@ -135,7 +143,7 @@ export const DashboardMobileSidebar = ({
   onClose,
   pathname,
   user,
-isLoading,
+  isLoading,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -172,14 +180,14 @@ isLoading,
             </div>
             <span className="text-white font-medium">chatwithanything</span>
           </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="text-gray-400 hover:text-white border rounded-lg"
-            >
-              <ChevronsLeft className="size-8" />
-            </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="text-gray-400 hover:text-white border rounded-lg"
+          >
+            <ChevronsLeft className="size-8" />
+          </Button>
         </div>
         <MobileNavigation pathname={pathname} onItemClick={onClose} />
         <div className="p-4 border-t border-gray-700">

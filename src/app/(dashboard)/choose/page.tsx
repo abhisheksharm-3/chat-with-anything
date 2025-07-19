@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import React from 'react';
-import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
-import { FileTypes } from '@/constants/FileTypes';
-import UploadModal from '@/components/upload/UploadModal';
+import React from "react";
+import Image from "next/image";
+import { Card, CardContent } from "@/components/ui/card";
+import { FileTypes } from "@/constants/FileTypes";
+import UploadModal from "@/components/upload/UploadModal";
 
 /**
  * Renders the page where users select a file type to begin a new chat.
@@ -31,7 +31,7 @@ const ChoosePage = () => {
             {fileType.comingSoon ? (
               // Render a disabled "coming soon" card for features that are not yet released.
               <Card className="h-32 w-full hover:bg-muted/50 transition-colors">
-                <CardContent className='flex flex-col items-center justify-center gap-3 h-full relative'>
+                <CardContent className="flex flex-col items-center justify-center gap-3 h-full relative">
                   <div className="h-12 w-12 flex items-center justify-center">
                     <Image
                       src={fileType.image}
@@ -41,7 +41,9 @@ const ChoosePage = () => {
                       className="opacity-50 object-contain"
                     />
                   </div>
-                  <span className="text-sm text-center text-gray-300">{fileType.name}</span>
+                  <span className="text-sm text-center text-gray-300">
+                    {fileType.name}
+                  </span>
                   <div className="absolute bottom-2 left-0 right-0 flex justify-center translate-y-11">
                     <span className="text-xs bg-foreground text-primary px-2 py-1 rounded-xl tracking-tighter font-bold">
                       COMING SOON
@@ -51,11 +53,11 @@ const ChoosePage = () => {
               </Card>
             ) : (
               // For available file types, the card itself becomes the trigger for an upload modal.
-              <UploadModal 
+              <UploadModal
                 fileType={fileType.type}
                 trigger={
                   <Card className="h-32 w-full hover:bg-muted/50 transition-colors cursor-pointer">
-                    <CardContent className='flex flex-col items-center justify-center gap-3 h-full relative'>
+                    <CardContent className="flex flex-col items-center justify-center gap-3 h-full relative">
                       <div className="h-12 w-12 flex items-center justify-center">
                         <Image
                           src={fileType.image}
@@ -65,7 +67,9 @@ const ChoosePage = () => {
                           className="object-contain"
                         />
                       </div>
-                      <span className="text-sm text-center text-gray-300">{fileType.name}</span>
+                      <span className="text-sm text-center text-gray-300">
+                        {fileType.name}
+                      </span>
                     </CardContent>
                   </Card>
                 }

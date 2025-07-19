@@ -87,7 +87,7 @@ export const useUploadLogic = ({
         setError("");
       }
     },
-    []
+    [],
   );
 
   /** Handles changes to the URL input field. */
@@ -101,7 +101,7 @@ export const useUploadLogic = ({
       }
       if (error) setError("");
     },
-    [error]
+    [error],
   );
 
   /** Deselects the currently chosen file. */
@@ -146,7 +146,7 @@ export const useUploadLogic = ({
           throw new Error(
             `Cannot process this YouTube video: ${
               transcriptError || "No transcript available."
-            }`
+            }`,
           );
         }
       }
@@ -194,7 +194,7 @@ export const useUploadLogic = ({
       }
       return null;
     },
-    [startChatWithFileAsync]
+    [startChatWithFileAsync],
   );
 
   /**
@@ -217,7 +217,7 @@ export const useUploadLogic = ({
           throw new Error(
             `File size exceeds ${
               fileTypeConfig.maxSize / (1024 * 1024)
-            }MB limit`
+            }MB limit`,
           );
         }
         uploadedFile = await uploadFileAsync({
@@ -281,7 +281,7 @@ export const useUploadLogic = ({
         handleUrlSubmit();
       }
     },
-    [handleUrlSubmit]
+    [handleUrlSubmit],
   );
 
   return {

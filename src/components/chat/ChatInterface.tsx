@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useMessages, useChats, useFileById } from '@/hooks';
-import { TypeMessage } from '@/types/supabase';
-import { TypeChatInterfaceProps } from '@/types/chat';
-import { ChatInterfaceMessages } from './ChatInterfaceMessage';
-import { ChatInterfaceInput } from './ChatInterfaceInput';
-import { ChatInterfaceDocumentViewer } from './ChatInterfaceDocumentViewer';
-import { ChatInterfaceMobileTabs } from './ChatInterfaceMobileTabs';
+import React, { useState, useEffect, useRef } from "react";
+import { useMessages, useChats, useFileById } from "@/hooks";
+import { TypeMessage } from "@/types/supabase";
+import { TypeChatInterfaceProps } from "@/types/chat";
+import { ChatInterfaceMessages } from "./ChatInterfaceMessage";
+import { ChatInterfaceInput } from "./ChatInterfaceInput";
+import { ChatInterfaceDocumentViewer } from "./ChatInterfaceDocumentViewer";
+import { ChatInterfaceMobileTabs } from "./ChatInterfaceMobileTabs";
 
 /**
  * The main component for the chat interface, orchestrating the document viewer,
@@ -27,19 +27,24 @@ import { ChatInterfaceMobileTabs } from './ChatInterfaceMobileTabs';
  * @param {string} props.chatId - The unique identifier for the current chat session.
  * @returns {JSX.Element} The fully interactive chat interface.
  */
-const ChatInterface: React.FC<TypeChatInterfaceProps> = ({ 
-  title = "Untitled Chat", 
-  chatId 
+const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
+  title = "Untitled Chat",
+  chatId,
 }) => {
   // --- Hooks for data fetching and state management ---
-  const { messages: chatMessages, isLoading: messagesLoading, sendMessage, subscribeToMessages } = useMessages(chatId);
+  const {
+    messages: chatMessages,
+    isLoading: messagesLoading,
+    sendMessage,
+    subscribeToMessages,
+  } = useMessages(chatId);
   const { getChatById } = useChats();
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [showPDF, setShowPDF] = useState(false); // For mobile view toggle
   const [localMessages, setLocalMessages] = useState<TypeMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const localMessagesRef = useRef<TypeMessage[]>([]);
-  
+
   // Keep ref in sync with state
   useEffect(() => {
     localMessagesRef.current = localMessages;
@@ -48,32 +53,40 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
   /**
    * Checks if two messages are duplicates based on content and timing
    */
-  const areMessagesDuplicate = (msg1: TypeMessage, msg2: TypeMessage): boolean => {
+  const areMessagesDuplicate = (
+    msg1: TypeMessage,
+    msg2: TypeMessage,
+  ): boolean => {
     // Same role and content
     if (msg1.role === msg2.role && msg1.content === msg2.content) {
       // If they're both user messages, they're likely duplicates
-      if (msg1.role === 'user') {
+      if (msg1.role === "user") {
         return true;
       }
-      
+
       // For assistant messages, check if they're within a short time window (5 seconds)
       const time1 = new Date(msg1.created_at).getTime();
       const time2 = new Date(msg2.created_at).getTime();
       const timeDiff = Math.abs(time1 - time2);
       return timeDiff < 5000; // 5 seconds
     }
-    
+
     return false;
   };
-  
+
   // Fetch chat and associated file metadata
   const chat = getChatById(chatId);
-  const { data: file, isLoading: isFileLoading, isError: isFileError } = useFileById(chat?.file_id || '');
+  const {
+    data: file,
+    isLoading: isFileLoading,
+    isError: isFileError,
+  } = useFileById(chat?.file_id || "");
 
   // Derived state to check for a specific YouTube processing error
-  const hasYouTubeProcessingError = file?.type === 'youtube' && 
-                                    file?.processing_status === 'failed' && 
-                                    file?.processing_error;
+  const hasYouTubeProcessingError =
+    file?.type === "youtube" &&
+    file?.processing_status === "failed" &&
+    file?.processing_error;
 
   // --- Effects ---
 
@@ -84,45 +97,47 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
    */
   useEffect(() => {
     if (!chatMessages) return;
-    
+
     // Get all temporary messages (optimistic updates)
-    const tempMessages = localMessagesRef.current.filter(msg => 
-      msg.id.startsWith('temp-') || msg.id.startsWith('error-')
+    const tempMessages = localMessagesRef.current.filter(
+      (msg) => msg.id.startsWith("temp-") || msg.id.startsWith("error-"),
     );
-    
+
     // Get server message IDs to avoid duplicates
-    const serverMessageIds = new Set(chatMessages.map(msg => msg.id));
-    
+    const serverMessageIds = new Set(chatMessages.map((msg) => msg.id));
+
     // Filter out temp messages that have been replaced by server messages
     // Also filter out temp user messages that have corresponding server messages with same content
-    const uniqueTempMessages = tempMessages.filter(tempMsg => {
+    const uniqueTempMessages = tempMessages.filter((tempMsg) => {
       // If it's a temp user message, check if there's a server message with same content
-      if (tempMsg.role === 'user' && tempMsg.id.startsWith('temp-')) {
-        const hasMatchingServerMessage = chatMessages.some(serverMsg => 
-          areMessagesDuplicate(tempMsg, serverMsg)
+      if (tempMsg.role === "user" && tempMsg.id.startsWith("temp-")) {
+        const hasMatchingServerMessage = chatMessages.some((serverMsg) =>
+          areMessagesDuplicate(tempMsg, serverMsg),
         );
         return !hasMatchingServerMessage;
       }
-      
+
       // For other temp messages (AI thinking, errors), just check by ID
       return !serverMessageIds.has(tempMsg.id);
     });
-    
+
     // Create new local messages array with server messages + unique temp messages
     const newLocalMessages = [...chatMessages, ...uniqueTempMessages];
-    
+
     // Final deduplication pass to ensure no duplicates exist
     const finalMessages = newLocalMessages.filter((msg, index) => {
       // Check if this message is a duplicate of any previous message
-      const isDuplicate = newLocalMessages.slice(0, index).some(prevMsg => 
-        areMessagesDuplicate(msg, prevMsg)
-      );
-      
+      const isDuplicate = newLocalMessages
+        .slice(0, index)
+        .some((prevMsg) => areMessagesDuplicate(msg, prevMsg));
+
       return !isDuplicate;
     });
-    
+
     // Only update if the arrays are actually different
-    if (JSON.stringify(finalMessages) !== JSON.stringify(localMessagesRef.current)) {
+    if (
+      JSON.stringify(finalMessages) !== JSON.stringify(localMessagesRef.current)
+    ) {
       setLocalMessages(finalMessages);
     }
   }, [chatMessages]);
@@ -136,13 +151,18 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
       const errorMessage: TypeMessage = {
         id: `error-${Date.now()}`,
         chat_id: chatId,
-        role: 'assistant' as const,
-        content: `I couldn't process this YouTube video: ${file?.processing_error || 'No transcript available'}`,
+        role: "assistant" as const,
+        content: `I couldn't process this YouTube video: ${file?.processing_error || "No transcript available"}`,
         created_at: new Date().toISOString(),
       };
       setLocalMessages([errorMessage]);
     }
-  }, [hasYouTubeProcessingError, file?.processing_error, chatId, localMessages.length]);
+  }, [
+    hasYouTubeProcessingError,
+    file?.processing_error,
+    chatId,
+    localMessages.length,
+  ]);
 
   /**
    * Subscribes to real-time message updates from Supabase when the component mounts.
@@ -158,7 +178,7 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
    */
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [localMessages]);
 
@@ -170,7 +190,7 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
    */
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
-    
+
     const tempUserMessage: TypeMessage = {
       id: `temp-${Date.now()}`,
       chat_id: chatId,
@@ -178,36 +198,42 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
       content: inputValue,
       created_at: new Date().toISOString(),
     };
-    
+
     const tempAiMessage: TypeMessage = {
       id: `temp-ai-${Date.now()}`,
       chat_id: chatId,
       role: "assistant",
-      content: '...',
+      content: "...",
       created_at: new Date().toISOString(),
     };
-    
-    setLocalMessages(prev => [...prev, tempUserMessage, tempAiMessage]);
+
+    setLocalMessages((prev) => [...prev, tempUserMessage, tempAiMessage]);
     const messageToSend = inputValue;
-    setInputValue(''); // Clear input immediately
-    
+    setInputValue(""); // Clear input immediately
+
     try {
       await sendMessage(messageToSend);
       // Remove the temporary AI message after successful send
       // The temporary user message will be handled by the useEffect when server messages arrive
-      setLocalMessages(prev => prev.filter(msg => msg.id !== tempAiMessage.id));
+      setLocalMessages((prev) =>
+        prev.filter((msg) => msg.id !== tempAiMessage.id),
+      );
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error("Failed to send message:", error);
       // Remove temporary AI message and add error message
-      setLocalMessages(prev => {
-        const filtered = prev.filter(msg => !msg.id.startsWith('temp-ai-'));
-        return [...filtered, {
-          id: `error-${Date.now()}`,
-          chat_id: chatId,
-          role: 'assistant' as const,
-          content: 'Sorry, there was an error processing your request. Please try again.',
-          created_at: new Date().toISOString(),
-        }];
+      setLocalMessages((prev) => {
+        const filtered = prev.filter((msg) => !msg.id.startsWith("temp-ai-"));
+        return [
+          ...filtered,
+          {
+            id: `error-${Date.now()}`,
+            chat_id: chatId,
+            role: "assistant" as const,
+            content:
+              "Sorry, there was an error processing your request. Please try again.",
+            created_at: new Date().toISOString(),
+          },
+        ];
       });
     }
   };
@@ -216,7 +242,7 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
    * Sends the message when the user presses Enter without the Shift key.
    */
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -243,11 +269,11 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
         {/* Left Column: Document Viewer */}
         <div className="bg-[#181818] border rounded-xl border-[#272626] flex flex-col">
           {file && (
-            <ChatInterfaceDocumentViewer 
-              file={file} 
-              isLoading={isFileLoading} 
-              isError={isFileError} 
-              title={title} 
+            <ChatInterfaceDocumentViewer
+              file={file}
+              isLoading={isFileLoading}
+              isError={isFileError}
+              title={title}
             />
           )}
         </div>
@@ -256,15 +282,17 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
         <div className="bg-[#181818] flex flex-col border border-[#272626] rounded-xl py-2 max-h-[calc(100vh-5rem)]">
           <div className="p-3 border border-[#272626] rounded-xl mx-4">
             <h2 className="text-sm text-center text-gray-400">
-              {file ? `// Chat with ${file.name} //` : '// Chat with the document //'}
+              {file
+                ? `// Chat with ${file.name} //`
+                : "// Chat with the document //"}
             </h2>
           </div>
-          <ChatInterfaceMessages 
+          <ChatInterfaceMessages
             messages={localMessages}
             messagesLoading={messagesLoading}
             messagesEndRef={messagesEndRef}
           />
-          <ChatInterfaceInput 
+          <ChatInterfaceInput
             inputValue={inputValue}
             setInputValue={setInputValue}
             onSendMessage={handleSendMessage}
@@ -281,23 +309,23 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
           // View 1: Document Viewer
           <div className="flex-1 overflow-hidden">
             {file && (
-              <ChatInterfaceDocumentViewer 
-                file={file} 
-                isLoading={isFileLoading} 
-                isError={isFileError} 
-                title={title} 
+              <ChatInterfaceDocumentViewer
+                file={file}
+                isLoading={isFileLoading}
+                isError={isFileError}
+                title={title}
               />
             )}
           </div>
         ) : (
           // View 2: Chat Thread
           <div className="flex flex-col h-[calc(100vh-8rem)]">
-            <ChatInterfaceMessages 
+            <ChatInterfaceMessages
               messages={localMessages}
               messagesLoading={messagesLoading}
               messagesEndRef={messagesEndRef}
             />
-            <ChatInterfaceInput 
+            <ChatInterfaceInput
               inputValue={inputValue}
               setInputValue={setInputValue}
               onSendMessage={handleSendMessage}

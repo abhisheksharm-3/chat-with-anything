@@ -58,13 +58,13 @@ export const useUser = () => {
 
       if (error) {
         // If no profile is found, it's not a hard error. The user might have just signed up.
-        if (error.code === 'PGRST116') {
+        if (error.code === "PGRST116") {
           console.warn("User profile not found in database");
           return null;
         }
         throw error;
       }
-      
+
       return data as TypeUser;
     },
     enabled: !!sessionQuery.data?.user?.id, // Only run this query if the user is authenticated
@@ -73,7 +73,8 @@ export const useUser = () => {
   /** Mutation to update the user's profile in the 'users' table. */
   const updateUserMutation = useMutation({
     mutationFn: async (userData: Partial<TypeUser>) => {
-      if (!sessionQuery.data?.user?.id) throw new Error("No authenticated user");
+      if (!sessionQuery.data?.user?.id)
+        throw new Error("No authenticated user");
 
       const { data, error } = await supabase
         .from("users")
@@ -105,12 +106,15 @@ export const useUser = () => {
   });
 
   /** A fallback user object created from session data for a better UX while the full profile loads. */
-  const defaultUser: TypeUser | null = sessionQuery.data?.user ? {
-    id: sessionQuery.data.user.id,
-    email: sessionQuery.data.user.email || '',
-    name: sessionQuery.data.user.user_metadata?.full_name || '',
-    created_at: sessionQuery.data.user.created_at || new Date().toISOString(),
-  } : null;
+  const defaultUser: TypeUser | null = sessionQuery.data?.user
+    ? {
+        id: sessionQuery.data.user.id,
+        email: sessionQuery.data.user.email || "",
+        name: sessionQuery.data.user.user_metadata?.full_name || "",
+        created_at:
+          sessionQuery.data.user.created_at || new Date().toISOString(),
+      }
+    : null;
 
   return {
     user: userQuery.data || defaultUser,
@@ -127,4 +131,4 @@ export const useUser = () => {
     signOutAsync: signOutMutation.mutateAsync,
     isSigningOut: signOutMutation.isPending,
   };
-}
+};

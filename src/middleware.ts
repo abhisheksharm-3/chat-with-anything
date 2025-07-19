@@ -1,9 +1,9 @@
-import { type NextRequest } from 'next/server'
-import { updateSession } from './utils/supabase/middleware'
+import { type NextRequest } from "next/server";
+import { updateSession } from "./utils/supabase/middleware";
 
 export const middleware = async (request: NextRequest) => {
-  return await updateSession(request)
-}
+  return await updateSession(request);
+};
 
 export const config = {
   matcher: [
@@ -14,6 +14,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - images in the public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
-}
+};

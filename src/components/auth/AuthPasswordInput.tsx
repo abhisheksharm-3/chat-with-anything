@@ -16,7 +16,11 @@ import { Button } from "../ui/button";
  * @param {string} [props.className=""] - Optional CSS classes to apply to the input element.
  * @returns {React.ReactElement} The rendered password input component.
  */
-export const AuthPasswordInput = ({ field, placeholder = "••••••••", className = "" }: TypePasswordInputProps) => {
+export const AuthPasswordInput = ({
+  field,
+  placeholder = "••••••••",
+  className = "",
+}: TypePasswordInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (

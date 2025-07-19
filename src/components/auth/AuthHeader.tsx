@@ -14,7 +14,10 @@ import { TypeAuthHeaderProps } from "@/types/auth";
  * @param {string} props.subtitle - The descriptive text to display below the title.
  * @returns {React.ReactElement} The rendered header component.
  */
-export const AuthHeader: React.FC<TypeAuthHeaderProps> = ({ title, subtitle }) => (
+export const AuthHeader: React.FC<TypeAuthHeaderProps> = ({
+  title,
+  subtitle,
+}) => (
   <div className="flex flex-col items-center justify-center text-center">
     <Link href="/" className="mb-6">
       <Image
@@ -26,11 +29,7 @@ export const AuthHeader: React.FC<TypeAuthHeaderProps> = ({ title, subtitle }) =
         priority
       />
     </Link>
-    <h1 className="text-2xl font-bold tracking-tight">
-      {title}
-    </h1>
-    <p className="mt-2 text-sm text-gray-400">
-      {subtitle}
-    </p>
+    <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+    <p className="mt-2 text-sm text-gray-400">{subtitle}</p>
   </div>
 );

@@ -1,5 +1,5 @@
-import React from 'react';
-import { TypeSectionHeaderProps } from '@/types/types';
+import React from "react";
+import { TypeSectionHeaderProps } from "@/types/types";
 
 /**
  * A reusable component for displaying a consistent header for various sections of a webpage.
@@ -15,11 +15,11 @@ import { TypeSectionHeaderProps } from '@/types/types';
  * @param {string} [props.titleClassName] - Optional CSS classes to apply to the title element.
  * @returns {JSX.Element} The rendered section header.
  */
-const SectionHeader = ({ 
-  subtitle = "FAQ", 
-  title = "You might have a question?", 
+const SectionHeader = ({
+  subtitle = "FAQ",
+  title = "You might have a question?",
   subtitleClassName = "text-primary text-center mb-4 text-2xl tracking-tight",
-  titleClassName = "text-center text-4xl md:text-5xl font-semibold tracking-tighter mb-36"
+  titleClassName = "text-center text-4xl md:text-5xl font-semibold tracking-tighter mb-36",
 }: TypeSectionHeaderProps) => {
   return (
     <>

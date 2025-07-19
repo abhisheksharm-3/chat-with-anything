@@ -101,32 +101,36 @@ const AddTabButton = () => (
  * @param {object} props - The component's properties.
  * @param {() => void} props.onMenuToggle - Callback function to open/close the mobile sidebar.
  */
-export const DashboardMobileHeader = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
+export const DashboardMobileHeader = ({
+  onMenuToggle,
+}: {
+  onMenuToggle: () => void;
+}) => {
   const pathname = usePathname();
-  const isSettingsPage = pathname === '/settings';
+  const isSettingsPage = pathname === "/settings";
   const router = useRouter();
 
   return (
     <header className="md:hidden h-16 flex items-center justify-between px-4 max-w-screen">
       <div className="flex items-center gap-3 bg-[#181818] rounded-lg border">
         {isSettingsPage ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.back()}
-              className="text-gray-400 hover:text-white"
-            >
-              <ChevronsLeft className="size-8" />
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onMenuToggle}
-              className="text-gray-400 hover:text-white"
-            >
-              <ChevronsRight className="size-8" />
-            </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            className="text-gray-400 hover:text-white"
+          >
+            <ChevronsLeft className="size-8" />
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onMenuToggle}
+            className="text-gray-400 hover:text-white"
+          >
+            <ChevronsRight className="size-8" />
+          </Button>
         )}
       </div>
       <MobileLogo />
@@ -175,7 +179,7 @@ export const DashboardDesktopHeader = ({
       </div>
     )}
     {/* Placeholder to keep the 'Upgrade' button to the right on the history page */}
-    {isHistoryPage && <div></div>} 
+    {isHistoryPage && <div></div>}
     <PricingDialog
       trigger={
         <Button

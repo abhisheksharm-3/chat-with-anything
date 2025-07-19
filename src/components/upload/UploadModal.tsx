@@ -1,24 +1,20 @@
-"use client"
+"use client";
 
-import { useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent,
-  DialogTrigger
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { X, CircleAlert, AlertCircle } from 'lucide-react';
-import { useUploadLogic } from '@/hooks/useUpload';
-import { getFileTypeConfig } from '@/constants/FileTypes';
-import { useUser } from '@/hooks/useUser';
+import { useState } from "react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { X, CircleAlert, AlertCircle } from "lucide-react";
+import { useUploadLogic } from "@/hooks/useUpload";
+import { getFileTypeConfig } from "@/constants/FileTypes";
+import { useUser } from "@/hooks/useUser";
 
 // Components
-import UploadModalArea from './UploadModalArea';
-import UploadModalProgress from './UploadModalProgress';
-import UploadModalSuccess from './UploadModalSuccess';
-import UploadModalError from './UploadModalError';
-import UploadModalUrlInput from './UploadModalUrlInput';
-import { TypeUploadModalProps } from '@/types/types';
+import UploadModalArea from "./UploadModalArea";
+import UploadModalProgress from "./UploadModalProgress";
+import UploadModalSuccess from "./UploadModalSuccess";
+import UploadModalError from "./UploadModalError";
+import UploadModalUrlInput from "./UploadModalUrlInput";
+import { TypeUploadModalProps } from "@/types/types";
 
 /**
  * A comprehensive modal dialog for handling various file and URL uploads.
@@ -38,14 +34,14 @@ import { TypeUploadModalProps } from '@/types/types';
  * @param {string} props.fileType - A key specifying the type of upload (e.g., 'pdf', 'youtube'), used to get configuration.
  * @returns {JSX.Element} The rendered upload modal component.
  */
-const UploadModal: React.FC<TypeUploadModalProps> = ({ 
-  trigger, 
-  defaultOpen = false, 
-  fileType 
+const UploadModal: React.FC<TypeUploadModalProps> = ({
+  trigger,
+  defaultOpen = false,
+  fileType,
 }) => {
   // State
   const [open, setOpen] = useState(defaultOpen);
-  
+
   // Hooks
   const { isAuthenticated } = useUser();
   const fileTypeConfig = getFileTypeConfig(fileType);
@@ -58,7 +54,7 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
   const handleClose = () => {
     setOpen(false);
   };
-  
+
   // Upload logic hook
   const {
     uploadStatus,
@@ -73,10 +69,10 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
     handleSubmit,
     handleUrlSubmit,
     handleKeyDown,
-    isUploading
-  } = useUploadLogic({ 
-    fileType, 
-    onClose: handleClose 
+    isUploading,
+  } = useUploadLogic({
+    fileType,
+    onClose: handleClose,
   });
 
   // Render guards for authentication and feature availability
@@ -84,14 +80,19 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-        <DialogContent className="bg-[#121212] border border-[#333] max-w-md p-0 rounded-xl" showCloseButton={false}>
+        <DialogContent
+          className="bg-[#121212] border border-[#333] max-w-md p-0 rounded-xl"
+          showCloseButton={false}
+        >
           <div className="p-6 flex flex-col items-center justify-center">
             <AlertCircle className="text-red-500 h-12 w-12 mb-4" />
-            <h2 className="text-lg font-medium mb-2">Authentication Required</h2>
+            <h2 className="text-lg font-medium mb-2">
+              Authentication Required
+            </h2>
             <p className="text-sm text-gray-400 text-center mb-4">
               You need to be logged in to upload files and start chats.
             </p>
-            <Button 
+            <Button
               onClick={handleClose}
               className="w-full py-2 text-center bg-primary hover:bg-primary/90 text-white rounded-lg cursor-pointer"
             >
@@ -107,14 +108,18 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-        <DialogContent className="bg-[#121212] border border-[#333] max-w-md p-0 rounded-xl" showCloseButton={false}>
+        <DialogContent
+          className="bg-[#121212] border border-[#333] max-w-md p-0 rounded-xl"
+          showCloseButton={false}
+        >
           <div className="p-6 flex flex-col items-center justify-center">
             <CircleAlert className="text-amber-500 h-12 w-12 mb-4" />
             <h2 className="text-lg font-medium mb-2">Coming Soon</h2>
             <p className="text-sm text-gray-400 text-center mb-4">
-              {fileTypeConfig.name} uploads are coming soon. We&apos;re working hard to bring this feature to you!
+              {fileTypeConfig.name} uploads are coming soon. We&apos;re working
+              hard to bring this feature to you!
             </p>
-            <Button 
+            <Button
               onClick={handleClose}
               className="w-full py-2 text-center bg-primary hover:bg-primary/90 text-white rounded-lg cursor-pointer"
             >
@@ -130,16 +135,21 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="bg-[#121212] border border-[#333] max-w-md p-0 rounded-xl" showCloseButton={false}>
+      <DialogContent
+        className="bg-[#121212] border border-[#333] max-w-md p-0 rounded-xl"
+        showCloseButton={false}
+      >
         {/* Header */}
         <div className="p-4 flex justify-between items-start border-b border-[#333]">
           <div>
-            <h2 className="text-base font-medium">Upload {fileTypeConfig.name}</h2>
+            <h2 className="text-base font-medium">
+              Upload {fileTypeConfig.name}
+            </h2>
             <p className="text-xs text-gray-400 mt-0.5">
               Upload and chat with your {fileTypeConfig.name.toLowerCase()}.
             </p>
           </div>
-          <button 
+          <button
             onClick={handleClose}
             className="text-gray-400 hover:text-white cursor-pointer"
             aria-label="Close dialog"
@@ -147,12 +157,12 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
             <X size={18} />
           </button>
         </div>
-        
+
         {/* Content */}
         <div className="p-6">
           {/* File upload area */}
-          {!isUrlOnly && uploadStatus === 'idle' && (
-            <UploadModalArea 
+          {!isUrlOnly && uploadStatus === "idle" && (
+            <UploadModalArea
               fileTypeConfig={fileTypeConfig}
               selectedFile={selectedFile}
               handleFileChange={handleFileChange}
@@ -160,11 +170,14 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
           )}
 
           {/* Upload states */}
-          {uploadStatus === 'uploading' && <UploadModalProgress />}
-          {uploadStatus === 'uploaded' && (
-            <UploadModalSuccess fileName={fileName} handleRemoveFile={handleRemoveFile} />
+          {uploadStatus === "uploading" && <UploadModalProgress />}
+          {uploadStatus === "uploaded" && (
+            <UploadModalSuccess
+              fileName={fileName}
+              handleRemoveFile={handleRemoveFile}
+            />
           )}
-          {uploadStatus === 'error' && (
+          {uploadStatus === "error" && (
             <UploadModalError error={error} handleRetry={handleRetry} />
           )}
 
@@ -209,9 +222,9 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
           <Button
             onClick={handleSubmit}
             className="flex-1 py-2 text-center bg-primary hover:bg-primary/90 text-white rounded-lg cursor-pointer"
-            disabled={isUploading || uploadStatus === 'uploaded'}
+            disabled={isUploading || uploadStatus === "uploaded"}
           >
-            {isUploading ? 'Uploading...' : 'Upload'}
+            {isUploading ? "Uploading..." : "Upload"}
           </Button>
         </div>
       </DialogContent>

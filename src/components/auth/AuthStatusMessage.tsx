@@ -9,7 +9,10 @@ import { TypeStatusMessageProps } from "@/types/auth";
  * @param {'error' | 'success'} props.type The type of message, which determines the component's color scheme.
  * @returns {JSX.Element | null} A styled `div` with the message, or `null` if no message is provided.
  */
-export const AuthStatusMessage = ({ message, type }: TypeStatusMessageProps) => {
+export const AuthStatusMessage = ({
+  message,
+  type,
+}: TypeStatusMessageProps) => {
   if (!message) {
     return null;
   }

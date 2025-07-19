@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
   DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { X, Check } from 'lucide-react';
-import { PricingData } from '@/constants/PricingData';
-import { TypeDialogProps, TypePricingTier } from '@/types/types';
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { X, Check } from "lucide-react";
+import { PricingData } from "@/constants/PricingData";
+import { TypeDialogProps, TypePricingTier } from "@/types/types";
 
 /**
  * A client-side modal dialog for displaying and selecting from various pricing plans.
@@ -25,9 +25,15 @@ import { TypeDialogProps, TypePricingTier } from '@/types/types';
  */
 const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   const [open, setOpen] = useState(defaultOpen);
-  const [selectedPlan, setSelectedPlan] = useState<'annual' | 'lifetime'>('annual');
-  const [selectedPricing, setSelectedPricing] = useState<'free' | 'personal' | 'pro'>('personal');
-  const [expandedPlan, setExpandedPlan] = useState<'free' | 'personal' | 'pro'>('personal');
+  const [selectedPlan, setSelectedPlan] = useState<"annual" | "lifetime">(
+    "annual",
+  );
+  const [selectedPricing, setSelectedPricing] = useState<
+    "free" | "personal" | "pro"
+  >("personal");
+  const [expandedPlan, setExpandedPlan] = useState<"free" | "personal" | "pro">(
+    "personal",
+  );
 
   const handleClose = () => setOpen(false);
 
@@ -37,7 +43,7 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   /**
    * Handle plan selection on mobile - expands the clicked plan and selects it
    */
-  const handleMobilePlanClick = (tier: 'free' | 'personal' | 'pro') => {
+  const handleMobilePlanClick = (tier: "free" | "personal" | "pro") => {
     if (expandedPlan === tier) {
       // If clicking the already expanded plan, just update selection
       setSelectedPricing(tier);
@@ -51,16 +57,19 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   /**
    * A helper function to render a single pricing tier card for desktop.
    */
-  const renderDesktopPricingCard = (tier: 'free' | 'personal' | 'pro', tierData: TypePricingTier) => {
+  const renderDesktopPricingCard = (
+    tier: "free" | "personal" | "pro",
+    tierData: TypePricingTier,
+  ) => {
     const isSelected = selectedPricing === tier;
-    
+
     return (
-      <div 
+      <div
         key={tier}
         className={`border rounded-lg p-4 relative cursor-pointer transition-all ${
-          isSelected 
-            ? 'border-primary bg-gray-900' 
-            : 'border-gray-700 hover:border-primary'
+          isSelected
+            ? "border-primary bg-gray-900"
+            : "border-gray-700 hover:border-primary"
         }`}
         onClick={() => setSelectedPricing(tier)}
       >
@@ -68,24 +77,26 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
           <div>
             <h3 className="text-xl font-semibold">{tierData.price}</h3>
             <p className="text-gray-400 text-sm">{tierData.subtitle}</p>
-            {tier === 'pro' && selectedPlan === 'annual' && (
+            {tier === "pro" && selectedPlan === "annual" && (
               <p className="text-gray-500 text-xs mt-1">5000mins/month</p>
             )}
             {tierData.billingNote && (
-              <p className="text-gray-500 text-xs mt-1">{tierData.billingNote}</p>
+              <p className="text-gray-500 text-xs mt-1">
+                {tierData.billingNote}
+              </p>
             )}
           </div>
           <div className="flex items-center">
-            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-              isSelected 
-                ? 'border-primary bg-primary' 
-                : 'border-gray-500'
-            }`}>
+            <div
+              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                isSelected ? "border-primary bg-primary" : "border-gray-500"
+              }`}
+            >
               {isSelected && <Check size={12} className="text-white" />}
             </div>
           </div>
         </div>
-        
+
         <div className="space-y-3">
           {tierData.features.map((feature, index) => (
             <div key={index} className="flex items-start gap-3">
@@ -101,21 +112,22 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   /**
    * A helper function to render a single pricing tier card for mobile with accordion behavior.
    */
-  const renderMobilePricingCard = (tier: 'free' | 'personal' | 'pro', tierData: TypePricingTier) => {
+  const renderMobilePricingCard = (
+    tier: "free" | "personal" | "pro",
+    tierData: TypePricingTier,
+  ) => {
     const isSelected = selectedPricing === tier;
     const isExpanded = expandedPlan === tier;
-    
+
     return (
-      <div 
+      <div
         key={tier}
         className={`border rounded-xl transition-all ${
-          isSelected 
-            ? 'border-primary' 
-            : 'border-gray-700'
+          isSelected ? "border-primary" : "border-gray-700"
         }`}
       >
         {/* Header - Always visible */}
-        <div 
+        <div
           className="p-4 cursor-pointer"
           onClick={() => handleMobilePlanClick(tier)}
         >
@@ -123,32 +135,37 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
             <div>
               <h3 className="text-xl font-semibold">{tierData.price}</h3>
               <p className="text-gray-400 text-sm">{tierData.subtitle}</p>
-              {tier === 'pro' && selectedPlan === 'annual' && (
+              {tier === "pro" && selectedPlan === "annual" && (
                 <p className="text-gray-500 text-xs mt-1">5000mins/month</p>
               )}
               {tierData.billingNote && (
-                <p className="text-gray-500 text-xs mt-1">{tierData.billingNote}</p>
+                <p className="text-gray-500 text-xs mt-1">
+                  {tierData.billingNote}
+                </p>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                isSelected 
-                  ? 'border-primary bg-primary' 
-                  : 'border-gray-500'
-              }`}>
+              <div
+                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                  isSelected ? "border-primary bg-primary" : "border-gray-500"
+                }`}
+              >
                 {isSelected && <Check size={12} className="text-white" />}
               </div>
             </div>
           </div>
         </div>
-        
+
         {/* Expandable content - Features */}
         {isExpanded && (
           <div className="px-4 pb-4 border-t border-gray-700 pt-4">
             <div className="space-y-3">
               {tierData.features.map((feature, index) => (
                 <div key={index} className="flex items-start gap-3">
-                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
+                  <Check
+                    size={16}
+                    className="text-primary mt-0.5 flex-shrink-0"
+                  />
                   <span className="text-sm">{feature}</span>
                 </div>
               ))}
@@ -162,13 +179,20 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="bg-[#121212] border text-foreground sm:max-w-4xl max-w-[95vw] p-0 rounded-xl overflow-hidden max-h-[90vh] overflow-y-auto" showCloseButton={false}>
+      <DialogContent
+        className="bg-[#121212] border text-foreground sm:max-w-4xl max-w-[95vw] p-0 rounded-xl overflow-hidden max-h-[90vh] overflow-y-auto"
+        showCloseButton={false}
+      >
         <div className="p-4 sm:p-6 flex items-center justify-between border-b border-gray-800">
           <div>
-            <DialogTitle className="text-lg font-semibold tracking-tight">Select plan</DialogTitle>
-            <p className="text-muted-foreground text-sm">Simple and flexible per-user pricing.</p>
+            <DialogTitle className="text-lg font-semibold tracking-tight">
+              Select plan
+            </DialogTitle>
+            <p className="text-muted-foreground text-sm">
+              Simple and flexible per-user pricing.
+            </p>
           </div>
-          <button 
+          <button
             onClick={handleClose}
             className="text-muted-foreground hover:text-foreground"
             aria-label="Close dialog"
@@ -176,58 +200,58 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
             <X size={20} />
           </button>
         </div>
-        
+
         <div className="p-4 sm:p-6">
           {/* Plan selector */}
           <div className="flex justify-center mb-6">
             <div className="bg-gray-800 rounded-xl p-1 inline-flex">
-              <button 
+              <button
                 className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-medium transition-colors ${
-                  selectedPlan === 'annual' 
-                    ? 'bg-primary shadow-sm' 
-                    : 'text-gray-400 hover:text-white'
+                  selectedPlan === "annual"
+                    ? "bg-primary shadow-sm"
+                    : "text-gray-400 hover:text-white"
                 }`}
-                onClick={() => setSelectedPlan('annual')}
+                onClick={() => setSelectedPlan("annual")}
               >
                 Annual
               </button>
-              <button 
+              <button
                 className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-medium transition-colors ${
-                  selectedPlan === 'lifetime' 
-                    ? 'bg-primary shadow-sm' 
-                    : 'text-gray-400 hover:text-white'
+                  selectedPlan === "lifetime"
+                    ? "bg-primary shadow-sm"
+                    : "text-gray-400 hover:text-white"
                 }`}
-                onClick={() => setSelectedPlan('lifetime')}
+                onClick={() => setSelectedPlan("lifetime")}
               >
                 Lifetime
               </button>
             </div>
           </div>
-          
+
           {/* Mobile view - accordion style */}
           <div className="md:hidden space-y-3">
-            {renderMobilePricingCard('free', currentPricing.free)}
-            {renderMobilePricingCard('personal', currentPricing.personal)}
-            {renderMobilePricingCard('pro', currentPricing.pro)}
+            {renderMobilePricingCard("free", currentPricing.free)}
+            {renderMobilePricingCard("personal", currentPricing.personal)}
+            {renderMobilePricingCard("pro", currentPricing.pro)}
           </div>
-          
+
           {/* Desktop view - show all pricing cards */}
           <div className="hidden md:grid md:grid-cols-3 gap-4">
-            {renderDesktopPricingCard('free', currentPricing.free)}
-            {renderDesktopPricingCard('personal', currentPricing.personal)}
-            {renderDesktopPricingCard('pro', currentPricing.pro)}
+            {renderDesktopPricingCard("free", currentPricing.free)}
+            {renderDesktopPricingCard("personal", currentPricing.personal)}
+            {renderDesktopPricingCard("pro", currentPricing.pro)}
           </div>
         </div>
-        
+
         <div className="p-4 sm:p-6 border-t border-gray-800 flex flex-col gap-3">
           <Button
             className="w-full py-3 text-sm font-medium rounded-xl bg-primary hover:bg-primary-dark"
             size="lg"
-            disabled={selectedPricing === 'free'}
+            disabled={selectedPricing === "free"}
           >
-            {selectedPricing === 'free' ? 'Current Plan' : 'Subscribe now'}
+            {selectedPricing === "free" ? "Current Plan" : "Subscribe now"}
           </Button>
-          <Button 
+          <Button
             variant="outline"
             className="w-full py-3 text-sm font-medium rounded-xl border-gray-600 hover:bg-gray-800"
             onClick={handleClose}

@@ -22,11 +22,7 @@ export const metadata: Metadata = {
  * @param {React.ReactNode} props.children - The specific page content (e.g., a login or signup form) to be rendered inside the layout.
  * @returns {JSX.Element} The authentication layout component.
  */
-const AuthLayout = async ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
+const AuthLayout = async ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-[#121212]">
       <Navbar />

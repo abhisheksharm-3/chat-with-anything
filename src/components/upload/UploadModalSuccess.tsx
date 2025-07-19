@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { TypeUploadModalSuccessProps } from '@/types/types';
-import { Upload, X } from 'lucide-react';
+import { TypeUploadModalSuccessProps } from "@/types/types";
+import { Upload, X } from "lucide-react";
 
 /**
  * A presentational component that indicates a file has been successfully selected or staged for upload.
@@ -15,9 +15,9 @@ import { Upload, X } from 'lucide-react';
  * @param {() => void} props.handleRemoveFile - The callback function to execute when the remove button is clicked.
  * @returns {JSX.Element} The rendered success state component.
  */
-const UploadModalSuccess: React.FC<TypeUploadModalSuccessProps> = ({ 
-  fileName, 
-  handleRemoveFile 
+const UploadModalSuccess: React.FC<TypeUploadModalSuccessProps> = ({
+  fileName,
+  handleRemoveFile,
 }) => {
   return (
     <div className="border border-dashed border-[#333] rounded-lg p-6 text-center mb-4">
@@ -28,7 +28,7 @@ const UploadModalSuccess: React.FC<TypeUploadModalSuccessProps> = ({
           </div>
           <span className="text-sm">{fileName}</span>
         </div>
-        <button 
+        <button
           className="text-primary hover:text-primary/90 cursor-pointer"
           onClick={handleRemoveFile}
           aria-label="Remove file"
