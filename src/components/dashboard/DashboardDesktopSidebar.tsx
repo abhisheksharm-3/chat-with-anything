@@ -31,33 +31,50 @@ const Logo = () => (
  * @param {object} props - The component's properties.
  * @param {string} props.pathname - The current URL pathname to determine the active link.
  */
-const DesktopNavigation = ({ pathname }: { pathname: string }) => (
-  <nav className="flex flex-col space-y-2">
-    {NavigationItems.map(({ href, icon: IconComponent }) => {
-      const LucideIconComponent = IconComponent as LucideIcon;
-      return (
-        <Link
-          key={href}
-          href={href}
-          className={`p-2 rounded-md transition-colors ${
-            pathname === href
-              ? "text-white"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <LucideIconComponent size={20} />
-        </Link>
-      );
-    })}
-    <SettingsDialog
-      trigger={
-        <button className="p-2 rounded-md text-muted-foreground hover:text-foreground cursor-pointer">
-          <Settings size={20} />
-        </button>
-      }
-    />
-  </nav>
-);
+const DesktopNavigation = ({ pathname }: { pathname: string }) => {
+  /**
+   * Determines if a navigation item should be highlighted as active
+   * @param {string} href - The navigation item's href
+   * @param {string} pathname - The current pathname
+   * @returns {boolean} - Whether the item should be highlighted
+   */
+  const isActive = (href: string, pathname: string): boolean => {
+    if (href === "/choose") {
+      // For /choose, also highlight when on /chat/[id] routes
+      return pathname === "/choose" || pathname.startsWith("/chat/");
+    }
+    // For other routes, exact match
+    return pathname === href;
+  };
+
+  return (
+    <nav className="flex flex-col space-y-2">
+      {NavigationItems.map(({ href, icon: IconComponent }) => {
+        const LucideIconComponent = IconComponent as LucideIcon;
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={`p-2 rounded-md transition-colors ${
+              isActive(href, pathname)
+                ? "text-white"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <LucideIconComponent size={20} />
+          </Link>
+        );
+      })}
+      <SettingsDialog
+        trigger={
+          <button className="p-2 rounded-md text-muted-foreground hover:text-foreground cursor-pointer">
+            <Settings size={20} />
+          </button>
+        }
+      />
+    </nav>
+  );
+};
 
 /**
  * The main desktop sidebar component for the dashboard.
@@ -68,7 +85,7 @@ const DesktopNavigation = ({ pathname }: { pathname: string }) => (
  * @param {string} props.pathname - The current URL pathname, passed down to the navigation component.
  */
 export const DashboardDesktopSidebar = ({ pathname }: { pathname: string }) => (
-  <aside className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 w-12 bg-[#181818] rounded-xl flex-col items-center justify-between py-2 px-2 h-[calc(100vh-1rem)]">
+  <aside className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 w-12 bg-[#181818] border border-[#272626] rounded-xl flex-col items-center justify-between py-2 px-2 h-[calc(100vh-1rem)]">
     <Logo />
     <DesktopNavigation pathname={pathname} />
     <LogoutDialog

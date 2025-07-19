@@ -177,7 +177,7 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
       {/* Desktop Layout: 2-column grid */}
       <div className="hidden md:grid grid-cols-2 gap-2 h-full">
         {/* Left Column: Document Viewer */}
-        <div className="bg-[#181818] border rounded-xl border-[#333] flex flex-col">
+        <div className="bg-[#181818] border rounded-xl border-[#272626] flex flex-col">
           {file && (
             <ChatInterfaceDocumentViewer 
               file={file} 
@@ -189,8 +189,8 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
         </div>
 
         {/* Right Column: Chat Thread */}
-        <div className="bg-[#181818] flex flex-col border rounded-xl px-4 py-2 max-h-[calc(100vh-5rem)]">
-          <div className="p-3 border border-[#333] rounded-xl">
+        <div className="bg-[#181818] flex flex-col border border-[#272626] rounded-xl py-2 max-h-[calc(100vh-5rem)]">
+          <div className="p-3 border border-[#272626] rounded-xl mx-4">
             <h2 className="text-sm text-center text-gray-400">
               {file ? `// Chat with ${file.name} //` : '// Chat with the document //'}
             </h2>

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { TypeChatInterfaceMessagesProps } from '@/types/chat';
+import { useUser } from '@/hooks/useUser'; // Import the useUser hook
+import Image from 'next/image';
 
 /**
  * Renders the main message display area for the chat interface.
@@ -20,6 +22,30 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
   messagesLoading,
   messagesEndRef
 }) => {
+  const { user } = useUser();
+
+  /**
+   * Gets the user's initials from their name or email
+   * @returns {string} The user's initials (up to 2 characters)
+   */
+  const getUserInitials = (): string => {
+    if (!user) return 'U';
+    
+    if (user.name && user.name.trim()) {
+      const nameParts = user.name.trim().split(' ');
+      if (nameParts.length >= 2) {
+        return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+      }
+      return nameParts[0][0].toUpperCase();
+    }
+    
+    if (user.email) {
+      return user.email[0].toUpperCase();
+    }
+    
+    return 'U';
+  };
+
   /**
    * Parses and renders the string content of a single message.
    * This function provides rich formatting for special cases, such as displaying
@@ -57,7 +83,7 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex-1 overflow-y-auto p-4 space-y-4 max-w-screen">
       {/* Initial loading state */}
       {messagesLoading && messages.length === 0 ? (
         <div className="flex items-center justify-center h-full">
@@ -82,17 +108,25 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
           >
             {/* Assistant avatar */}
             {message.role === 'assistant' && (
-              <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0 text-white">
-                🤖
+              <div className="w-11 h-11 rounded-lg bg-[#272626] flex items-center justify-center flex-shrink-0 p-2">
+                <Image
+                  src="/logo.png"
+                  alt="Logo"
+                  className="object-contain"
+                  width={44}
+                  height={40}
+                  priority
+                />
               </div>
             )}
+            
             <div
               className={`max-w-[80%] rounded-lg p-3 text-sm ${
                 message.role === "user"
-                  ? "bg-purple-600 text-white"
+                  ? "bg-primary"
                   : message.isError
                     ? "bg-red-900/20 text-red-400"
-                    : "bg-[#1E1E1E] text-white"
+                    : "bg-[#272626]"
               }`}
             >
               {/* "Thinking" indicator */}
@@ -107,6 +141,13 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
                 </div>
               )}
             </div>
+
+            {/* User avatar with initials */}
+            {message.role === 'user' && (
+              <div className="w-11 h-11 rounded-lg bg-[#272626] flex items-center justify-center flex-shrink-0 text-sm">
+                {getUserInitials()}
+              </div>
+            )}
           </div>
         ))
       )}

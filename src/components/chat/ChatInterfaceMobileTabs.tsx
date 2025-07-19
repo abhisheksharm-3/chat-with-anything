@@ -28,16 +28,16 @@ export const ChatInterfaceMobileTabs: React.FC<TypeChatInterfaceMobileTabsProps>
 
   return (
     <div
-      className={`w-full z-10 ${
+      className={`max-w-sm z-10 mx-2 mb-3 ${
       showPDF ? 'fixed bottom-0 left-0' : 'sticky top-0'
       }`}
     >
       <Button
-      variant="ghost"
-      className="w-full flex items-center justify-center border-b border-[#333] bg-[#121212] px-4 py-6"
+      variant="outline"
+      className="w-full flex items-center justify-center border-none bg-[#121212] px-4 py-6 rounded-lg"
       onClick={handleClick}
       >
-      <span className="flex items-center justify-center gap-2 text-gray-400 rounded-xl bg-[#1d1d1d] w-full">
+      <span className="flex items-center justify-center gap-2 text-gray-400 bg-[#1d1d1d] w-full">
         {showPDF ? (
         <>
           <ChevronsUp className="w-6 h-6" />

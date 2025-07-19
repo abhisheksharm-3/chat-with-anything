@@ -5,14 +5,13 @@ import { Button } from "@/components/ui/button";
 import { File, Plus, ChevronsRight, ChevronsLeft } from "lucide-react";
 import PricingDialog from "@/components/dashboard/PricingDialog";
 import { TypeChat, TypeFile } from "@/types/supabase";
-import { getFileTypeIcon } from "@/utils/dashboard-utils";
 
 /**
  * Renders the application logo for the mobile header.
  * @component
  */
 const MobileLogo = () => (
-  <div className="w-8 h-8 flex items-center justify-center">
+  <div className="w-8 h-8 flex items-center justify-center translate-x-5">
     <Image
       src="/logo.png"
       alt="Logo"
@@ -41,15 +40,13 @@ const ActiveTab = ({
   chat: TypeChat | null;
   file: TypeFile | null;
 }) => (
-  <div className="flex items-center gap-2 bg-[#2a2a2a] px-4 py-2 rounded-l-md border-l-4 border-l-purple-500">
+  <div className="flex items-center gap-4 bg-[#181818] border border-[#272626] px-2 py-2  border-l-4 border-l-primary rounded-xl">
     {isChatPage && chat ? (
       <>
-        <span className="text-white">
-          {getFileTypeIcon(file?.type || chat.type)}
-        </span>
         <span className="text-sm text-white truncate max-w-[200px]">
           {file?.name || chat.title || "Untitled Chat"}
         </span>
+        <FileTypeTab chat={chat} file={file} />
       </>
     ) : (
       <>
@@ -57,6 +54,7 @@ const ActiveTab = ({
           <File size={16} />
         </span>
         <span className="text-sm text-white">New Note</span>
+        <FileTypeTab chat={chat} file={file} />
       </>
     )}
   </div>
@@ -76,8 +74,8 @@ const FileTypeTab = ({
   chat: TypeChat | null;
   file: TypeFile | null;
 }) => (
-  <div className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a]">
-    <span className="text-sm text-gray-400 uppercase">
+  <div className="flex items-center gap-2 px-1 py-1 bg-[#262525] rounded-lg">
+    <span className="text-xs font-semibold text-gray-400 uppercase">
       {file?.type || chat?.type || "Document"}
     </span>
   </div>
@@ -90,7 +88,7 @@ const FileTypeTab = ({
 const AddTabButton = () => (
   <Link
     href="/choose"
-    className="flex items-center justify-center px-3 py-2 rounded-r-md bg-[#1a1a1a] hover:bg-[#2a2a2a] transition-colors"
+    className="flex items-center justify-center px-1 py-1 rounded-lg bg-[#181818] hover:bg-[#2a2a2a] transition-colors border border-[#272626]"
   >
     <Plus size={16} className="text-gray-400 hover:text-white" />
   </Link>
@@ -109,7 +107,7 @@ export const DashboardMobileHeader = ({ onMenuToggle }: { onMenuToggle: () => vo
   const router = useRouter();
 
   return (
-    <header className="md:hidden h-16 flex items-center justify-between px-4">
+    <header className="md:hidden h-16 flex items-center justify-between px-4 max-w-screen">
       <div className="flex items-center gap-3 bg-[#181818] rounded-lg border">
         {isSettingsPage ? (
             <Button
@@ -169,11 +167,10 @@ export const DashboardDesktopHeader = ({
   chat: TypeChat | null;
   file: TypeFile | null;
 }) => (
-  <header className="hidden md:flex h-16 items-center justify-between px-6">
+  <header className="hidden md:flex h-16 items-center justify-between px-2">
     {!isHistoryPage && (
-      <div className="flex items-center">
+      <div className="flex items-center gap-3">
         <ActiveTab isChatPage={isChatPage} chat={chat} file={file} />
-        {isChatPage && chat && <FileTypeTab chat={chat} file={file} />}
         <AddTabButton />
       </div>
     )}
