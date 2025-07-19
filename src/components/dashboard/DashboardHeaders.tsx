@@ -111,7 +111,7 @@ export const DashboardMobileHeader = ({
   const router = useRouter();
 
   return (
-    <header className="md:hidden h-16 flex items-center justify-between px-4 max-w-screen">
+    <header className="md:hidden h-16 flex items-center justify-between px-4 max-w-screen bg-[#121212]">
       <div className="flex items-center gap-3 bg-[#181818] rounded-lg border">
         {isSettingsPage ? (
           <Button

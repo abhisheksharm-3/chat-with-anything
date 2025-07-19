@@ -30,8 +30,8 @@ export const ChatInterfaceMobileTabs: React.FC<
 
   return (
     <div
-      className={`max-w-sm z-10 mx-2 mb-3 ${
-        showPDF ? "fixed bottom-0 left-0" : "sticky top-0"
+      className={`w-full z-10 mb-3 ${
+        showPDF ? "fixed bottom-0 left-0 mx-3" : "sticky top-0 mx-auto"
       }`}
     >
       <Button

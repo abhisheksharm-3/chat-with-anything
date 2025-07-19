@@ -69,7 +69,7 @@ export const ChatInterfaceMessages: React.FC<
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 max-w-screen">
+    <div className="flex-1 overflow-y-auto p-4 space-y-4 max-w-screen bg-[#181818]">
       {/* Initial loading state */}
       {messagesLoading && messages.length === 0 ? (
         <div className="flex items-center justify-center h-full">

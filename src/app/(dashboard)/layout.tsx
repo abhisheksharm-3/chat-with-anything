@@ -70,7 +70,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           chat={chat as TypeChat | null}
           file={file as TypeFile | null}
         />
-        <main className="flex-1 overflow-auto p-2">{children}</main>
+        <main className="flex-1 overflow-auto lg:p-2">{children}</main>
       </div>
     </div>
   );

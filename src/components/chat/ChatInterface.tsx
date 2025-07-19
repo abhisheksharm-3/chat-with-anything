@@ -303,7 +303,9 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
 
       {/* Mobile Layout: Toggable view */}
       <div className="md:hidden flex flex-col h-full">
-        <ChatInterfaceMobileTabs showPDF={showPDF} setShowPDF={setShowPDF} />
+        <div className="flex items-center justify-between p-4 bg-[#121212] border-b border-[#272626]">
+          <ChatInterfaceMobileTabs showPDF={showPDF} setShowPDF={setShowPDF} />
+        </div>
 
         {showPDF ? (
           // View 1: Document Viewer
