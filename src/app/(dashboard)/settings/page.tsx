@@ -7,7 +7,6 @@ import PricingDialog from "@/components/dashboard/PricingDialog";
 import LogoutDialog from "@/components/dashboard/LogoutDialog";
 import { useUser, useIsMobile } from "@/hooks";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
 
 /**
  * Renders the user account settings page, designed specifically for mobile devices.
