@@ -16,7 +16,7 @@ import {
 } from "@/utils/processors";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { TypeFile } from "@/types/supabase";
-import { isYoutubeUrl } from "./youtube-utils";
+import { isYoutubeUrl } from "../youtube-utils";
 import { createImageContext } from "../image-utils";
 
 /**

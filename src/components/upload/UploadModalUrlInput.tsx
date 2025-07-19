@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Send, AlertCircle } from "lucide-react";
 import { TypeUploadModalUrlInputProps } from "@/types/types";
-import { isYoutubeUrl } from "@/utils/gemini/youtube-utils";
+import { isYoutubeUrl } from "@/utils/youtube-utils";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 

@@ -6,7 +6,7 @@ import { createGeminiEmbeddings } from "../gemini/embeddings";
 import { PineconeStore } from "@langchain/pinecone";
 import { getPineconeIndex, isPineconeConfigured } from "../pinecone";
 import { Document } from "langchain/document";
-import { extractYoutubeVideoId } from "../gemini/youtube-utils";
+import { extractYoutubeVideoId } from "../youtube-utils";
 import { supabaseBrowserClient } from "../supabase/client";
 
 // Constants for transcript processing

@@ -3,7 +3,7 @@ import {
   HarmCategory,
   HarmBlockThreshold,
 } from "@google/generative-ai";
-import { createYoutubeSystemPrompt } from "./youtube-utils";
+import { createYoutubeSystemPrompt } from "../youtube-utils";
 import { createRagSystemPrompt } from "../query-utils";
 
 // Initialize the Gemini API with the API key from environment variables
@@ -79,7 +79,7 @@ export const sendMessageToGemini = async (
 
     if (imageUrlMatch && imageUrlMatch[1]) {
       const imageUrl = imageUrlMatch[1];
-      console.log("Image URL detected in message:", imageUrl);
+      console.log(`Image URL detected in message: ${imageUrl}`);
 
       try {
         // Extract the actual query from the message
@@ -87,19 +87,14 @@ export const sendMessageToGemini = async (
           /I'm looking at an image at URL: https:\/\/[^\s]+\.\s*/,
           "",
         );
-        console.log("Extracted query:", query);
+        console.log(`Extracted query: ${query}`);
 
         // Currently the Gemini API doesn't support image URLs directly
         // We'll need to inform the user about this limitation
         return "I'm sorry, I can't analyze images via URLs at the moment. The Gemini API requires direct image uploads which aren't supported in this interface yet.";
       } catch (imageError) {
         console.error("Error processing image with Gemini:", imageError);
-        return (
-          "I'm sorry, I couldn't analyze the image. The error was: " +
-          (imageError instanceof Error
-            ? imageError.message
-            : String(imageError))
-        );
+        return `I'm sorry, I couldn't analyze the image. The error was: ${imageError instanceof Error ? imageError.message : String(imageError)}`;
       }
     }
 
@@ -134,17 +129,14 @@ export const sendMessageToGemini = async (
         // Send the system prompt as a user message first
         const systemResult = await chat.sendMessage([
           {
-            text:
-              "I need you to act as a document assistant with the following instructions: " +
-              systemPrompt,
+            text: `I need you to act as a document assistant with the following instructions: ${systemPrompt}`,
           },
         ]);
 
         // Get the response to acknowledge the system prompt
         const systemResponse = systemResult.response;
         console.log(
-          "System prompt acknowledged:",
-          systemResponse.text().substring(0, 50) + "...",
+          `System prompt acknowledged: ${systemResponse.text().substring(0, 50)}...`,
         );
       }
     }
@@ -162,8 +154,7 @@ export const sendMessageToGemini = async (
     // Send the last user message to get a response
     const lastUserMessage = messages[messages.length - 1];
     console.log(
-      "Sending user message to Gemini:",
-      lastUserMessage.content.substring(0, 50) + "...",
+      `Sending user message to Gemini: ${lastUserMessage.content.substring(0, 50)}...`,
     );
 
     const result = await chat.sendMessage([{ text: lastUserMessage.content }]);
@@ -173,9 +164,6 @@ export const sendMessageToGemini = async (
     return response.text();
   } catch (error) {
     console.error("Error in Gemini chat:", error);
-    return (
-      "I'm sorry, I encountered an error while processing your request. " +
-      (error instanceof Error ? error.message : String(error))
-    );
+    return `I'm sorry, I encountered an error while processing your request. ${error instanceof Error ? error.message : String(error)}`;
   }
 };
