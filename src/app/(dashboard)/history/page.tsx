@@ -3,8 +3,14 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, Send, MoreVertical } from 'lucide-react';
+import { Search, Plus, Send, MoreVertical, Trash2, Download } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useChats, useFileById } from '@/hooks';
 import { TypeChat } from '@/types/supabase';
 import { formatFileSize, formatTimeAgo } from '@/utils/history-page-utils';
@@ -20,51 +26,114 @@ import { Input } from '@/components/ui/input';
 const ChatItem = ({ chat }: { chat: TypeChat }) => {
   const { data: file } = useFileById(chat.file_id || '');
 
+  const handleDownload = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Download file:', file?.name);
+  };
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Share file:', file?.name);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Delete chat:', chat.id);
+  };
+
   return (
-    <Link href={`/chat/${chat.id}`}>
-      <div className="w-full bg-[#1a1a1a] hover:bg-[#252525] transition-colors p-3 sm:p-4 flex items-center justify-between">
-        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-          <h3 className="font-normal text-sm sm:text-base text-white truncate">
-            {chat.title || file?.name || "Untitled Chat"}
-          </h3>
-          <span className="text-[10px] sm:text-xs text-[#A9A9A9] uppercase bg-[#2a2a2a] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-center whitespace-nowrap">
-            {file?.type?.toUpperCase() || 'FILE'}
-          </span>
-        </div>
-        
-        <div className="flex items-center gap-3 sm:gap-6 flex-shrink-0">
-          {file?.size && (
-            <span className="text-[10px] sm:text-xs text-[#A9A9A9] hidden sm:block">
-              {formatFileSize(file.size)}
-            </span>
-          )}
-          
-          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-0">
-            {file?.size && (
-              <span className="text-[10px] text-[#A9A9A9] sm:hidden">
-                {formatFileSize(file.size)}
-              </span>
-            )}
-            <span className="text-[10px] sm:text-xs text-[#A9A9A9]">
-              {formatTimeAgo(chat.created_at)}
-            </span>
+    <div className="max-w-sm lg:max-w-screen px-2 bg-[#1a1a1a] hover:bg-[#252525] transition-colors relative group">
+      <Link href={`/chat/${chat.id}`} className="block">
+        <div className="p-3 sm:p-4">
+          {/* Mobile Layout */}
+          <div className="flex sm:hidden items-start justify-between">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-normal text-sm text-white truncate">
+                  {chat.title || file?.name || "Untitled Chat"}
+                </h3>
+                <span className="text-[10px] text-[#A9A9A9] uppercase bg-[#2a2a2a] px-1.5 py-0.5 rounded whitespace-nowrap">
+                  {file?.type?.toUpperCase() || 'FILE'}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-[10px] text-[#A9A9A9]">
+                {file?.size && (
+                  <span>{formatFileSize(file.size)}</span>
+                )}
+                <span>{formatTimeAgo(chat.created_at)}</span>
+              </div>
+            </div>
           </div>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              // Prevent link navigation to allow for future actions like a dropdown menu.
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            className="text-gray-400 hover:text-gray-300 hover:bg-[#2a2a2a] p-1.5 sm:p-2 h-6 w-6 sm:h-8 sm:w-8"
-          >
-            <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
-          </Button>
+
+          {/* Desktop Layout */}
+          <div className="hidden sm:flex items-center justify-between">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <h3 className="font-normal text-base text-white truncate">
+                {chat.title || file?.name || "Untitled Chat"}
+              </h3>
+              <span className="text-xs text-[#A9A9A9] uppercase bg-[#2a2a2a] px-2 py-1 rounded whitespace-nowrap">
+                {file?.type?.toUpperCase() || 'FILE'}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-6 flex-shrink-0 pr-10">
+              {file?.size && (
+                <span className="text-xs text-[#A9A9A9]">
+                  {formatFileSize(file.size)}
+                </span>
+              )}
+              <span className="text-xs text-[#A9A9A9]">
+                {formatTimeAgo(chat.created_at)}
+              </span>
+            </div>
+          </div>
         </div>
+      </Link>
+      
+      {/* More button - positioned absolutely to avoid overlap */}
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 transition-opacity">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-400 hover:text-gray-300 hover:bg-[#2a2a2a] p-1.5 h-7 w-7 sm:h-8 sm:w-8"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent 
+            align="end" 
+            className="bg-[#1d1d1d] border-[#272626] text-white w-40 rounded-xl shadow-lg"
+          >
+            <DropdownMenuItem 
+              onClick={handleDownload}
+              className="cursor-pointer hover:bg-[#3a3a3a] focus:bg-[#3a3a3a] text-sm"
+            >
+              <Download className="mr-3 h-4 w-4" />
+              Download file
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={handleShare}
+              className="cursor-pointer hover:bg-[#3a3a3a] focus:bg-[#3a3a3a] text-sm"
+            >
+              <Send className="mr-3 h-4 w-4" />
+              Share file
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={handleDelete}
+              className="cursor-pointer hover:bg-[#3a3a3a] focus:bg-[#3a3a3a] text-sm"
+            >
+              <Trash2 className="mr-3 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-    </Link>
+    </div>
   );
 };
 
@@ -84,17 +153,24 @@ const HistoryPage = () => {
 
   /** Renders a loading skeleton UI while chat data is being fetched. */
   const renderLoadingSkeleton = () => (
-    <div className="w-full space-y-1">
+    <div className="w-full space-y-2 sm:space-y-3">
       {[1, 2, 3].map((item) => (
-        <div key={item} className="w-full bg-[#1a1a1a] p-3 sm:p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3 flex-1">
-            <Skeleton className="h-3 sm:h-4 w-32 sm:w-48 bg-[#333] rounded" />
-            <Skeleton className="h-3 sm:h-4 w-8 sm:w-12 bg-[#333] rounded" />
-          </div>
-          <div className="flex items-center gap-3 sm:gap-6">
-            <Skeleton className="h-2 sm:h-3 w-8 sm:w-12 bg-[#333] rounded hidden sm:block" />
-            <Skeleton className="h-2 sm:h-3 w-12 sm:w-20 bg-[#333] rounded" />
-            <Skeleton className="h-5 w-5 sm:h-6 sm:w-6 bg-[#333] rounded" />
+        <div key={item} className="w-full bg-[#1a1a1a] p-3 sm:p-4 rounded-lg border border-[#333]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3 flex-1">
+              <Skeleton className="h-4 w-32 sm:w-48 bg-[#333] rounded" />
+              <Skeleton className="h-4 w-12 bg-[#333] rounded" />
+            </div>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="flex flex-col items-end gap-0.5 sm:hidden">
+                <Skeleton className="h-2 w-12 bg-[#333] rounded" />
+                <Skeleton className="h-2 w-16 bg-[#333] rounded" />
+              </div>
+              <div className="hidden sm:flex items-center gap-4">
+                <Skeleton className="h-3 w-12 bg-[#333] rounded" />
+                <Skeleton className="h-3 w-20 bg-[#333] rounded" />
+              </div>
+            </div>
           </div>
         </div>
       ))}
@@ -131,35 +207,52 @@ const HistoryPage = () => {
     </div>
   );
 
+  const handleSearch = () => {
+    // You can add search submission logic here if needed
+    console.log('Search for:', searchQuery);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full">
-      <div className="w-full max-w-4xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex flex-col mt-3 sm:mt-6">
+    <div className="flex flex-col min-h-screen max-w-screen bg-[#0f0f0f]">
+      <div className="w-full max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 flex-1">
+        <div className="flex flex-col py-4 sm:py-6">
           {/* Title Section */}
           <div className="text-center mb-4 sm:mb-6">
-            <h2 className="text-base sm:text-lg font-normal mb-1 sm:mb-2">File History</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-1 sm:mb-2 text-white">File History</h2>
             <p className="text-xs sm:text-sm font-normal text-[#A9A9A9]">Review your chat history</p>
           </div>
           
           {/* Search Bar */}
-            <div className="relative w-full max-w-sm sm:max-w-lg mx-auto mb-4 sm:mb-6">
+          <div className="relative w-full max-w-sm sm:max-w-lg mx-auto mb-4 sm:mb-6">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
             <Input
               type="text"
               placeholder="Search chat"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10 text-sm text-gray-300 bg-[#1a1a1a] border-[#333] focus:border-[#555] rounded-xl"
+              onKeyPress={handleKeyPress}
+              className="pl-10 pr-10 text-sm text-gray-300 bg-[#1a1a1a] border-[#333] focus:border-[#555] rounded-xl h-10 sm:h-12"
             />
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <div className="w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded">
-              <Send size={14} className='sm:w-4 sm:h-4 text-gray-500 cursor-pointer hover:text-gray-400 transition-colors' />
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSearch}
+                className="p-1 h-6 w-6 hover:bg-[#2a2a2a] rounded"
+              >
+                <Send size={14} className='text-gray-500 hover:text-gray-400 transition-colors' />
+              </Button>
             </div>
-            </div>
+          </div>
           
           {/* Content area that conditionally renders based on state */}
-          <div className="w-full">
+          <div className="w-full flex-1">
             {isLoading ? renderLoadingSkeleton() : 
              filteredChats.length === 0 ? renderEmptyState() : 
              renderChatList()}

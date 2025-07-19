@@ -119,13 +119,13 @@ isLoading,
     {/* Overlay */}
     {isOpen && (
       <div
-        className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+        className="md:hidden fixed inset-0 bg-[#121212] bg-opacity-50 z-40"
         onClick={onClose}
       />
     )}
     {/* Sidebar */}
     <aside
-      className={`md:hidden fixed left-0 top-0 h-full w-full bg-[#181818] z-50 transform transition-transform duration-300 ${
+      className={`md:hidden fixed left-0 top-0 h-full w-full bg-[#121212] z-50 transform transition-transform duration-300 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
