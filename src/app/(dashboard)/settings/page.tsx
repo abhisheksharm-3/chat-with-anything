@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import PricingDialog from "@/components/dashboard/PricingDialog";
@@ -19,9 +19,8 @@ import { Input } from "@/components/ui/input";
  * @returns {React.ReactElement | null} The rendered settings page or null if on a desktop device.
  */
 const SettingsPage = () => {
-  const { user, isLoading, updateUser, isUpdating } = useUser();
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [name, setName] = React.useState("");
+  const { user, isLoading } = useUser();
+  const [, setName] = useState("");
   const isMobile = useIsMobile();
   const router = useRouter();
   // State to track if the component has mounted on the client, preventing hydration errors.
@@ -49,26 +48,11 @@ const SettingsPage = () => {
   /**
    * Effect to synchronize the local 'name' state with the user data once it loads.
    */
-  React.useEffect(() => {
+  useEffect(() => {
     if (user?.name) {
       setName(user.name);
     }
   }, [user?.name]);
-
-  /**
-   * Handles the form submission to update the user's display name.
-   * @param {React.FormEvent} e - The form event.
-   */
-  const handleUpdateName = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      await updateUser({ name });
-      setIsEditing(false); // Exit editing mode on success
-    } catch (error) {
-      console.error("Failed to update name:", error);
-    }
-  };
 
   // Avoid rendering the page on the server or on desktop to prevent a UI flash before redirect.
   if (!isMounted || (isMounted && !isMobile)) {
