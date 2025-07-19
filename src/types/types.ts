@@ -116,3 +116,12 @@ export interface TypeUseUploadLogicProps {
   fileType: string;
   onClose: () => void;
 }
+
+export type TypeSpreadsheetRow = (
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+)[];
+export type TypeSpreadsheetData = TypeSpreadsheetRow[];

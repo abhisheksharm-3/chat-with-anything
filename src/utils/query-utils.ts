@@ -8,7 +8,7 @@
 /**
  * Create a system prompt for RAG
  */
-export function createRagSystemPrompt(documentContent: string): string {
+export const createRagSystemPrompt = (documentContent: string): string => {
   return `You are a helpful assistant that answers questions based on the provided document content.
   
 Here is the relevant document content to use when answering questions:
@@ -21,4 +21,4 @@ When answering:
 3. Keep your answers concise and focused on the question.
 4. Do not make up information that isn't in the document.
 5. If asked about topics unrelated to the document, politely redirect the conversation back to the document content.`;
-}
+};

@@ -29,7 +29,7 @@ import { createImageContext } from "../image-utils";
  * @returns {Promise<string | null>} A promise that resolves to the file content, a placeholder string
  * (e.g., 'PDF_CONTENT', 'YOUTUBE_TRANSCRIPT'), an error message prefixed with 'ERROR:', or null if not found.
  */
-async function getFileContent(fileId: string) {
+const getFileContent = async (fileId: string): Promise<string | null> => {
   const supabase = supabaseBrowserClient();
 
   // First get the file metadata from the database without filtering by user_id
@@ -417,7 +417,7 @@ async function getFileContent(fileId: string) {
 
   // Default case if no specific handling
   return null;
-}
+};
 
 /**
  * Helper function to download a file's blob content from Supabase storage.
@@ -426,10 +426,10 @@ async function getFileContent(fileId: string) {
  * @param {TypeFile} file - The file metadata object from the database.
  * @returns {Promise<Blob | null>} A promise that resolves with the file Blob, or null if it cannot be downloaded.
  */
-async function getFileBlob(
+const getFileBlob = async (
   supabase: SupabaseClient,
   file: TypeFile,
-): Promise<Blob | null> {
+): Promise<Blob | null> => {
   // Try with direct URL if available
   if (file.url && file.url.includes("file-storage")) {
     try {
@@ -484,7 +484,7 @@ async function getFileBlob(
   }
 
   return null;
-}
+};
 
 /**
  * Creates a new chat session associated with a specific file and user.
@@ -494,7 +494,7 @@ async function getFileBlob(
  * @returns {Promise<any>} A promise that resolves to the newly created chat object.
  * @throws {Error} If the Gemini API is not configured, user is not authenticated, the file is not found, or a database error occurs.
  */
-export async function createChat(fileId: string, userId?: string) {
+export const createChat = async (fileId: string, userId?: string) => {
   console.log("createChat called with:", { fileId, userId });
 
   // Check if Gemini API is configured
@@ -539,7 +539,7 @@ export async function createChat(fileId: string, userId?: string) {
 
     // Map file type to a valid chat type
     // Valid chat types: 'pdf' | 'image' | 'doc' | 'video' | 'sheet' | 'slides' | null
-    let chatType = file.type;
+    let chatType: string | null = file.type;
 
     // Map non-standard types to valid chat types
     if (file.type === "youtube" || file.type === "web" || file.type === "url") {
@@ -589,7 +589,7 @@ export async function createChat(fileId: string, userId?: string) {
     console.error("Error in createChat function:", error);
     throw error;
   }
-}
+};
 
 /**
  * Sends a message to the Gemini API and saves the conversation history.
@@ -602,11 +602,11 @@ export async function createChat(fileId: string, userId?: string) {
  * @returns {Promise<any>} A promise that resolves to the assistant's saved message object.
  * @throws {Error} If the Gemini API is not configured, user is not authenticated, or if an error occurs during message processing or API communication.
  */
-export async function sendMessage(
+export const sendMessage = async (
   chatId: string,
   content: string,
   userId?: string,
-) {
+) => {
   // Check if Gemini API is configured
   if (!isConfigured()) {
     throw new Error(
@@ -911,4 +911,4 @@ export async function sendMessage(
 
     throw error;
   }
-}
+};

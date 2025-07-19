@@ -8,26 +8,26 @@
 /**
  * Helper function to extract YouTube video ID from URL
  */
-export function extractYoutubeVideoId(url: string): string | null {
+export const extractYoutubeVideoId = (url: string): string | null => {
   const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
   const match = url.match(regExp);
   return match && match[2].length === 11 ? match[2] : null;
-}
+};
 
 /**
  * Check if a URL is a YouTube URL
  */
-export function isYoutubeUrl(url: string): boolean {
+export const isYoutubeUrl = (url: string): boolean => {
   return url.includes("youtube.com") || url.includes("youtu.be");
-}
+};
 
 /**
  * Check if a YouTube video has available transcripts
  * This is a client-side function that calls the server-side function
  */
-export async function checkYoutubeTranscriptAvailability(
+export const checkYoutubeTranscriptAvailability = async (
   url: string,
-): Promise<{ available: boolean; error?: string }> {
+): Promise<{ available: boolean; error?: string }> => {
   try {
     // Extract video ID from URL
     const videoId = extractYoutubeVideoId(url);
@@ -66,12 +66,14 @@ export async function checkYoutubeTranscriptAvailability(
           : "Unknown error checking transcript availability",
     };
   }
-}
+};
 
 /**
  * Create a system prompt for YouTube videos
  */
-export function createYoutubeSystemPrompt(transcriptContent: string): string {
+export const createYoutubeSystemPrompt = (
+  transcriptContent: string,
+): string => {
   return `You are a helpful assistant that answers questions about a YouTube video based on its transcript.
   
 Here is the relevant transcript content to use when answering questions:
@@ -84,4 +86,4 @@ When answering:
 3. Keep your answers concise and focused on the question.
 4. Do not make up information that isn't in the transcript.
 5. If asked about topics unrelated to the video, politely redirect the conversation back to the video content.`;
-}
+};

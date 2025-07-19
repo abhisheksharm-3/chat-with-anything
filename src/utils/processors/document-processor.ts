@@ -7,6 +7,7 @@ import { getPineconeIndex, isPineconeConfigured } from "../pinecone";
 import { Document } from "langchain/document";
 import mammoth from "mammoth";
 import * as XLSX from "xlsx";
+import { TypeSpreadsheetData, TypeSpreadsheetRow } from "@/types/types";
 
 // Constants for document processing
 const CHUNK_SIZE = 1000;
@@ -17,11 +18,11 @@ const RETRY_DELAY = 1000;
 /**
  * Process a PDF file and store its embeddings in Pinecone
  */
-export async function processPdfDocument(
+export const processPdfDocument = async (
   fileBlob: Blob,
   namespace: string,
   apiKey?: string,
-): Promise<{ numDocs: number; success: boolean; error?: string }> {
+): Promise<{ numDocs: number; success: boolean; error?: string }> => {
   console.log(`Starting PDF processing for namespace: ${namespace}`);
 
   // Check if Pinecone is configured
@@ -130,18 +131,18 @@ export async function processPdfDocument(
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to process PDF: ${errorMessage}`);
   }
-}
+};
 
 /**
  * Process a generic document (docs, sheets, slides)
  * Currently this is a placeholder that will be expanded as needed
  */
-export async function processGenericDocument(
+export const processGenericDocument = async (
   fileBlob: Blob,
   namespace: string,
   documentType: string,
   apiKey?: string,
-): Promise<{ numDocs: number; success: boolean; error?: string }> {
+): Promise<{ numDocs: number; success: boolean; error?: string }> => {
   console.log(
     `Starting ${documentType} processing for namespace: ${namespace}`,
   );
@@ -257,16 +258,16 @@ export async function processGenericDocument(
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to process ${documentType}: ${errorMessage}`);
   }
-}
+};
 
 /**
  * Extract text from a generic document (docs, sheets, slides)
  * Uses appropriate loaders based on file type
  */
-async function extractTextFromGenericDocument(
+const extractTextFromGenericDocument = async (
   fileBlob: Blob,
   documentType: string,
-): Promise<string> {
+): Promise<string> => {
   console.log(`Extracting text from ${documentType}...`);
 
   try {
@@ -287,7 +288,7 @@ async function extractTextFromGenericDocument(
           if (!text || text.trim().length < 50) {
             throw new Error("Could not extract meaningful text from document");
           }
-        } catch (error) {
+        } catch {
           console.warn(
             `Mammoth extraction failed for ${documentType}, trying fallback method`,
           );
@@ -315,20 +316,22 @@ async function extractTextFromGenericDocument(
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
             // Convert each row to text
-            jsonData.forEach((row: any) => {
-              if (Array.isArray(row)) {
-                const rowText = row
-                  .filter(
-                    (cell) =>
-                      cell !== null && cell !== undefined && cell !== "",
-                  )
-                  .map((cell) => String(cell).trim())
-                  .join(" | ");
-                if (rowText) {
-                  textParts.push(rowText);
+            (jsonData as TypeSpreadsheetData).forEach(
+              (row: TypeSpreadsheetRow) => {
+                if (Array.isArray(row)) {
+                  const rowText = row
+                    .filter(
+                      (cell) =>
+                        cell !== null && cell !== undefined && cell !== "",
+                    )
+                    .map((cell) => String(cell).trim())
+                    .join(" | ");
+                  if (rowText) {
+                    textParts.push(rowText);
+                  }
                 }
-              }
-            });
+              },
+            );
           });
 
           text = textParts.join("\n");
@@ -338,7 +341,7 @@ async function extractTextFromGenericDocument(
               "Could not extract meaningful text from spreadsheet",
             );
           }
-        } catch (error) {
+        } catch {
           console.warn(
             `XLSX extraction failed for ${documentType}, trying fallback method`,
           );
@@ -381,7 +384,7 @@ async function extractTextFromGenericDocument(
               "Could not extract meaningful text from presentation",
             );
           }
-        } catch (error) {
+        } catch {
           console.warn(
             `Enhanced text extraction failed for ${documentType}, trying basic method`,
           );
@@ -411,12 +414,12 @@ async function extractTextFromGenericDocument(
       `Failed to extract text from ${documentType}: ${errorMessage}`,
     );
   }
-}
+};
 
 /**
  * Extract text from a PDF file
  */
-export async function extractTextFromPdf(fileBlob: Blob): Promise<string> {
+export const extractTextFromPdf = async (fileBlob: Blob): Promise<string> => {
   console.log("Extracting text from PDF...");
 
   try {
@@ -431,7 +434,9 @@ export async function extractTextFromPdf(fileBlob: Blob): Promise<string> {
     console.log(`Successfully extracted text from ${docs.length} pages`);
 
     // Combine all page content
-    const combinedText = docs.map((doc) => doc.pageContent).join("\n\n");
+    const combinedText = docs
+      .map((doc: Document) => doc.pageContent)
+      .join("\n\n");
     console.log(
       `Total extracted text length: ${combinedText.length} characters`,
     );
@@ -442,4 +447,4 @@ export async function extractTextFromPdf(fileBlob: Blob): Promise<string> {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to extract text from PDF: ${errorMessage}`);
   }
-}
+};

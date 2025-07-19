@@ -13,10 +13,10 @@
  * Currently, we don't need to do any processing for images
  * as they are handled directly by the Gemini model
  */
-export async function processImage(
+export const processImage = async (
   fileBlob: Blob,
   fileName: string,
-): Promise<{ success: boolean }> {
+): Promise<{ success: boolean }> => {
   console.log(`Processing image: ${fileName}`);
 
   try {
@@ -39,15 +39,15 @@ export async function processImage(
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to process image: ${errorMessage}`);
   }
-}
+};
 
 /**
  * Get image file information
  * This is a placeholder for future expansion
  */
-export async function getImageInfo(
+export const getImageInfo = async (
   fileBlob: Blob,
-): Promise<{ width: number; height: number; format: string }> {
+): Promise<{ width: number; height: number; format: string }> => {
   return new Promise((resolve, reject) => {
     try {
       const img = new Image();
@@ -68,4 +68,4 @@ export async function getImageInfo(
       reject(error);
     }
   });
-}
+};

@@ -8,7 +8,7 @@ let pineconeClientInstance: Pinecone | null = null;
 let pineconeIndexInstance: Index | null = null;
 
 // Get Pinecone client using singleton pattern
-export async function getPineconeClient() {
+export const getPineconeClient = async () => {
   if (pineconeClientInstance) return pineconeClientInstance;
 
   const PINECONE_API_KEY = process.env.PINECONE_API_KEY ?? "";
@@ -27,10 +27,10 @@ export async function getPineconeClient() {
     console.error("Failed to initialize Pinecone client:", error);
     return null;
   }
-}
+};
 
 // Get Pinecone index using singleton pattern
-export async function getPineconeIndex() {
+export const getPineconeIndex = async () => {
   if (pineconeIndexInstance) return pineconeIndexInstance;
 
   const client = await getPineconeClient();
@@ -53,11 +53,11 @@ export async function getPineconeIndex() {
     console.error("Failed to initialize Pinecone index:", error);
     return null;
   }
-}
+};
 
 // Helper function to check if Pinecone is properly configured
-export async function isPineconeConfigured(): Promise<boolean> {
+export const isPineconeConfigured = async (): Promise<boolean> => {
   const PINECONE_API_KEY = process.env.PINECONE_API_KEY ?? "";
   const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME ?? "";
   return !!PINECONE_API_KEY && !!PINECONE_INDEX_NAME;
-}
+};

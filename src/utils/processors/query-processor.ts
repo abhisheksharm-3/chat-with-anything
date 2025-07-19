@@ -8,12 +8,12 @@ import { Document } from "langchain/document";
 /**
  * Query documents from Pinecone
  */
-export async function queryDocuments(
+export const queryDocuments = async (
   query: string,
   namespace: string,
   topK: number = 5,
   apiKey?: string,
-): Promise<Document[]> {
+): Promise<Document[]> => {
   console.log(`Querying documents for: "${query}" in namespace: ${namespace}`);
 
   // Check if Pinecone is configured
@@ -31,7 +31,6 @@ export async function queryDocuments(
 
   try {
     // First, check if there are any vectors in this namespace
-    let namespaceExists = false;
     try {
       const stats = await pineconeIndex.describeIndexStats();
       console.log("Pinecone index stats:", JSON.stringify(stats));
@@ -42,7 +41,6 @@ export async function queryDocuments(
         console.log(
           `Found ${namespaces[namespace].recordCount} vectors in namespace ${namespace}`,
         );
-        namespaceExists = true;
       } else {
         // Even if not found in stats, we'll still try to query
         // Sometimes namespaces don't show up in stats right away
@@ -103,7 +101,9 @@ export async function queryDocuments(
     // Log similarity scores for debugging
     resultsWithScores.forEach(([doc, score], i) => {
       console.log(
-        `Result ${i + 1}: Score ${score.toFixed(4)}, Content: "${doc.pageContent.substring(0, 50)}..."`,
+        `Result ${i + 1}: Score ${score.toFixed(
+          4,
+        )}, Content: "${doc.pageContent.substring(0, 50)}..."`,
       );
     });
 
@@ -116,14 +116,14 @@ export async function queryDocuments(
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to query documents: ${errorMessage}`);
   }
-}
+};
 
 /**
  * Check if a namespace exists in Pinecone
  */
-export async function checkNamespaceExists(
+export const checkNamespaceExists = async (
   namespace: string,
-): Promise<boolean> {
+): Promise<boolean> => {
   // Check if Pinecone is configured
   if (!(await isPineconeConfigured())) {
     console.log(
@@ -193,7 +193,7 @@ export async function checkNamespaceExists(
         const exists = resultsWithScores.length > 0;
         console.log(`Namespace ${namespace} exists with documents: ${exists}`);
         return exists;
-      } catch (queryError) {
+      } catch {
         // If the query fails but the vector store was created, the namespace exists but is empty
         console.log(`Namespace ${namespace} exists but may be empty`);
         return true;
@@ -207,4 +207,4 @@ export async function checkNamespaceExists(
     console.log(`Error checking if namespace ${namespace} exists:`, error);
     return false;
   }
-}
+};

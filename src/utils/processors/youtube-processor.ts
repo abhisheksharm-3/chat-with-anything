@@ -18,11 +18,11 @@ const RETRY_DELAY = 1000;
 /**
  * Process YouTube video transcript and store its embeddings in Pinecone
  */
-export async function processYoutubeVideo(
+export const processYoutubeVideo = async (
   videoUrl: string,
   namespace: string,
   apiKey?: string,
-): Promise<{ numDocs: number; success: boolean; error?: string }> {
+): Promise<{ numDocs: number; success: boolean; error?: string }> => {
   console.log(
     `Starting YouTube transcript processing for namespace: ${namespace}`,
   );
@@ -191,7 +191,11 @@ export async function processYoutubeVideo(
             .from("files")
             .update({
               processing_status: "failed",
-              processing_error: `Failed to store transcript in Pinecone: ${storeError instanceof Error ? storeError.message : String(storeError)}`,
+              processing_error: `Failed to store transcript in Pinecone: ${
+                storeError instanceof Error
+                  ? storeError.message
+                  : String(storeError)
+              }`,
             })
             .eq("id", namespace);
 
@@ -234,15 +238,15 @@ export async function processYoutubeVideo(
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to process YouTube video: ${errorMessage}`);
   }
-}
+};
 
 /**
  * Get YouTube video information
  * This is a placeholder for future expansion
  */
-export async function getYoutubeVideoInfo(
+export const getYoutubeVideoInfo = async (
   videoId: string,
-): Promise<{ title: string; channel: string; duration: number }> {
+): Promise<{ title: string; channel: string; duration: number }> => {
   // In a real implementation, this would use the YouTube API
   // For now, we'll just return placeholder data
   return {
@@ -250,4 +254,4 @@ export async function getYoutubeVideoInfo(
     channel: "Unknown Channel",
     duration: 0,
   };
-}
+};
