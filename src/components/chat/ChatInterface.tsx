@@ -38,6 +38,33 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
   const [showPDF, setShowPDF] = useState(false); // For mobile view toggle
   const [localMessages, setLocalMessages] = useState<TypeMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const localMessagesRef = useRef<TypeMessage[]>([]);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    localMessagesRef.current = localMessages;
+  }, [localMessages]);
+
+  /**
+   * Checks if two messages are duplicates based on content and timing
+   */
+  const areMessagesDuplicate = (msg1: TypeMessage, msg2: TypeMessage): boolean => {
+    // Same role and content
+    if (msg1.role === msg2.role && msg1.content === msg2.content) {
+      // If they're both user messages, they're likely duplicates
+      if (msg1.role === 'user') {
+        return true;
+      }
+      
+      // For assistant messages, check if they're within a short time window (5 seconds)
+      const time1 = new Date(msg1.created_at).getTime();
+      const time2 = new Date(msg2.created_at).getTime();
+      const timeDiff = Math.abs(time1 - time2);
+      return timeDiff < 5000; // 5 seconds
+    }
+    
+    return false;
+  };
   
   // Fetch chat and associated file metadata
   const chat = getChatById(chatId);
@@ -56,15 +83,49 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
    * temporary optimistic UI messages (like user messages just sent or AI 'thinking' indicators).
    */
   useEffect(() => {
-    if (chatMessages && JSON.stringify(chatMessages) !== JSON.stringify(localMessages.filter(m => !m.id.startsWith('temp-')))) {
-      const tempMessages = localMessages.filter(msg => 
-        msg.id.startsWith('temp-') || msg.id.startsWith('error-')
+    if (!chatMessages) return;
+    
+    // Get all temporary messages (optimistic updates)
+    const tempMessages = localMessagesRef.current.filter(msg => 
+      msg.id.startsWith('temp-') || msg.id.startsWith('error-')
+    );
+    
+    // Get server message IDs to avoid duplicates
+    const serverMessageIds = new Set(chatMessages.map(msg => msg.id));
+    
+    // Filter out temp messages that have been replaced by server messages
+    // Also filter out temp user messages that have corresponding server messages with same content
+    const uniqueTempMessages = tempMessages.filter(tempMsg => {
+      // If it's a temp user message, check if there's a server message with same content
+      if (tempMsg.role === 'user' && tempMsg.id.startsWith('temp-')) {
+        const hasMatchingServerMessage = chatMessages.some(serverMsg => 
+          areMessagesDuplicate(tempMsg, serverMsg)
+        );
+        return !hasMatchingServerMessage;
+      }
+      
+      // For other temp messages (AI thinking, errors), just check by ID
+      return !serverMessageIds.has(tempMsg.id);
+    });
+    
+    // Create new local messages array with server messages + unique temp messages
+    const newLocalMessages = [...chatMessages, ...uniqueTempMessages];
+    
+    // Final deduplication pass to ensure no duplicates exist
+    const finalMessages = newLocalMessages.filter((msg, index) => {
+      // Check if this message is a duplicate of any previous message
+      const isDuplicate = newLocalMessages.slice(0, index).some(prevMsg => 
+        areMessagesDuplicate(msg, prevMsg)
       );
-      const serverMessageIds = chatMessages.map(msg => msg.id);
-      const uniqueTempMessages = tempMessages.filter(msg => !serverMessageIds.includes(msg.id));
-      setLocalMessages([...chatMessages, ...uniqueTempMessages]);
+      
+      return !isDuplicate;
+    });
+    
+    // Only update if the arrays are actually different
+    if (JSON.stringify(finalMessages) !== JSON.stringify(localMessagesRef.current)) {
+      setLocalMessages(finalMessages);
     }
-  }, [chatMessages, localMessages]);
+  }, [chatMessages]);
 
   /**
    * Injects an error message into the chat if a YouTube video fails processing.
@@ -132,16 +193,19 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
     
     try {
       await sendMessage(messageToSend);
+      // Remove the temporary AI message after successful send
+      // The temporary user message will be handled by the useEffect when server messages arrive
       setLocalMessages(prev => prev.filter(msg => msg.id !== tempAiMessage.id));
     } catch (error) {
       console.error('Failed to send message:', error);
+      // Remove temporary AI message and add error message
       setLocalMessages(prev => {
         const filtered = prev.filter(msg => !msg.id.startsWith('temp-ai-'));
         return [...filtered, {
           id: `error-${Date.now()}`,
           chat_id: chatId,
           role: 'assistant' as const,
-          content: 'Sorry, there was an error processing your request.',
+          content: 'Sorry, there was an error processing your request. Please try again.',
           created_at: new Date().toISOString(),
         }];
       });

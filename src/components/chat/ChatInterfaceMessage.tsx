@@ -73,7 +73,10 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
       return (
         <div className="text-red-400">
           <p>{content}</p>
-          <p className="mt-2 text-sm">The document might be empty, scanned, or in an unsupported format.</p>
+          <p className="mt-2 text-sm">
+            The document might be empty, scanned, corrupted, or in an unsupported format. 
+            For best results, try uploading a different file or ensure the document contains readable text.
+          </p>
         </div>
       );
     }

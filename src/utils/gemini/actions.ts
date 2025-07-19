@@ -693,7 +693,7 @@ export async function sendMessage(
             .insert({
               chat_id: chatId,
               role: "assistant",
-              content: `I couldn't process this document: ${errorMessage}`,
+              content: `I couldn't process this document: ${errorMessage}. Please try uploading a different file or contact support if the issue persists.`,
             })
             .select()
             .single();

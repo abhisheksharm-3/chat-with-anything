@@ -5,6 +5,8 @@ import { createGeminiEmbeddings } from "../gemini/embeddings";
 import { PineconeStore } from "@langchain/pinecone";
 import { getPineconeIndex, isPineconeConfigured } from "../pinecone";
 import { Document } from "langchain/document";
+import mammoth from "mammoth";
+import * as XLSX from "xlsx";
 
 // Constants for document processing
 const CHUNK_SIZE = 1000;
@@ -135,9 +137,8 @@ export async function processGenericDocument(
   }
   
   try {
-    // For now, we'll just extract text from the blob and create a document
-    // In the future, we can add specific loaders for different document types
-    const text = await fileBlob.text();
+    // Extract text using the appropriate method for the document type
+    const text = await extractTextFromGenericDocument(fileBlob, documentType);
     
     if (!text || text.trim().length === 0) {
       console.error(`No content extracted from ${documentType}`);
@@ -228,6 +229,143 @@ export async function processGenericDocument(
     throw new Error(`Failed to process ${documentType}: ${errorMessage}`);
   }
 }
+
+/**
+ * Extract text from a generic document (docs, sheets, slides)
+ * Uses appropriate loaders based on file type
+ */
+async function extractTextFromGenericDocument(
+  fileBlob: Blob,
+  documentType: string
+): Promise<string> {
+  console.log(`Extracting text from ${documentType}...`);
+  
+  try {
+    let text = "";
+    
+    // Convert blob to buffer for processing
+    const arrayBuffer = await fileBlob.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    switch (documentType) {
+      case "doc":
+      case "docs":
+        // For Word documents, use mammoth for .docx files
+        try {
+          const result = await mammoth.extractRawText({ buffer });
+          text = result.value;
+          
+          if (!text || text.trim().length < 50) {
+            throw new Error("Could not extract meaningful text from document");
+          }
+        } catch (error) {
+          console.warn(`Mammoth extraction failed for ${documentType}, trying fallback method`);
+          // Fallback: try basic text extraction
+          text = buffer.toString('utf8');
+          text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '');
+          text = text.replace(/\s+/g, ' ').trim();
+          
+          if (!text || text.length < 50) {
+            throw new Error("No readable text content found in document");
+          }
+        }
+        break;
+        
+      case "sheet":
+      case "sheets":
+        // For Excel files, use xlsx library
+        try {
+          const workbook = XLSX.read(buffer, { type: 'buffer' });
+          const textParts: string[] = [];
+          
+          // Extract text from all sheets
+          workbook.SheetNames.forEach(sheetName => {
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            
+            // Convert each row to text
+            jsonData.forEach((row: any) => {
+              if (Array.isArray(row)) {
+                const rowText = row
+                  .filter(cell => cell !== null && cell !== undefined && cell !== '')
+                  .map(cell => String(cell).trim())
+                  .join(' | ');
+                if (rowText) {
+                  textParts.push(rowText);
+                }
+              }
+            });
+          });
+          
+          text = textParts.join('\n');
+          
+          if (!text || text.trim().length < 50) {
+            throw new Error("Could not extract meaningful text from spreadsheet");
+          }
+        } catch (error) {
+          console.warn(`XLSX extraction failed for ${documentType}, trying fallback method`);
+          // Fallback: try basic text extraction
+          text = buffer.toString('utf8');
+          text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '');
+          text = text.replace(/\s+/g, ' ').trim();
+          
+          if (!text || text.length < 50) {
+            throw new Error("No readable text content found in spreadsheet");
+          }
+        }
+        break;
+        
+      case "slides":
+        // For PowerPoint files, use enhanced text extraction
+        try {
+          // Try to extract text using XML parsing for .pptx files
+          // For .ppt files, we'll use basic extraction
+          text = buffer.toString('utf8');
+          
+          // Clean up PowerPoint-specific formatting and extract readable content
+          const cleanedText = text
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '')
+            .replace(/<[^>]*>/g, ' ') // Remove XML tags
+            .replace(/\s+/g, ' ')
+            .trim();
+          
+          // Extract meaningful text parts
+          const textParts = cleanedText
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0 && /[a-zA-Z0-9]/.test(line))
+            .join('\n');
+          
+          if (textParts.length > 50) {
+            text = textParts;
+          } else {
+            throw new Error("Could not extract meaningful text from presentation");
+          }
+        } catch (error) {
+          console.warn(`Enhanced text extraction failed for ${documentType}, trying basic method`);
+          // Fallback: try basic text extraction
+          text = buffer.toString('utf8');
+          text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '');
+          text = text.replace(/\s+/g, ' ').trim();
+          
+          if (!text || text.length < 50) {
+            throw new Error("No readable text content found in presentation");
+          }
+        }
+        break;
+        
+      default:
+        throw new Error(`Unsupported document type: ${documentType}`);
+    }
+    
+    console.log(`Successfully extracted ${text.length} characters from ${documentType}`);
+    return text;
+  } catch (error) {
+    console.error(`Error extracting text from ${documentType}:`, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to extract text from ${documentType}: ${errorMessage}`);
+  }
+} 
 
 /**
  * Extract text from a PDF file
