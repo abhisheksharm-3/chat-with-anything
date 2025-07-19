@@ -116,7 +116,7 @@ export const DashboardMobileHeader = ({ onMenuToggle }: { onMenuToggle: () => vo
               onClick={() => router.back()}
               className="text-gray-400 hover:text-white"
             >
-              <ChevronsLeft />
+              <ChevronsLeft className="size-8" />
             </Button>
           ) : (
             <Button
@@ -125,7 +125,7 @@ export const DashboardMobileHeader = ({ onMenuToggle }: { onMenuToggle: () => vo
               onClick={onMenuToggle}
               className="text-gray-400 hover:text-white"
             >
-              <ChevronsRight />
+              <ChevronsRight className="size-8" />
             </Button>
         )}
       </div>

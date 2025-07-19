@@ -23,7 +23,7 @@ const Pricing = () => {
         <SectionHeader subtitle="Pricing" title="One plan one price" />
 
         <div className="flex items-baseline justify-center mb-16 tracking-tighter">
-          <span className="text-6xl md:text-8xl font-semibold">$10</span>
+          <span className="text-8xl font-semibold">$10</span>
           <span className="text-gray-500 ml-1 text-2xl">/month</span>
         </div>
 

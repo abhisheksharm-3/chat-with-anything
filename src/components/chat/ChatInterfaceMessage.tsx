@@ -1,8 +1,9 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { TypeChatInterfaceMessagesProps } from '@/types/chat';
-import { useUser } from '@/hooks/useUser'; // Import the useUser hook
 import Image from 'next/image';
+import { getUserInitials } from '@/utils/dashboard-utils';
+import { useUser } from '@/hooks';
 
 /**
  * Renders the main message display area for the chat interface.
@@ -22,29 +23,7 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
   messagesLoading,
   messagesEndRef
 }) => {
-  const { user } = useUser();
-
-  /**
-   * Gets the user's initials from their name or email
-   * @returns {string} The user's initials (up to 2 characters)
-   */
-  const getUserInitials = (): string => {
-    if (!user) return 'U';
-    
-    if (user.name && user.name.trim()) {
-      const nameParts = user.name.trim().split(' ');
-      if (nameParts.length >= 2) {
-        return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
-      }
-      return nameParts[0][0].toUpperCase();
-    }
-    
-    if (user.email) {
-      return user.email[0].toUpperCase();
-    }
-    
-    return 'U';
-  };
+  const { user } = useUser()
 
   /**
    * Parses and renders the string content of a single message.
@@ -148,7 +127,7 @@ export const ChatInterfaceMessages: React.FC<TypeChatInterfaceMessagesProps> = (
             {/* User avatar with initials */}
             {message.role === 'user' && (
               <div className="w-11 h-11 rounded-lg bg-[#272626] flex items-center justify-center flex-shrink-0 text-sm">
-                {getUserInitials()}
+                {getUserInitials(user)}
               </div>
             )}
           </div>

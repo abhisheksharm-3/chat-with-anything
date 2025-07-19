@@ -87,8 +87,8 @@ const Hero = () => {
             Using doc2text ask questions, get information from a document, image, video, URL, github repo and more.
           </div>
         </div>
-        <div className='mt-10 min-w-96 mx-auto px-12 md:px-0'>
-          <ButtonCta className='py-6' showArrow={true} />
+        <div className='mt-10 md:min-w-96 mx-auto px-12 md:px-0'>
+          <ButtonCta className='py-6' showArrow={true} link='/signup'/>
         </div>
       </div>
     </section>

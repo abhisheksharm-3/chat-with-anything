@@ -15,7 +15,7 @@ const Features = () => {
   return (
     <div id="features" className="relative py-32 border-b border-primary/10">
       <div className="relative z-10">
-        <SectionHeader subtitle="Features" title="Experience the power of AI" />
+        <SectionHeader subtitle="Features" title="Experience the power of AI"/>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto px-8">
           {/* Note: Mapping over a placeholder array. Replace with dynamic data as needed. */}
           {[...Array(3)].map((_, index) => (

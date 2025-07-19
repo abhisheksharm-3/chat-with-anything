@@ -45,7 +45,7 @@ const ChatItem = ({ chat }: { chat: TypeChat }) => {
   };
 
   return (
-    <div className="max-w-sm lg:max-w-screen px-2 bg-[#1a1a1a] hover:bg-[#252525] transition-colors relative group">
+    <div className="max-w-[395px] lg:max-w-screen px-2 bg-[#1a1a1a] hover:bg-[#252525] transition-colors relative group">
       <Link href={`/chat/${chat.id}`} className="block">
         <div className="p-3 sm:p-4">
           {/* Mobile Layout */}
@@ -220,7 +220,7 @@ const HistoryPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen max-w-screen bg-[#0f0f0f]">
-      <div className="w-full max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 flex-1">
+      <div className="w-full max-w-4xl mx-auto  lg:px-8 flex-1">
         <div className="flex flex-col py-4 sm:py-6">
           {/* Title Section */}
           <div className="text-center mb-4 sm:mb-6">

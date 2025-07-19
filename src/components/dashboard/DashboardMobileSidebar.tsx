@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import PricingDialog from "@/components/dashboard/PricingDialog";
 import { MobileNavItems } from "@/constants/NavItems";
 import { TypeUser } from "@/types/supabase";
-import { getUserInitials } from "@/utils/dashboard-utils";
+import avatarImage from "@/assets/images/avatar.svg";
 
 /**
  * Renders the list of navigation links for the mobile sidebar.
@@ -22,25 +22,37 @@ const MobileNavigation = ({
   pathname: string;
   onItemClick: () => void;
 }) => (
-  <nav className="flex-1 p-4">
-    <div className="space-y-2">
+  <nav className="flex-1 p-6">
+    <div className="space-y-1">
       {MobileNavItems.map(({ href, icon: IconComponent, title, description }) => {
         const Icon = IconComponent as LucideIcon;
+        const isActive = pathname === href;
+        
         return (
           <Link
             key={href}
             href={href}
-            className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-              pathname === href
-                ? "bg-[#2a2a2a] text-white"
-                : "text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
+            className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-200 ${
+              isActive
+                ? "bg-[#2a2a2a] text-white shadow-sm"
+                : "text-gray-400 hover:text-white hover:bg-[#1f1f1f] active:bg-[#2a2a2a]"
             }`}
             onClick={onItemClick}
           >
-            <Icon size={20} />
-            <div>
-              <div className="text-sm font-medium">{title}</div>
-              <div className="text-xs text-gray-500">{description}</div>
+            <div className={`flex-shrink-0 w-10 h-10 rounded-full bg-[#181818] flex items-center justify-center ${
+              isActive ? 'text-white' : 'text-gray-400'
+            }`}>
+              <Icon size={20} strokeWidth={1.5} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className={`text-base font-medium leading-5 ${
+                isActive ? 'text-white' : 'text-gray-300'
+              }`}>
+                {title}
+              </div>
+              <div className="text-sm text-gray-500 leading-4 mt-0.5">
+                {description}
+              </div>
             </div>
           </Link>
         );
@@ -74,20 +86,36 @@ const UserProfile = ({
   }
 
   return (
-    <>
-      <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
-        <span className="text-white text-sm">{getUserInitials(user)}</span>
+    <div className="flex items-center gap-6 flex-col justify-center w-screen">
+      <div className="flex items-start gap-3 w-full">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center">
+        <Image
+          src={avatarImage}
+          alt="User Avatar"
+          className="object-contain"
+          width={64}
+          height={64}
+          priority
+        />
       </div>
-      <div>
-        <div className="text-white text-sm font-medium">
+      <div className="flex flex-col text-left gap-2">
+        <div className="text-white text-lg font-bold">
           {user?.name || "User"}
         </div>
-        <div className="text-gray-400 text-xs">{user?.email || "No email"}</div>
+        <div className="text-gray-400 text-sm">{user?.email || "No email"}</div>
       </div>
       <div className="ml-auto">
         <span className="bg-primary text-xs px-2 py-1 rounded">FREE</span>
       </div>
-    </>
+      </div>
+      <PricingDialog
+            trigger={
+              <Button className="w-full font-bold text-lg bg-primary hover:bg-primary/90 text-white rounded-lg py-8">
+                Upgrade to pro
+              </Button>
+            }
+          />
+    </div>
   );
 };
 
@@ -150,21 +178,14 @@ isLoading,
               onClick={onClose}
               className="text-gray-400 hover:text-white border rounded-lg"
             >
-              <ChevronsLeft size={20} />
+              <ChevronsLeft className="size-8" />
             </Button>
         </div>
         <MobileNavigation pathname={pathname} onItemClick={onClose} />
         <div className="p-4 border-t border-gray-700">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex mb-4 p-4 border rounded-lg">
             <UserProfile user={user} isLoading={isLoading} />
           </div>
-          <PricingDialog
-            trigger={
-              <Button className="w-full bg-primary hover:bg-primary/90 text-white rounded-lg py-3">
-                Upgrade to pro
-              </Button>
-            }
-          />
         </div>
       </div>
     </aside>
