@@ -27,6 +27,7 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   const [open, setOpen] = useState(defaultOpen);
   const [selectedPlan, setSelectedPlan] = useState<'annual' | 'lifetime'>('annual');
   const [selectedPricing, setSelectedPricing] = useState<'free' | 'personal' | 'pro'>('personal');
+  const [expandedPlan, setExpandedPlan] = useState<'free' | 'personal' | 'pro'>('personal');
 
   const handleClose = () => setOpen(false);
 
@@ -34,15 +35,23 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   const currentPricing = PricingData[selectedPlan];
 
   /**
-   * A helper function to render a single pricing tier card.
-   * It handles the display of features, price, and applies conditional styling
-   * based on whether it is the currently selected plan.
-   *
-   * @param {'free' | 'personal' | 'pro'} tier - The identifier for the pricing tier.
-   * @param {TypePricingTier} tierData - The data object containing details for the tier.
-   * @returns {JSX.Element} A rendered pricing card.
+   * Handle plan selection on mobile - expands the clicked plan and selects it
    */
-  const renderPricingCard = (tier: 'free' | 'personal' | 'pro', tierData: TypePricingTier) => {
+  const handleMobilePlanClick = (tier: 'free' | 'personal' | 'pro') => {
+    if (expandedPlan === tier) {
+      // If clicking the already expanded plan, just update selection
+      setSelectedPricing(tier);
+    } else {
+      // Expand the new plan and select it
+      setExpandedPlan(tier);
+      setSelectedPricing(tier);
+    }
+  };
+
+  /**
+   * A helper function to render a single pricing tier card for desktop.
+   */
+  const renderDesktopPricingCard = (tier: 'free' | 'personal' | 'pro', tierData: TypePricingTier) => {
     const isSelected = selectedPricing === tier;
     
     return (
@@ -85,6 +94,67 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
             </div>
           ))}
         </div>
+      </div>
+    );
+  };
+
+  /**
+   * A helper function to render a single pricing tier card for mobile with accordion behavior.
+   */
+  const renderMobilePricingCard = (tier: 'free' | 'personal' | 'pro', tierData: TypePricingTier) => {
+    const isSelected = selectedPricing === tier;
+    const isExpanded = expandedPlan === tier;
+    
+    return (
+      <div 
+        key={tier}
+        className={`border rounded-xl transition-all ${
+          isSelected 
+            ? 'border-primary' 
+            : 'border-gray-700'
+        }`}
+      >
+        {/* Header - Always visible */}
+        <div 
+          className="p-4 cursor-pointer"
+          onClick={() => handleMobilePlanClick(tier)}
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-xl font-semibold">{tierData.price}</h3>
+              <p className="text-gray-400 text-sm">{tierData.subtitle}</p>
+              {tier === 'pro' && selectedPlan === 'annual' && (
+                <p className="text-gray-500 text-xs mt-1">5000mins/month</p>
+              )}
+              {tierData.billingNote && (
+                <p className="text-gray-500 text-xs mt-1">{tierData.billingNote}</p>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                isSelected 
+                  ? 'border-primary bg-primary' 
+                  : 'border-gray-500'
+              }`}>
+                {isSelected && <Check size={12} className="text-white" />}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Expandable content - Features */}
+        {isExpanded && (
+          <div className="px-4 pb-4 border-t border-gray-700 pt-4">
+            <div className="space-y-3">
+              {tierData.features.map((feature, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-sm">{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -134,11 +204,18 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
             </div>
           </div>
           
-          {/* Pricing cards - responsive layout */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {renderPricingCard('free', currentPricing.free)}
-            {renderPricingCard('personal', currentPricing.personal)}
-            {renderPricingCard('pro', currentPricing.pro)}
+          {/* Mobile view - accordion style */}
+          <div className="md:hidden space-y-3">
+            {renderMobilePricingCard('free', currentPricing.free)}
+            {renderMobilePricingCard('personal', currentPricing.personal)}
+            {renderMobilePricingCard('pro', currentPricing.pro)}
+          </div>
+          
+          {/* Desktop view - show all pricing cards */}
+          <div className="hidden md:grid md:grid-cols-3 gap-4">
+            {renderDesktopPricingCard('free', currentPricing.free)}
+            {renderDesktopPricingCard('personal', currentPricing.personal)}
+            {renderDesktopPricingCard('pro', currentPricing.pro)}
           </div>
         </div>
         
