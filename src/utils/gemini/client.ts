@@ -16,6 +16,11 @@ export interface ChatMessage {
   content: string;
 }
 
+export interface ImageData {
+  buffer: Buffer;
+  mimeType: string;
+}
+
 // Get the Gemini model
 export const getGeminiModel = () =>
   genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
@@ -61,6 +66,7 @@ export const createChatSession = () => {
 export const sendMessageToGemini = async (
   messages: ChatMessage[],
   fileContent?: string,
+  imageData?: ImageData,
 ) => {
   try {
     if (!isConfigured()) {
@@ -69,34 +75,8 @@ export const sendMessageToGemini = async (
 
     console.log("Sending message to Gemini...");
     console.log(`Has file content: ${!!fileContent}`);
+    console.log(`Has image data: ${!!imageData}`);
     console.log(`Number of messages: ${messages.length}`);
-
-    // Check if the last message contains an image URL
-    const lastMessage = messages[messages.length - 1];
-    const imageUrlMatch = lastMessage.content.match(
-      /I'm looking at an image at URL: (https:\/\/[^\s]+)\./,
-    );
-
-    if (imageUrlMatch && imageUrlMatch[1]) {
-      const imageUrl = imageUrlMatch[1];
-      console.log(`Image URL detected in message: ${imageUrl}`);
-
-      try {
-        // Extract the actual query from the message
-        const query = lastMessage.content.replace(
-          /I'm looking at an image at URL: https:\/\/[^\s]+\.\s*/,
-          "",
-        );
-        console.log(`Extracted query: ${query}`);
-
-        // Currently the Gemini API doesn't support image URLs directly
-        // We'll need to inform the user about this limitation
-        return "I'm sorry, I can't analyze images via URLs at the moment. The Gemini API requires direct image uploads which aren't supported in this interface yet.";
-      } catch (imageError) {
-        console.error("Error processing image with Gemini:", imageError);
-        return `I'm sorry, I couldn't analyze the image. The error was: ${imageError instanceof Error ? imageError.message : String(imageError)}`;
-      }
-    }
 
     // Create chat session (always with empty history)
     const chat = createChatSession();
@@ -157,11 +137,30 @@ export const sendMessageToGemini = async (
       `Sending user message to Gemini: ${lastUserMessage.content.substring(0, 50)}...`,
     );
 
-    const result = await chat.sendMessage([{ text: lastUserMessage.content }]);
-    const response = result.response;
-
-    console.log("Received response from Gemini");
-    return response.text();
+    // Handle image data if present
+    if (imageData) {
+      console.log("Sending message with image data to Gemini");
+      const result = await chat.sendMessage([
+        {
+          text: lastUserMessage.content,
+        },
+        {
+          inlineData: {
+            data: imageData.buffer.toString("base64"),
+            mimeType: imageData.mimeType,
+          },
+        },
+      ]);
+      const response = result.response;
+      console.log("Received response from Gemini with image");
+      return response.text();
+    } else {
+      // Regular text-only message
+      const result = await chat.sendMessage([{ text: lastUserMessage.content }]);
+      const response = result.response;
+      console.log("Received response from Gemini");
+      return response.text();
+    }
   } catch (error) {
     console.error("Error in Gemini chat:", error);
     return `I'm sorry, I encountered an error while processing your request. ${error instanceof Error ? error.message : String(error)}`;

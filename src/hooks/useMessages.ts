@@ -5,6 +5,7 @@ import { supabaseBrowserClient } from "@/utils/supabase/client";
 import { TypeMessage } from "@/types/supabase";
 import { useUser } from "./useUser";
 import { sendMessage as sendMessageToGemini } from "@/utils/gemini/actions";
+import { ChatMessage } from "@/utils/gemini/client";
 
 /** The base query key for all message-related queries in React Query. */
 export const MESSAGES_QUERY_KEY = ["messages"];
@@ -65,7 +66,15 @@ export const useMessages = (chatId: string) => {
     mutationFn: async (content: string) => {
       if (!isValidChatId) throw new Error("No chat ID provided");
       if (!userId) throw new Error("No authenticated user");
-      return await sendMessageToGemini(chatId, content, userId);
+      
+      // Convert current messages to ChatMessage format for Gemini
+      const currentMessages = messagesQuery.data || [];
+      const formattedMessages: ChatMessage[] = currentMessages.map((msg) => ({
+        role: msg.role === "user" ? "user" : "model",
+        content: msg.content,
+      }));
+      
+      return await sendMessageToGemini(chatId, content, formattedMessages);
     },
     onSuccess: () => {
       // Invalidate the messages query to refetch the conversation, including the AI's response.

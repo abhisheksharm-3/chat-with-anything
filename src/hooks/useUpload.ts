@@ -135,20 +135,10 @@ export const useUploadLogic = ({
     try {
       const urlType = getUrlType(url, fileType);
 
-      // Special check for YouTube to verify transcript availability before proceeding
+      // For YouTube URLs, we'll let the server-side processing handle transcript availability
+      // This avoids client-side API calls and provides better error handling
       if (urlType === "youtube") {
-        const { checkYoutubeTranscriptAvailability } = await import(
-          "@/utils/youtube-utils"
-        );
-        const { available, error: transcriptError } =
-          await checkYoutubeTranscriptAvailability(url);
-        if (!available) {
-          throw new Error(
-            `Cannot process this YouTube video: ${
-              transcriptError || "No transcript available."
-            }`,
-          );
-        }
+        console.log("Processing YouTube URL - transcript availability will be checked server-side");
       }
 
       const urlFileName = new URL(url).hostname;

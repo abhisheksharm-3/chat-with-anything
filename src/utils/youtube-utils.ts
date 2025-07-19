@@ -23,7 +23,7 @@ export const isYoutubeUrl = (url: string): boolean => {
 
 /**
  * Check if a YouTube video has available transcripts
- * This is a client-side function that calls the server-side function
+ * This function validates the URL format but defers actual transcript checking to server-side processing
  */
 export const checkYoutubeTranscriptAvailability = async (
   url: string,
@@ -38,23 +38,18 @@ export const checkYoutubeTranscriptAvailability = async (
       };
     }
 
-    // Call the server action to check transcript availability
-    const response = await fetch(
-      `/api/youtube/check-transcript?videoId=${videoId}`,
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
+    // Basic validation - check if it's a valid YouTube URL format
+    if (!isYoutubeUrl(url)) {
       return {
         available: false,
-        error: errorData.error || "Failed to check transcript availability",
+        error: "Invalid YouTube URL format.",
       };
     }
 
-    const data = await response.json();
+    // For now, we'll assume the video is valid and let the server-side processing handle transcript availability
+    // This avoids the API call issue and lets the actual transcript processing determine availability
     return {
-      available: data.available,
-      error: data.error,
+      available: true,
     };
   } catch (error) {
     console.error("Error checking YouTube transcript availability:", error);
