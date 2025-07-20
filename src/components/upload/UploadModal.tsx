@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, CircleAlert, AlertCircle } from "lucide-react";
 import { useUploadLogic } from "@/hooks/useUpload";
@@ -84,6 +84,7 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
           className="bg-[#121212] border border-[#333] max-w-md p-0 rounded-xl"
           showCloseButton={false}
         >
+          <DialogTitle className="sr-only">Authentication Required</DialogTitle>
           <div className="p-6 flex flex-col items-center justify-center">
             <AlertCircle className="text-red-500 h-12 w-12 mb-4" />
             <h2 className="text-lg font-medium mb-2">
@@ -112,6 +113,7 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
           className="bg-[#121212] border border-[#333] max-w-md p-0 rounded-xl"
           showCloseButton={false}
         >
+          <DialogTitle className="sr-only">Coming Soon</DialogTitle>
           <div className="p-6 flex flex-col items-center justify-center">
             <CircleAlert className="text-amber-500 h-12 w-12 mb-4" />
             <h2 className="text-lg font-medium mb-2">Coming Soon</h2>
@@ -139,6 +141,8 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
         className="bg-[#121212] border border-[#333] max-w-md p-0 rounded-xl"
         showCloseButton={false}
       >
+        <DialogTitle className="sr-only">Upload {fileTypeConfig.name}</DialogTitle>
+        
         {/* Header */}
         <div className="p-4 flex justify-between items-start border-b border-[#333]">
           <div>
