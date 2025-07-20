@@ -1,4 +1,4 @@
-import { AuthErrorType } from "@/constants/EnumAuthErrorTypes";
+import { EnumAuthErrorType } from "@/constants/EnumAuthErrorTypes";
 import { TypeLoginFormValues, TypeSignupFormValues } from "@/schemas/auth";
 
 export interface TypeLoginFormData {
@@ -52,7 +52,7 @@ export interface TypeAuthHeaderProps {
 }
 
 export interface TypeAuthError {
-  type: AuthErrorType;
+  type: EnumAuthErrorType;
   message: string;
   userMessage: string;
   code?: string;

@@ -1,5 +1,5 @@
 import { ErrorMessages } from "@/constants/AuthErrorMessages";
-import { AuthErrorType } from "@/constants/EnumAuthErrorTypes";
+import { EnumAuthErrorType } from "@/constants/EnumAuthErrorTypes";
 import { TypeAuthError, TypeUnknownError } from "@/types/auth";
 
 /**
@@ -50,7 +50,7 @@ export const categorizeAuthError = (error: TypeUnknownError, context?: Record<st
     switch (status) {
       case 400:
         return {
-          type: AuthErrorType.VALIDATION_ERROR,
+          type: EnumAuthErrorType.VALIDATION_ERROR,
           message: errorMessage,
           userMessage: 'Please check your input and try again.',
           retryable: false,
@@ -58,7 +58,7 @@ export const categorizeAuthError = (error: TypeUnknownError, context?: Record<st
         };
       case 401:
         return {
-          type: AuthErrorType.AUTHENTICATION_ERROR,
+          type: EnumAuthErrorType.AUTHENTICATION_ERROR,
           message: errorMessage,
           userMessage: 'Authentication failed. Please check your credentials.',
           retryable: true,
@@ -66,7 +66,7 @@ export const categorizeAuthError = (error: TypeUnknownError, context?: Record<st
         };
       case 403:
         return {
-          type: AuthErrorType.AUTHORIZATION_ERROR,
+          type: EnumAuthErrorType.AUTHORIZATION_ERROR,
           message: errorMessage,
           userMessage: 'Access denied. You don\'t have permission to perform this action.',
           retryable: false,
@@ -74,7 +74,7 @@ export const categorizeAuthError = (error: TypeUnknownError, context?: Record<st
         };
       case 429:
         return {
-          type: AuthErrorType.RATE_LIMIT_ERROR,
+          type: EnumAuthErrorType.RATE_LIMIT_ERROR,
           message: errorMessage,
           userMessage: 'Too many requests. Please wait a moment and try again.',
           retryable: true,
@@ -86,7 +86,7 @@ export const categorizeAuthError = (error: TypeUnknownError, context?: Record<st
       case 503:
       case 504:
         return {
-          type: AuthErrorType.SERVER_ERROR,
+          type: EnumAuthErrorType.SERVER_ERROR,
           message: errorMessage,
           userMessage: 'Our servers are experiencing issues. Please try again in a few minutes.',
           retryable: true,
@@ -97,7 +97,7 @@ export const categorizeAuthError = (error: TypeUnknownError, context?: Record<st
 
   // Default unknown error
   return {
-    type: AuthErrorType.UNKNOWN_ERROR,
+    type: EnumAuthErrorType.UNKNOWN_ERROR,
     message: errorMessage,
     userMessage: 'An unexpected error occurred. Please try again or contact support if the problem persists.',
     retryable: true,

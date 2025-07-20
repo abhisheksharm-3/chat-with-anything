@@ -1,12 +1,12 @@
-export type Json =
+export type TypeJson =
   | string
   | number
   | boolean
   | null
-  | { [key: string]: Json }
-  | Json[];
+  | { [key: string]: TypeJson }
+  | TypeJson[];
 
-export interface Database {
+export interface TypeDatabase {
   public: {
     Tables: {
       users: {
@@ -22,7 +22,7 @@ export interface Database {
           name?: string | null;
           created_at?: string;
         };
-        Update: Partial<Database["public"]["Tables"]["users"]["Insert"]>;
+        Update: Partial<TypeDatabase["public"]["Tables"]["users"]["Insert"]>;
       };
 
       files: {
@@ -62,7 +62,7 @@ export interface Database {
           indexed_chunks?: number | null;
           full_text?: string | null;
         };
-        Update: Partial<Database["public"]["Tables"]["files"]["Insert"]>;
+        Update: Partial<TypeDatabase["public"]["Tables"]["files"]["Insert"]>;
       };
 
       chats: {
@@ -82,7 +82,7 @@ export interface Database {
           created_at?: string;
           type?: "pdf" | "image" | "doc" | "video" | "sheet" | "slides" | null;
         };
-        Update: Partial<Database["public"]["Tables"]["chats"]["Insert"]>;
+        Update: Partial<TypeDatabase["public"]["Tables"]["chats"]["Insert"]>;
       };
 
       messages: {
@@ -100,7 +100,7 @@ export interface Database {
           content: string;
           created_at?: string;
         };
-        Update: Partial<Database["public"]["Tables"]["messages"]["Insert"]>;
+        Update: Partial<TypeDatabase["public"]["Tables"]["messages"]["Insert"]>;
       };
     };
 
@@ -111,9 +111,9 @@ export interface Database {
   };
 }
 
-export type TypeUser = Database["public"]["Tables"]["users"]["Row"];
-export type TypeChat = Database["public"]["Tables"]["chats"]["Row"];
-export type TypeFile = Database["public"]["Tables"]["files"]["Row"];
-export type TypeMessage = Database["public"]["Tables"]["messages"]["Row"] & {
+export type TypeUser = TypeDatabase["public"]["Tables"]["users"]["Row"];
+export type TypeChat = TypeDatabase["public"]["Tables"]["chats"]["Row"];
+export type TypeFile = TypeDatabase["public"]["Tables"]["files"]["Row"];
+export type TypeMessage = TypeDatabase["public"]["Tables"]["messages"]["Row"] & {
   isError?: boolean;
 };

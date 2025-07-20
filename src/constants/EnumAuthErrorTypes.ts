@@ -1,4 +1,4 @@
-export enum AuthErrorType {
+export enum EnumAuthErrorType {
   NETWORK_ERROR = 'NETWORK_ERROR',
   VALIDATION_ERROR = 'VALIDATION_ERROR',
   AUTHENTICATION_ERROR = 'AUTHENTICATION_ERROR',

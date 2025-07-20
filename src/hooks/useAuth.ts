@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { TypeAuthError, TypeLoginFormData, TypeSignupFormData } from "@/types/auth";
 import { signIn, signUp } from "@/app/(auth)/actions";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
-import { AuthErrorType } from "@/constants/EnumAuthErrorTypes";
+import { EnumAuthErrorType } from "@/constants/EnumAuthErrorTypes";
 import { categorizeAuthError, handleAuthErrors } from "@/utils/auth-utils";
 
 /**
@@ -49,9 +49,9 @@ export const useAuth = () => {
       }
 
       // Don't retry specific error types
-      const nonRetryableTypes = [AuthErrorType.RATE_LIMIT_ERROR];
+      const nonRetryableTypes = [EnumAuthErrorType.RATE_LIMIT_ERROR];
       if (action === 'signup') {
-        nonRetryableTypes.push(AuthErrorType.VALIDATION_ERROR, AuthErrorType.USER_CREATION_ERROR);
+        nonRetryableTypes.push(EnumAuthErrorType.VALIDATION_ERROR, EnumAuthErrorType.USER_CREATION_ERROR);
       }
 
       return !nonRetryableTypes.includes(error.type);
@@ -60,7 +60,7 @@ export const useAuth = () => {
       const baseDelay = 1000;
       const delay = baseDelay * Math.pow(2, attemptIndex);
       
-      if (error?.type === AuthErrorType.NETWORK_ERROR) {
+      if (error?.type === EnumAuthErrorType.NETWORK_ERROR) {
         return delay + Math.random() * 1000;
       }
       
@@ -148,7 +148,7 @@ export const useAuth = () => {
         action: 'createUserProfile',
         step: 'general'
       });
-      categorizedError.type = AuthErrorType.USER_CREATION_ERROR;
+      categorizedError.type = EnumAuthErrorType.USER_CREATION_ERROR;
       categorizedError.userMessage = 'Your account was created but we couldn\'t complete the setup. Please contact support.';
       throw categorizedError;
     }
@@ -298,6 +298,6 @@ export const useAuth = () => {
     getErrorContext: () => loginError?.context || signupError?.context || null,
 
     /** Gets the current error type for conditional handling. */
-    getCurrentErrorType: (): AuthErrorType | null => loginError?.type || signupError?.type || null
+    getCurrentErrorType: (): EnumAuthErrorType | null => loginError?.type || signupError?.type || null
   };
 };

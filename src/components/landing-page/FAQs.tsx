@@ -21,7 +21,7 @@ import GlowBackground from "../shared/GlowBackground";
  * @component
  * @returns {JSX.Element} The rendered FAQs section.
  */
-const FAQs = () => {
+const Faqs = () => {
   const [openAccordion, setOpenAccordion] = useState("");
 
   return (
@@ -67,4 +67,4 @@ const FAQs = () => {
   );
 };
 
-export default FAQs;
+export default Faqs;
