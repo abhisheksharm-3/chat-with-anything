@@ -5,12 +5,7 @@ import ButtonCta from "./ButtonCta";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-
-const NavbarRoutes = [
-  { label: "Pricing", url: "/#pricing" },
-  { label: "FAQ", url: "/#faq" },
-  { label: "Contact Us", url: "/#contact-us" },
-];
+import { CtaButtons, PublicNavbarRoutes } from "@/constants/NavItems";
 
 /**
  * The main responsive navigation bar for the application's landing page.
@@ -21,22 +16,50 @@ const NavbarRoutes = [
  * @component
  * @returns {JSX.Element} The rendered navigation bar.
  */
-const Navbar: React.FC = () => {
+const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
-  /**
-   * Toggles the visibility of the mobile menu.
-   */
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
-  };
+  const toggleMenu = () => setIsOpen(!isOpen);
+  const closeMenu = () => setIsOpen(false);
 
-  /**
-   * Closes the mobile menu.
-   */
-  const closeMenu = () => {
-    setIsOpen(false);
-  };
+  // Navigation items component
+  const NavigationList = ({ isMobile = false, onItemClick }: { 
+    isMobile?: boolean; 
+    onItemClick?: () => void; 
+  }) => (
+    <ul className={isMobile ? "space-y-8" : "flex items-center gap-6 justify-center"}>
+      {PublicNavbarRoutes.map((item, index) => (
+        <li key={index}>
+          <Link
+            href={item.url}
+            className={
+              isMobile
+                ? "block text-2xl font-semibold hover:text-foreground/80 transition-colors"
+                : "text-sm text-foreground/80 hover:text-foreground transition-colors"
+            }
+            onClick={onItemClick}
+          >
+            {item.label}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+
+  // CTA buttons component
+  const CTAButtons = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <div className={isMobile ? "flex flex-col gap-4" : "flex items-center gap-2.5"}>
+      {CtaButtons.map(({ label, link, variant }) => (
+        <ButtonCta
+          key={label}
+          label={label}
+          link={link}
+          variant={variant}
+          className={isMobile ? "text-lg py-3" : undefined}
+        />
+      ))}
+    </div>
+  );
 
   return (
     <div className="w-full">
@@ -56,37 +79,12 @@ const Navbar: React.FC = () => {
           </span>
         </Link>
 
-        {/* Desktop CTA Buttons - Right */}
+        {/* Desktop Navigation & CTA */}
         <div className="hidden md:flex flex-shrink-0 gap-5">
-          {/* Desktop Navigation - Center */}
           <nav className="hidden md:flex">
-            <ul className="flex items-center gap-6 justify-center">
-              {NavbarRoutes.map((item, index) => (
-                <li key={index}>
-                  <Link
-                    href={item.url}
-                    className="text-sm text-foreground/80 hover:text-foreground transition-colors"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <NavigationList />
           </nav>
-          <div className="flex items-center gap-2.5">
-            <ButtonCta
-              label="Login"
-              link="/login"
-              variant="outline"
-              className="text-primary-foreground"
-            />
-            <ButtonCta
-              label="Try For Free"
-              link="/signup"
-              variant="default"
-              className="text-primary-foreground"
-            />
-          </div>
+          <CTAButtons />
         </div>
 
         {/* Mobile Menu Button */}
@@ -104,7 +102,6 @@ const Navbar: React.FC = () => {
       {/* Mobile Overlay Menu */}
       {isOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          {/* Full Screen Overlay */}
           <div
             className="fixed inset-0 bg-background/95 backdrop-blur-sm"
             onClick={closeMenu}
@@ -123,37 +120,12 @@ const Navbar: React.FC = () => {
 
               {/* Navigation */}
               <nav className="text-center">
-                <ul className="space-y-8">
-                  {NavbarRoutes.map((item, index) => (
-                    <li key={index}>
-                      <Link
-                        href={item.url}
-                        className="block text-2xl font-semibold hover:text-foreground/80 transition-colors"
-                        onClick={closeMenu}
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+                <NavigationList isMobile onItemClick={closeMenu} />
               </nav>
 
               {/* CTA Buttons */}
               <div className="mt-12 w-full max-w-xs">
-                <div className="flex flex-col gap-4">
-                  <ButtonCta
-                    label="Login"
-                    link="/login"
-                    variant="outline"
-                    className="w-full text-primary-foreground text-lg py-3"
-                  />
-                  <ButtonCta
-                    label="Try For Free"
-                    link="/signup"
-                    variant="default"
-                    className="w-full text-primary-foreground text-lg py-3"
-                  />
-                </div>
+                <CTAButtons isMobile />
               </div>
             </div>
           </div>

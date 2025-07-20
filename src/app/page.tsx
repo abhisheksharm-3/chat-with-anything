@@ -14,7 +14,7 @@ import Navbar from "@/components/landing-page/Navbar";
  *
  * @returns {Promise<React.ReactElement>} The fully rendered homepage component.
  */
-const Home = async () => {
+const Home = () => {
   return (
     <div className="bg-[#121212]">
       <Navbar />

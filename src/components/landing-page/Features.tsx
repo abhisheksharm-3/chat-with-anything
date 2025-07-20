@@ -27,8 +27,8 @@ const Features = () => {
                 {/* Placeholder for feature visual */}
                 <div className="h-72 w-52" />
               </CardHeader>
-              <CardFooter className="flex flex-col items-center space-y-2">
-                <h2 className="font-medium text-3xl tracking-tighter text-white">
+              <CardFooter className="flex-col space-y-2">
+                <h2 className="font-medium text-3xl tracking-tighter">
                   Craft together.
                 </h2>
                 <p className="text-white/70 text-sm leading-6">

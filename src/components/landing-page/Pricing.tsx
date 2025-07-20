@@ -29,22 +29,12 @@ const Pricing = () => {
 
         {/* Note: Feature list is currently hardcoded */}
         <ul className="mb-16 w-full flex flex-col items-center text-[#9FA9FF]">
-          <li className="flex items-center gap-3">
-            <span className="text-xl">•</span>
-            <span className="">Networked note-taking</span>
-          </li>
-          <li className="flex items-center gap-3">
-            <span className="text-xl">•</span>
-            <span className="">Networked note-taking</span>
-          </li>
-          <li className="flex items-center gap-3">
-            <span className="text-xl">•</span>
-            <span className="">Networked note-taking</span>
-          </li>
-          <li className="flex items-center gap-3">
-            <span className="text-xl">•</span>
-            <span className="">Networked note-taking</span>
-          </li>
+          {[...Array(4)].map((_, index) => (
+            <li key={index} className="flex items-center gap-3">
+              <span className="text-xl">•</span>
+              <span className="">Networked note-taking</span>
+            </li>
+          ))}
         </ul>
 
         <ButtonCta className="py-6" showArrow />

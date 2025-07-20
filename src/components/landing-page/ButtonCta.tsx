@@ -35,7 +35,7 @@ const ButtonCta = ({
         variant={variant}
         size={size}
         className={cn(
-          "font-medium cursor-pointer bg-primary hover:bg-primary/80 rounded-lg px-8 py-4 text-base w-full",
+          "cursor-pointer px-8 py-4 text-base w-full",
           className,
         )}
         {...props}

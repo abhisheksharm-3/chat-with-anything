@@ -39,7 +39,7 @@ const FAQs = () => {
           >
             {FaqData.map((item) => (
               <AccordionItem key={item.value} value={item.value}>
-                <AccordionTrigger className="flex items-center gap-4 py-6 px-6 hover:bg-gray-750/30 transition-colors duration-200 [&[data-state=open]>svg]:rotate-0 [&>svg]:transition-transform [&>svg]:duration-200">
+                <AccordionTrigger className="items-center py-6 px-6 hover:bg-gray-750/30 transition-colors duration-200 ">
                   <div className="flex items-center gap-12 flex-1">
                     <div className="flex-shrink-0">
                       {openAccordion === item.value ? (
