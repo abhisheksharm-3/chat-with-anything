@@ -1,6 +1,6 @@
 "use client";
 
-import { TypeUploadModalErrorProps } from "@/types/types";
+import { TypeUploadModalErrorProps } from "@/types/upload";
 import { AlertCircle } from "lucide-react";
 import { Button } from "../ui/button";
 

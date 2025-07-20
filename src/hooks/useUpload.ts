@@ -8,7 +8,7 @@ import { useUser } from "@/hooks/useUser";
 import { TypeFile, TypeChat } from "@/types/supabase";
 import { getFileTypeConfig } from "@/constants/FileTypes";
 import { getErrorMessage, getUrlType, isValidUrl } from "@/utils/upload-utils";
-import { TypeUseUploadLogicProps } from "@/types/types";
+import { TypeUseUploadLogicProps } from "@/types/upload";
 
 export type UploadStatus = "idle" | "uploading" | "uploaded" | "error";
 
@@ -138,7 +138,9 @@ export const useUploadLogic = ({
       // For YouTube URLs, we'll let the server-side processing handle transcript availability
       // This avoids client-side API calls and provides better error handling
       if (urlType === "youtube") {
-        console.log("Processing YouTube URL - transcript availability will be checked server-side");
+        console.log(
+          "Processing YouTube URL - transcript availability will be checked server-side",
+        );
       }
 
       const urlFileName = new URL(url).hostname;

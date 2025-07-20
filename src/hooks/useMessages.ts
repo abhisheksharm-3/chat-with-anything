@@ -66,14 +66,14 @@ export const useMessages = (chatId: string) => {
     mutationFn: async (content: string) => {
       if (!isValidChatId) throw new Error("No chat ID provided");
       if (!userId) throw new Error("No authenticated user");
-      
+
       // Convert current messages to ChatMessage format for Gemini
       const currentMessages = messagesQuery.data || [];
       const formattedMessages: ChatMessage[] = currentMessages.map((msg) => ({
         role: msg.role === "user" ? "user" : "model",
         content: msg.content,
       }));
-      
+
       return await sendMessageToGemini(chatId, content, formattedMessages);
     },
     onSuccess: () => {

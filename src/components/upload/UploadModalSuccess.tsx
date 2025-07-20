@@ -1,6 +1,6 @@
 "use client";
 
-import { TypeUploadModalSuccessProps } from "@/types/types";
+import { TypeUploadModalSuccessProps } from "@/types/upload";
 import { Upload, X } from "lucide-react";
 
 /**

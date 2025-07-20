@@ -80,7 +80,9 @@ const getFileContent = async (fileId: string): Promise<string | null> => {
       const namespaceExists = await checkNamespaceExists(file.id);
 
       if (namespaceExists) {
-        console.log("YouTube transcript found in Pinecone, returning placeholder");
+        console.log(
+          "YouTube transcript found in Pinecone, returning placeholder",
+        );
 
         // Update status to completed if not already
         if (file.processing_status !== "completed") {
@@ -115,7 +117,8 @@ const getFileContent = async (fileId: string): Promise<string | null> => {
             .from("files")
             .update({
               processing_status: "failed",
-              processing_error: result.error || "Failed to process YouTube video",
+              processing_error:
+                result.error || "Failed to process YouTube video",
             })
             .eq("id", file.id);
 
@@ -658,20 +661,20 @@ export const sendMessage = async (
 
     // Check if Gemini is configured
     if (!isConfigured()) {
-      const errorMessage = "Gemini API is not configured. Please check your environment variables.";
+      const errorMessage =
+        "Gemini API is not configured. Please check your environment variables.";
       console.error(errorMessage);
 
       // Save the error message as the assistant's response
-      const { data: errorResponse, error: errorResponseError } =
-        await supabase
-          .from("messages")
-          .insert({
-            chat_id: chatId,
-            role: "assistant",
-            content: errorMessage,
-          })
-          .select()
-          .single();
+      const { data: errorResponse, error: errorResponseError } = await supabase
+        .from("messages")
+        .insert({
+          chat_id: chatId,
+          role: "assistant",
+          content: errorMessage,
+        })
+        .select()
+        .single();
 
       if (errorResponseError) {
         console.error("Error saving error response:", errorResponseError);
@@ -740,7 +743,8 @@ export const sendMessage = async (
                 .insert({
                   chat_id: chatId,
                   role: "assistant",
-                  content: "I couldn't access the image file. Please try uploading the image again.",
+                  content:
+                    "I couldn't access the image file. Please try uploading the image again.",
                 })
                 .select()
                 .single();
@@ -862,16 +866,15 @@ export const sendMessage = async (
       console.error("Error in Gemini processing:", geminiError);
 
       // Save the error message as the assistant's response
-      const { data: errorResponse, error: errorResponseError } =
-        await supabase
-          .from("messages")
-          .insert({
-            chat_id: chatId,
-            role: "assistant",
-            content: `I'm sorry, I encountered an error while processing your request. Please try again or contact support if the issue persists.`,
-          })
-          .select()
-          .single();
+      const { data: errorResponse, error: errorResponseError } = await supabase
+        .from("messages")
+        .insert({
+          chat_id: chatId,
+          role: "assistant",
+          content: `I'm sorry, I encountered an error while processing your request. Please try again or contact support if the issue persists.`,
+        })
+        .select()
+        .single();
 
       if (errorResponseError) {
         console.error("Error saving error response:", errorResponseError);

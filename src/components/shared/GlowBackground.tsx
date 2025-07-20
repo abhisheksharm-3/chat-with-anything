@@ -1,6 +1,6 @@
 "use client";
 
-import { TypeGlowProps } from "@/types/types";
+import { TypeGlowProps } from "@/types/ui";
 
 /**
  * A reusable client-side component for creating soft, glowing background effects.

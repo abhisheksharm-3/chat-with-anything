@@ -12,7 +12,7 @@ import { Loader2, X } from "lucide-react";
 import PricingDialog from "./PricingDialog";
 import { useUser, useIsMobile } from "@/hooks";
 import { useRouter } from "next/navigation";
-import { TypeDialogProps } from "@/types/types";
+import { TypeDialogProps } from "@/types/ui";
 import { Input } from "../ui/input";
 
 /**

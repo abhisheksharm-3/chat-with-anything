@@ -156,7 +156,9 @@ export const sendMessageToGemini = async (
       return response.text();
     } else {
       // Regular text-only message
-      const result = await chat.sendMessage([{ text: lastUserMessage.content }]);
+      const result = await chat.sendMessage([
+        { text: lastUserMessage.content },
+      ]);
       const response = result.response;
       console.log("Received response from Gemini");
       return response.text();

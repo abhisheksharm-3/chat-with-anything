@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks";
-import { TypeDialogProps } from "@/types/types";
+import { TypeDialogProps } from "@/types/ui";
 
 /**
  * A modal dialog component that prompts the user for confirmation before signing out.

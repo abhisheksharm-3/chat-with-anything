@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Send, AlertCircle } from "lucide-react";
-import { TypeUploadModalUrlInputProps } from "@/types/types";
+import { TypeUploadModalUrlInputProps } from "@/types/upload";
 import { isYoutubeUrl } from "@/utils/youtube-utils";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";

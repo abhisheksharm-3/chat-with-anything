@@ -1,5 +1,5 @@
 import React from "react";
-import { TypeSectionHeaderProps } from "@/types/types";
+import { TypeSectionHeaderProps } from "@/types/ui";
 
 /**
  * A reusable component for displaying a consistent header for various sections of a webpage.
