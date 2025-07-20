@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronsLeft, Loader2 } from "lucide-react";
@@ -6,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import PricingDialog from "@/components/dashboard/PricingDialog";
 import { MobileNavItems } from "@/constants/NavItems";
 import { TypeUser } from "@/types/supabase";
+import { useUser } from "@/hooks";
 import avatarImage from "@/assets/images/avatar.svg";
+import { useSidebarState } from "@/hooks/useMobileSidebarState";
+import { usePathname } from "next/navigation";
 
 /**
  * Renders the list of navigation links for the mobile sidebar.
@@ -16,13 +20,13 @@ import avatarImage from "@/assets/images/avatar.svg";
  * @param {() => void} props.onItemClick - Callback executed when a navigation item is clicked, used to close the sidebar.
  */
 const MobileNavigation = ({
-  pathname,
   onItemClick,
 }: {
-  pathname: string;
   onItemClick: () => void;
-}) => (
-  <nav className="flex-1 p-6">
+}) => {
+  const pathname = usePathname();
+  return (
+    <nav className="flex-1 p-6">
     <div className="space-y-1">
       {MobileNavItems.map(
         ({ href, icon: IconComponent, title, description }) => {
@@ -65,7 +69,8 @@ const MobileNavigation = ({
       )}
     </div>
   </nav>
-);
+  )
+};
 
 /**
  * Displays the user's profile information, including an avatar with initials, name, and email.
@@ -118,7 +123,7 @@ const UserProfile = ({
       </div>
       <PricingDialog
         trigger={
-          <Button className="w-full font-bold text-lg bg-primary hover:bg-primary/90 text-white rounded-lg py-8">
+          <Button className="w-full font-bold text-lg rounded-lg py-8">
             Upgrade to pro
           </Button>
         }
@@ -130,72 +135,69 @@ const UserProfile = ({
 /**
  * The main sidebar component for mobile views, which slides in from the left.
  * It contains the navigation, user profile, and other actions.
+ * Now manages its own state for open/close functionality and fetches user data internally.
  * @component
  * @param {object} props - The component's properties.
- * @param {boolean} props.isOpen - Controls the visibility of the sidebar.
- * @param {() => void} props.onClose - Callback function to close the sidebar.
  * @param {string} props.pathname - The current URL path, passed to the navigation component.
- * @param {TypeUser | null | undefined} props.user - The user object, passed to the user profile component.
- * @param {boolean} props.isLoading - The user loading state, passed to the user profile component.
  */
-export const DashboardMobileSidebar = ({
-  isOpen,
-  onClose,
-  pathname,
-  user,
-  isLoading,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  pathname: string;
-  user: TypeUser | null | undefined;
-  isLoading: boolean;
-}) => (
-  <>
-    {/* Overlay */}
-    {isOpen && (
-      <div
-        className="md:hidden fixed inset-0 bg-[#121212] bg-opacity-50 z-40"
-        onClick={onClose}
-      />
-    )}
-    {/* Sidebar */}
-    <aside
-      className={`md:hidden fixed left-0 top-0 h-full w-full bg-[#121212] z-50 transform transition-transform duration-300 ${
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      }`}
-    >
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-[#121212]">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-              <Image
-                src="/logo.png"
-                alt="Logo"
-                className="object-contain"
-                width={44}
-                height={40}
-                priority
-              />
+export const DashboardMobileSidebar = () => {
+  
+  // User data fetching moved from layout to this component
+  const { user, isLoading } = useUser();
+
+    const { isOpen, closeSidebar } = useSidebarState();
+
+  const handleClose = () => {
+    closeSidebar();
+  };
+
+  return (
+    <>
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-[#121212] bg-opacity-50 z-40"
+          onClick={handleClose}
+        />
+      )}
+      {/* Sidebar */}
+      <aside
+        className={`md:hidden fixed left-0 top-0 h-full w-full bg-[#121212] z-50 transform transition-transform duration-300 ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-[#121212]">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+                <Image
+                  src="/logo.png"
+                  alt="Logo"
+                  className="object-contain"
+                  width={44}
+                  height={40}
+                  priority
+                />
+              </div>
+              <span className="text-white font-medium">chatwithanything</span>
             </div>
-            <span className="text-white font-medium">chatwithanything</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClose}
+              className="text-gray-400 hover:text-white border rounded-lg"
+            >
+              <ChevronsLeft className="size-8" />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="text-gray-400 hover:text-white border rounded-lg"
-          >
-            <ChevronsLeft className="size-8" />
-          </Button>
-        </div>
-        <MobileNavigation pathname={pathname} onItemClick={onClose} />
-        <div className="p-4 border-t border-gray-700">
-          <div className="flex mb-4 p-4 border rounded-lg">
-            <UserProfile user={user} isLoading={isLoading} />
+          <MobileNavigation onItemClick={handleClose} />
+          <div className="p-4 border-t border-gray-700">
+            <div className="flex mb-4 p-4 border rounded-lg">
+              <UserProfile user={user} isLoading={isLoading} />
+            </div>
           </div>
         </div>
-      </div>
-    </aside>
-  </>
-);
+      </aside>
+    </>
+  );
+};

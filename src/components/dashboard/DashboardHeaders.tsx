@@ -1,10 +1,13 @@
+"use client";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { File, Plus, ChevronsRight, ChevronsLeft } from "lucide-react";
 import PricingDialog from "@/components/dashboard/PricingDialog";
 import { TypeChat, TypeFile } from "@/types/supabase";
+import { useChats, useFileById } from "@/hooks";
+import { useSidebarState } from "@/hooks/useMobileSidebarState";
 
 /**
  * Renders the application logo for the mobile header.
@@ -97,18 +100,19 @@ const AddTabButton = () => (
 /**
  * The main header component for mobile views.
  * It includes a menu toggle, the logo, and an upgrade button.
+ * Now handles its own state and communicates with the mobile sidebar.
  * @component
- * @param {object} props - The component's properties.
- * @param {() => void} props.onMenuToggle - Callback function to open/close the mobile sidebar.
  */
-export const DashboardMobileHeader = ({
-  onMenuToggle,
-}: {
-  onMenuToggle: () => void;
-}) => {
+export const DashboardMobileHeader = () => {
   const pathname = usePathname();
   const isSettingsPage = pathname === "/settings";
   const router = useRouter();
+
+  const { openSidebar } = useSidebarState();
+
+  const handleMenuToggle = () => {
+    openSidebar();
+  };
 
   return (
     <header className="md:hidden h-16 flex items-center justify-between px-4 max-w-screen bg-[#121212]">
@@ -126,7 +130,7 @@ export const DashboardMobileHeader = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onMenuToggle}
+            onClick={handleMenuToggle}
             className="text-gray-400 hover:text-white"
           >
             <ChevronsRight className="size-8" />
@@ -153,45 +157,50 @@ export const DashboardMobileHeader = ({
 /**
  * The main header component for desktop views.
  * It displays a tabbed interface for the current chat and an upgrade button.
+ * Now handles its own data fetching and page context logic.
  * @component
  * @param {object} props - The component's properties.
- * @param {boolean} props.isHistoryPage - Flag to conditionally hide tabs on the history page.
- * @param {boolean} props.isChatPage - Flag indicating if the current view is a chat page.
- * @param {TypeChat | null} props.chat - The data for the current chat session.
- * @param {TypeFile | null} props.file - The data for the file associated with the chat.
+ * @param {string} props.pathname - The current URL path from SSR.
  */
-export const DashboardDesktopHeader = ({
-  isHistoryPage,
-  isChatPage,
-  chat,
-  file,
-}: {
-  isHistoryPage: boolean;
-  isChatPage: boolean;
-  chat: TypeChat | null;
-  file: TypeFile | null;
-}) => (
-  <header className="hidden md:flex h-16 items-center justify-between px-2">
-    {!isHistoryPage && (
-      <div className="flex items-center gap-3">
-        <ActiveTab isChatPage={isChatPage} chat={chat} file={file} />
-        <AddTabButton />
-      </div>
-    )}
-    {/* Placeholder to keep the 'Upgrade' button to the right on the history page */}
-    {isHistoryPage && <div></div>}
-    <PricingDialog
-      trigger={
-        <Button
-          size="sm"
-          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-5 cursor-pointer"
-        >
-          Upgrade plan
-          <span className="ml-2 text-xs bg-primary-foreground/20 text-primary-foreground font-semibold px-1.5 py-0.5 rounded">
-            PRO
-          </span>
-        </Button>
-      }
-    />
-  </header>
-);
+export const DashboardDesktopHeader = () => {
+  const params = useParams();
+  const pathname = usePathname();
+  const { getChatById } = useChats();
+
+  // --- Derived Values (moved from layout) ---
+  // Determine the current page context based on the URL.
+  const isHistoryPage = pathname === "/history";
+  const isChatPage = pathname?.startsWith("/chat/");
+  const chatId = isChatPage && params?.id ? params.id.toString() : null;
+  const chat = chatId ? getChatById(chatId) : null;
+
+  // Fetch file details associated with the current chat, if any.
+  const fileQuery = useFileById(chat?.file_id || "");
+  const file = fileQuery.data || null; // Explicitly handle undefined case
+
+  return (
+    <header className="hidden md:flex h-16 items-center justify-between px-2">
+      {!isHistoryPage && (
+        <div className="flex items-center gap-3">
+          <ActiveTab isChatPage={isChatPage} chat={chat || null} file={file} />
+          <AddTabButton />
+        </div>
+      )}
+      {/* Placeholder to keep the 'Upgrade' button to the right on the history page */}
+      {isHistoryPage && <div></div>}
+      <PricingDialog
+        trigger={
+          <Button
+            size="sm"
+            className="rounded-xl py-5 cursor-pointer"
+          >
+            Upgrade plan
+            <span className="ml-2 text-xs bg-primary-foreground/20 text-primary-foreground font-semibold px-1.5 py-0.5 rounded">
+              PRO
+            </span>
+          </Button>
+        }
+      />
+    </header>
+  );
+};

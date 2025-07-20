@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -181,25 +181,26 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent
-        className="bg-[#121212] border text-foreground sm:max-w-4xl max-w-[95vw] p-0 rounded-xl overflow-hidden max-h-[90vh] overflow-y-auto"
+        className="bg-[#121212] text-foreground sm:max-w-4xl max-w-[95vw] p-0 rounded-xl overflow-hidden max-h-[90vh] overflow-y-auto"
         showCloseButton={false}
       >
         <div className="p-4 sm:p-6 flex items-center justify-between border-b border-gray-800">
           <div>
-            <DialogTitle className="text-lg font-semibold tracking-tight">
+            <DialogTitle className="tracking-tight">
               Select plan
             </DialogTitle>
             <p className="text-muted-foreground text-sm">
               Simple and flexible per-user pricing.
             </p>
           </div>
-          <button
+          <Button
             onClick={handleClose}
+            variant="ghost"
             className="text-muted-foreground hover:text-foreground"
             aria-label="Close dialog"
           >
             <X size={20} />
-          </button>
+          </Button>
         </div>
 
         <div className="p-4 sm:p-6">
@@ -246,7 +247,7 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
 
         <div className="p-4 sm:p-6 border-t border-gray-800 flex flex-col gap-3">
           <Button
-            className="w-full py-3 text-sm font-medium rounded-xl bg-primary hover:bg-primary-dark"
+            className="w-full py-3 text-sm font-medium rounded-xl hover:bg-primary-dark"
             size="lg"
             disabled={selectedPricing === "free"}
           >

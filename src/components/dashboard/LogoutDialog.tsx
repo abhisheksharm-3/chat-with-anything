@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, X } from "lucide-react";
@@ -53,14 +53,15 @@ const LogoutDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
       >
         <div className="flex justify-between items-start">
           <h2 className="text-lg font-semibold">Logout?</h2>
-          <button
+          <Button
             onClick={handleCancel}
+            variant="ghost"
             className="text-gray-400 hover:text-white cursor-pointer"
             disabled={isSigningOut}
             aria-label="Close dialog"
           >
             <X size={24} />
-          </button>
+          </Button>
         </div>
 
         <p className="text-gray-400 text-sm mb-6">
@@ -70,14 +71,14 @@ const LogoutDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
         <div className="flex gap-3">
           <Button
             onClick={handleCancel}
-            className="flex-1 py-6 text-center bg-[#1a1a1a] hover:bg-[#252525] text-white border border-[#333] rounded-xl font-medium cursor-pointer"
+            className="flex-1 py-6 text-center bg-[#1a1a1a] hover:bg-[#252525] border border-[#333] rounded-xl font-medium cursor-pointer"
             disabled={isSigningOut}
           >
             Cancel
           </Button>
           <Button
             onClick={handleLogout}
-            className="flex-1 py-6 text-center bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium cursor-pointer"
+            className="flex-1 py-6 text-center bg-red-600 hover:bg-red-700 rounded-xl font-medium cursor-pointer"
             disabled={isSigningOut}
           >
             {isSigningOut ? (
