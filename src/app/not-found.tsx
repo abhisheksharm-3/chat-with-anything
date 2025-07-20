@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 import GlowBackground from "@/components/shared/GlowBackground";
 
-export default function NotFound() {
+const NotFound = () => {
   return (
     <div className="min-h-screen bg-[#121212] relative overflow-hidden">
       {/* Background Grid */}
@@ -14,7 +14,7 @@ export default function NotFound() {
       </div>
 
       {/* Glow Background */}
-      <GlowBackground
+      <GlowBackground 
         glowElements={[
           {
             position: "left-[10%] top-1/3",
@@ -66,8 +66,8 @@ export default function NotFound() {
           {/* Action Button */}
           <div className="flex justify-center items-center pt-4">
             <Link href="/">
-              <Button
-                size="lg"
+              <Button 
+                size="lg" 
                 className="px-8 py-3 font-medium transition-all duration-200 cursor-pointer"
               >
                 <Home className="mr-2 h-4 w-4" />
@@ -79,4 +79,6 @@ export default function NotFound() {
       </div>
     </div>
   );
-}
+};
+
+export default NotFound;
