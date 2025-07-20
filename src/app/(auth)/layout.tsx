@@ -1,4 +1,3 @@
-import React from "react";
 import { Metadata } from "next";
 import Navbar from "@/components/landing-page/Navbar";
 import Footer from "@/components/landing-page/Footer";

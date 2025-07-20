@@ -118,7 +118,7 @@ export const AuthSignupForm: React.FC<TypeSignupFormProps> = ({
 
         <Button
           type="submit"
-          className="w-full bg-primary hover:bg-primary/90 text-white py-5 rounded-lg"
+          className="w-full py-5 cursor-pointer"
           disabled={isLoading}
         >
           {isLoading ? (

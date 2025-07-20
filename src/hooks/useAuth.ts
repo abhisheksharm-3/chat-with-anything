@@ -1,8 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { TypeLoginFormData, TypeSignupFormData } from "@/types/auth";
+import { TypeAuthError, TypeLoginFormData, TypeSignupFormData } from "@/types/auth";
 import { signIn, signUp } from "@/app/(auth)/actions";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
+import { AuthErrorType } from "@/constants/EnumAuthErrorTypes";
+import { categorizeAuthError } from "@/utils/auth-utils";
 
 /**
  * A custom hook to manage user authentication processes like login and signup.
@@ -28,10 +30,25 @@ export const useAuth = () => {
       const { data: sessionData, error: sessionError } =
         await supabase.auth.getSession();
 
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        const categorizedError = categorizeAuthError(sessionError, { 
+          action: 'getSession',
+          step: 'createUserProfile'
+        });
+        throw categorizedError;
+      }
 
       if (!sessionData.session?.user?.id) {
-        throw new Error("No authenticated user found after signup");
+        const error = categorizeAuthError(
+          new Error("No authenticated user found after signup"),
+          { 
+            action: 'validateSession',
+            step: 'createUserProfile',
+            sessionExists: !!sessionData.session,
+            userExists: !!sessionData.session?.user
+          }
+        );
+        throw error;
       }
 
       // Prepare the user profile data for insertion
@@ -47,15 +64,30 @@ export const useAuth = () => {
         .insert(defaultUser);
 
       if (insertError) {
-        console.error("Error creating user profile:", insertError);
-        throw insertError;
+        const categorizedError = categorizeAuthError(insertError, {
+          action: 'insertUser',
+          step: 'createUserProfile',
+          userId: sessionData.session.user.id,
+          userEmail: signupData.email
+        });
+        throw categorizedError;
       }
 
       return defaultUser;
     } catch (error) {
-      console.error("Failed to create user profile:", error);
-      // Return null instead of throwing to avoid blocking the main signup flow.
-      return null;
+      // If it's already a categorized error, re-throw it
+      if (error && typeof error === 'object' && 'type' in error) {
+        throw error as TypeAuthError;
+      }
+      
+      // Otherwise, categorize the unknown error
+      const categorizedError = categorizeAuthError(error, {
+        action: 'createUserProfile',
+        step: 'general'
+      });
+      categorizedError.type = AuthErrorType.USER_CREATION_ERROR;
+      categorizedError.userMessage = 'Your account was created but we couldn\'t complete the setup. Please contact support.';
+      throw categorizedError;
     }
   };
 
@@ -65,17 +97,35 @@ export const useAuth = () => {
    */
   const loginMutation = useMutation({
     mutationFn: async (data: TypeLoginFormData) => {
-      const formData = new FormData();
-      formData.append("email", data.email);
-      formData.append("password", data.password);
+      try {
+        const formData = new FormData();
+        formData.append("email", data.email);
+        formData.append("password", data.password);
 
-      const result = await signIn(formData);
+        const result = await signIn(formData);
 
-      if (result) {
-        throw new Error(result); // Throw an error if signIn returns an error message
+        if (result) {
+          const categorizedError = categorizeAuthError(result, {
+            action: 'signIn',
+            email: data.email
+          });
+          throw categorizedError;
+        }
+
+        return { success: true };
+      } catch (error) {
+        // If it's already a categorized error, re-throw it
+        if (error && typeof error === 'object' && 'type' in error) {
+          throw error as TypeAuthError;
+        }
+        
+        // Categorize unknown errors
+        const categorizedError = categorizeAuthError(error, {
+          action: 'signIn',
+          email: data.email
+        });
+        throw categorizedError;
       }
-
-      return { success: true };
     },
     onSuccess: () => {
       // On success, invalidate user-related queries to refetch fresh data
@@ -84,9 +134,40 @@ export const useAuth = () => {
 
       router.push("/choose");
     },
-    onError: (error) => {
-      console.error("Login error:", error);
+    onError: (error: TypeAuthError) => {
+      if(process.env.NODE_ENV !== 'production') {
+        console.error("Login error:", {
+          type: error.type,
+          message: error.message,
+          userMessage: error.userMessage,
+          context: error.context,
+          retryable: error.retryable
+        });
+      }
     },
+    retry: (failureCount: number, error: TypeAuthError) => {
+      // Only retry if the error is retryable and we haven't exceeded max attempts
+      if (error.retryable && failureCount < 3) {
+        // For rate limit errors, respect the retryAfter period
+        if (error.type === AuthErrorType.RATE_LIMIT_ERROR && error.retryAfter) {
+          return false; // Don't auto-retry rate limit errors
+        }
+        return true;
+      }
+      return false;
+    },
+    retryDelay: (attemptIndex: number, error: TypeAuthError) => {
+      // Exponential backoff: 1s, 2s, 4s
+      const baseDelay = 1000;
+      const delay = baseDelay * Math.pow(2, attemptIndex);
+      
+      // For network errors, add some jitter
+      if (error.type === AuthErrorType.NETWORK_ERROR) {
+        return delay + Math.random() * 1000;
+      }
+      
+      return delay;
+    }
   });
 
   /**
@@ -95,21 +176,41 @@ export const useAuth = () => {
    */
   const signupMutation = useMutation({
     mutationFn: async (data: TypeSignupFormData) => {
-      const formData = new FormData();
-      formData.append("full-name", data.fullName);
-      formData.append("email", data.email);
-      formData.append("password", data.password);
+      try {
+        const formData = new FormData();
+        formData.append("full-name", data.fullName);
+        formData.append("email", data.email);
+        formData.append("password", data.password);
 
-      const result = await signUp(formData);
+        const result = await signUp(formData);
 
-      if (result) {
-        throw new Error(result); // Throw an error if signUp returns an error message
+        if (result) {
+          const categorizedError = categorizeAuthError(result, {
+            action: 'signUp',
+            email: data.email,
+            fullName: data.fullName
+          });
+          throw categorizedError;
+        }
+
+        // After successful signup, create the user profile in the database
+        const userProfile = await createUserProfile(data);
+
+        return { success: true, userProfile };
+      } catch (error) {
+        // If it's already a categorized error, re-throw it
+        if (error && typeof error === 'object' && 'type' in error) {
+          throw error as TypeAuthError;
+        }
+        
+        // Categorize unknown errors
+        const categorizedError = categorizeAuthError(error, {
+          action: 'signUp',
+          email: data.email,
+          fullName: data.fullName
+        });
+        throw categorizedError;
       }
-
-      // After successful signup, create the user profile in the database
-      const userProfile = await createUserProfile(data);
-
-      return { success: true, userProfile };
     },
     onSuccess: () => {
       // Invalidate queries to ensure fresh data on next load
@@ -121,9 +222,34 @@ export const useAuth = () => {
         router.push("/login");
       }, 2000);
     },
-    onError: (error) => {
-      console.error("Signup error:", error);
+    onError: (error: TypeAuthError) => {
+      if(process.env.NODE_ENV !== 'production') {
+        console.error("Signup error:", {
+          type: error.type,
+          message: error.message,
+          userMessage: error.userMessage,
+          context: error.context,
+          retryable: error.retryable
+        });
+      }
     },
+    retry: (failureCount: number, error: TypeAuthError) => {
+      // Only retry if the error is retryable and we haven't exceeded max attempts
+      if (error.retryable && failureCount < 2) {
+        // Don't retry validation errors or user creation errors
+        if (error.type === AuthErrorType.VALIDATION_ERROR || 
+            error.type === AuthErrorType.USER_CREATION_ERROR ||
+            error.type === AuthErrorType.RATE_LIMIT_ERROR) {
+          return false;
+        }
+        return true;
+      }
+      return false;
+    },
+    retryDelay: (attemptIndex: number) => {
+      // Shorter delays for signup (1s, 2s)
+      return 1000 * Math.pow(2, attemptIndex);
+    }
   });
 
   /**
@@ -142,30 +268,63 @@ export const useAuth = () => {
     signupMutation.mutate(data);
   };
 
+  /**
+   * Gets the current login error with enhanced information
+   */
+  const getLoginError = (): TypeAuthError | null => {
+    const error = loginMutation.error;
+    return error && typeof error === 'object' && 'type' in error ? error as TypeAuthError : null;
+  };
+
+  /**
+   * Gets the current signup error with enhanced information
+   */
+  const getSignupError = (): TypeAuthError | null => {
+    const error = signupMutation.error;
+    return error && typeof error === 'object' && 'type' in error ? error as TypeAuthError : null;
+  };
+
+  /**
+   * Checks if an error is retryable after a certain period
+   */
+  const canRetryAfter = (error: TypeAuthError | null): number | null => {
+    if (!error || !error.retryable || !error.retryAfter) {
+      return null;
+    }
+    return error.retryAfter * 1000; // Convert to milliseconds
+  };
+
   return {
     /** A general loading state, true if either login or signup is pending. */
     isLoading: loginMutation.isPending || signupMutation.isPending,
 
     // Login specific state
-    /** The error message from the login mutation, or null if no error. */
-    loginError: loginMutation.error?.message || null,
+    /** The enhanced error information from the login mutation. */
+    loginError: getLoginError(),
+    /** The user-friendly error message for login. */
+    loginErrorMessage: getLoginError()?.userMessage || null,
     /** True if the login mutation was successful. */
     loginSuccess: loginMutation.isSuccess,
     /** True if the login mutation is currently pending. */
     isLoginLoading: loginMutation.isPending,
+    /** True if the login error is retryable. */
+    isLoginRetryable: getLoginError()?.retryable || false,
 
     // Signup specific state
-    /** The error message from the signup mutation, or null if no error. */
-    signupError: signupMutation.error?.message || null,
+    /** The enhanced error information from the signup mutation. */
+    signupError: getSignupError(),
+    /** The user-friendly error message for signup. */
+    signupErrorMessage: getSignupError()?.userMessage || null,
     /** True if the signup mutation was successful. */
     signupSuccess: signupMutation.isSuccess,
     /** True if the signup mutation is currently pending. */
     isSignupLoading: signupMutation.isPending,
+    /** True if the signup error is retryable. */
+    isSignupRetryable: getSignupError()?.retryable || false,
 
-    // Legacy compatibility messages
-    /** A combined error message from either mutation. */
-    errorMessage:
-      loginMutation.error?.message || signupMutation.error?.message || null,
+    // Legacy compatibility (deprecated but maintained for backward compatibility)
+    /** @deprecated Use loginErrorMessage or signupErrorMessage instead */
+    errorMessage: getLoginError()?.userMessage || getSignupError()?.userMessage || null,
     /** A success message displayed after successful signup. */
     successMessage: signupMutation.isSuccess
       ? "Account created successfully! You can now sign in."
@@ -182,5 +341,27 @@ export const useAuth = () => {
     resetLoginState: () => loginMutation.reset(),
     /** Resets the state of the signup mutation. */
     resetSignupState: () => signupMutation.reset(),
+
+    // Enhanced error utilities
+    /** Returns the retry delay in milliseconds for the current error, if applicable. */
+    getRetryDelay: () => {
+      const loginError = getLoginError();
+      const signupError = getSignupError();
+      return canRetryAfter(loginError) || canRetryAfter(signupError);
+    },
+    
+    /** Gets detailed error context for debugging. */
+    getErrorContext: () => {
+      const loginError = getLoginError();
+      const signupError = getSignupError();
+      return loginError?.context || signupError?.context || null;
+    },
+
+    /** Gets the current error type for conditional handling. */
+    getCurrentErrorType: (): AuthErrorType | null => {
+      const loginError = getLoginError();
+      const signupError = getSignupError();
+      return loginError?.type || signupError?.type || null;
+    }
   };
 };

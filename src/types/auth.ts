@@ -1,3 +1,4 @@
+import { AuthErrorType } from "@/constants/EnumAuthErrorTypes";
 import { TypeLoginFormValues, TypeSignupFormValues } from "@/schemas/auth";
 
 export interface TypeLoginFormData {
@@ -49,3 +50,15 @@ export interface TypeAuthHeaderProps {
   title: string;
   subtitle: string;
 }
+
+export interface TypeAuthError {
+  type: AuthErrorType;
+  message: string;
+  userMessage: string;
+  code?: string;
+  retryable: boolean;
+  retryAfter?: number;
+  context?: Record<string, unknown>;
+}
+
+export type TypeUnknownError = Error | { message?: string; error_description?: string; error?: string; code?: string; status?: number } | string | unknown;
