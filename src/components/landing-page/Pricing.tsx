@@ -1,4 +1,3 @@
-import React from "react";
 import ButtonCta from "./ButtonCta";
 import SectionHeader from "../shared/SectionHeader";
 import GlowBackground from "../shared/GlowBackground";

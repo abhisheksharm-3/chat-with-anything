@@ -1,4 +1,4 @@
-import { ERROR_MESSAGES } from "@/constants/AuthErrorMessages";
+import { ErrorMessages } from "@/constants/AuthErrorMessages";
 import { AuthErrorType } from "@/constants/EnumAuthErrorTypes";
 import { TypeAuthError, TypeUnknownError } from "@/types/auth";
 
@@ -17,7 +17,7 @@ export const categorizeAuthError = (error: TypeUnknownError, context?: Record<st
   })();
   
   // Check for known error patterns
-  for (const [pattern, errorInfo] of Object.entries(ERROR_MESSAGES)) {
+  for (const [pattern, errorInfo] of Object.entries(ErrorMessages)) {
     if (errorMessage.toLowerCase().includes(pattern.toLowerCase())) {
       return {
         type: errorInfo.type!,

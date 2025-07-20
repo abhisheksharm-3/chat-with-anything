@@ -41,3 +41,9 @@ export interface TypeControlsProps {
   showControls: boolean;
   file?: TypeFile;
 }
+
+export type TypeChatError = Error & {
+  name: "ChatError";
+  code?: string;
+  statusCode?: number;
+};

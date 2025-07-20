@@ -1,5 +1,6 @@
 import { buttonVariants } from "@/components/ui/button";
 import { VariantProps } from "class-variance-authority";
+import { TypeChat } from "./supabase";
 
 export interface TypeButtonCta
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -34,4 +35,26 @@ export interface TypeSectionHeaderProps {
   title?: string;
   subtitleClassName?: string;
   titleClassName?: string;
+}
+export interface TypeDropdownAction {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  handler: (e: React.MouseEvent, chat: TypeChat, file?: { name?: string }) => void;
+}
+
+export interface TypeSkeletonConfig {
+  height: string;
+  width: string;
+  className?: string;
+}
+
+export interface TypeHistoryPageChatMetadataProps {
+  chat: TypeChat;
+  file?: { name?: string; type?: string; size?: number } | null;
+  isMobile?: boolean;
+}
+
+export interface TypeHistoryPageChatDropdownProps {
+  chat: TypeChat;
+  file?: { name?: string } | null;
 }

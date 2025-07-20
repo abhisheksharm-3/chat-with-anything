@@ -1,7 +1,7 @@
 import { TypeAuthError } from "@/types/auth";
 import { AuthErrorType } from "./EnumAuthErrorTypes";
 
-export const ERROR_MESSAGES: Record<string, Partial<TypeAuthError>> = {
+export const ErrorMessages: Record<string, Partial<TypeAuthError>> = {
   // Supabase Auth errors
   'Invalid login credentials': {
     type: AuthErrorType.AUTHENTICATION_ERROR,
