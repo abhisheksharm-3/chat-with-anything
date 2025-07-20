@@ -24,13 +24,13 @@ const SignupPage = () => {
    * - `successMessage`: A string for displaying a confirmation message upon successful signup.
    * - `handleSignup`: The function to call when the signup form is submitted.
    */
-  const { isLoading, errorMessage, successMessage, handleSignup } = useAuth();
+  const { isLoading, signupErrorMessage, successMessage, handleSignup } = useAuth();
 
   return (
     <AuthContainer
       title="Create your account"
       subtitle="Sign up to get started with Chat With Anything"
-      errorMessage={errorMessage}
+      errorMessage={signupErrorMessage}
       successMessage={successMessage}
     >
       <AuthSignupForm onSubmit={handleSignup} isLoading={isLoading} />

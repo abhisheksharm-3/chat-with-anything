@@ -104,3 +104,13 @@ export const categorizeAuthError = (error: TypeUnknownError, context?: Record<st
     context
   };
 };
+
+  // Shared error handling logic
+export const handleAuthErrors = (error: unknown, action: string, context: Record<string, unknown> = {}) => {
+    if (error && typeof error === 'object' && 'type' in error) {
+      throw error as TypeAuthError;
+    }
+    
+    const categorizedError = categorizeAuthError(error, { action, ...context });
+    throw categorizedError;
+  };

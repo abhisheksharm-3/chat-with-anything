@@ -23,13 +23,13 @@ const LoginPage = () => {
    * - `errorMessage`: A string containing any login-related error messages.
    * - `handleLogin`: The function to execute upon form submission.
    */
-  const { isLoading, errorMessage, handleLogin } = useAuth();
+  const { isLoading, loginErrorMessage, handleLogin } = useAuth();
 
   return (
     <AuthContainer
       title="Welcome back"
       subtitle="Sign in to your account to continue"
-      errorMessage={errorMessage}
+      errorMessage={loginErrorMessage}
     >
       <AuthLoginForm onSubmit={handleLogin} isLoading={isLoading} />
       <AuthLink
