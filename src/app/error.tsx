@@ -62,7 +62,7 @@ const Error = ({ error, reset }: ErrorProps) => {
               Something went wrong
             </h1>
             <p className="text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
-              We encountered an unexpected error. Don't worry, our team has been notified and is working to fix it.
+              We encountered an unexpected error. Don&apos;t worry, our team has been notified and is working to fix it.
             </p>
           </div>
 

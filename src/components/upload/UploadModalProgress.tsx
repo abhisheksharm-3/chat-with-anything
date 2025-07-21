@@ -1,7 +1,3 @@
-"use client";
-
-import React from "react";
-
 /**
  * A presentational component that displays a visual indicator for an ongoing file upload.
  *

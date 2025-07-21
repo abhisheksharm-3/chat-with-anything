@@ -1,4 +1,3 @@
-import React from "react";
 import { TypeChatInterfaceMobileTabsProps } from "@/types/chat";
 import { ChevronsDown, ChevronsUp } from "lucide-react";
 import { Button } from "../ui/button";

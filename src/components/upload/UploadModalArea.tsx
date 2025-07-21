@@ -3,7 +3,6 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { TypeUploadModalAreaProps } from "@/types/upload";
-import React from "react";
 
 /**
  * A reusable component that renders a file upload area (a "drop zone").

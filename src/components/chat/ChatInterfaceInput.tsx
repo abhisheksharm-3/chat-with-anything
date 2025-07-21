@@ -1,4 +1,3 @@
-import React from "react";
 import { Send } from "lucide-react";
 import { TypeChatInputProps } from "@/types/chat";
 import { Button } from "@/components/ui/button";

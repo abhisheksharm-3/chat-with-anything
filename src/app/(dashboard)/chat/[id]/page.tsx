@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ChatInterface from "@/components/chat/ChatInterface";
 import { Loader2 } from "lucide-react";
@@ -16,7 +16,7 @@ import { useChats } from "@/hooks/useChats";
  *
  * @returns {React.ReactElement} The rendered chat page, or a loading/error state.
  */
-const ChatPage: React.FC = () => {
+const ChatPage = () => {
   const params = useParams();
   const router = useRouter();
 
@@ -59,7 +59,7 @@ const ChatPage: React.FC = () => {
   }, [shouldRedirect, router]);
 
   // Display a loading indicator while fetching chat data.
-  if (isChatLoading) {
+  if (isChatLoading || !chat) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -69,7 +69,7 @@ const ChatPage: React.FC = () => {
   }
 
   // Display an error/redirect message if the chat could not be loaded.
-  if (isChatError || !chat) {
+  if (isChatError) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

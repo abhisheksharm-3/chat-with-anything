@@ -1,4 +1,3 @@
-import React from "react";
 import { Loader2 } from "lucide-react";
 import { TypeChatInterfaceMessagesProps } from "@/types/chat";
 import Image from "next/image";

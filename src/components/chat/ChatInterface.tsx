@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TypeMessage } from "@/types/supabase";
 import { TypeChatInterfaceProps } from "@/types/chat";
 import { ChatInterfaceMessages } from "./ChatInterfaceMessage";
