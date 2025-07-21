@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { TypeAuthHeaderProps } from "@/types/auth";
+import { TypeAuthHeaderProps } from "@/types/TypeAuth";
 
 /**
  * Renders a standardized header for authentication pages.

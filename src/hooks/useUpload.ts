@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useFiles } from "@/hooks/useFiles";
 import { useChats } from "@/hooks/useChats";
 import { useUser } from "@/hooks/useUser";
-import { TypeFile, TypeChat } from "@/types/supabase";
+import { TypeFile, TypeChat } from "@/types/TypeSupabase";
 import {
   getAllAcceptedFileTypes,
   getFileTypeConfig,
@@ -15,7 +15,7 @@ import {
   TypeUploadError,
   TypeUploadStatus,
   TypeUseUploadLogicProps,
-} from "@/types/upload";
+} from "@/types/TypeUpload";
 
 /** The maximum number of times to retry chat creation after a successful upload. */
 const MaxRetries = 3; // Increased from 2

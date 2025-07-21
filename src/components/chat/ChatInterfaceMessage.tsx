@@ -1,5 +1,5 @@
 import { Loader2 } from "lucide-react";
-import { TypeChatInterfaceMessagesProps } from "@/types/chat";
+import { TypeChatInterfaceMessagesProps } from "@/types/TypeChat";
 import Image from "next/image";
 import { getUserInitials } from "@/utils/dashboard-utils";
 import { useUser } from "@/hooks/useUser";

@@ -1,4 +1,4 @@
-import { TypeHistoryPageChatMetadataProps } from "@/types/ui";
+import { TypeHistoryPageChatMetadataProps } from "@/types/TypeUi";
 import { formatFileSize, formatTimeAgo } from "@/utils/history-page-utils";
 
 export const HistoryPageChatMetadata = ({

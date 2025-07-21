@@ -1,5 +1,5 @@
 import { FileText, FileIcon } from "lucide-react";
-import { TypeUser } from "@/types/supabase";
+import { TypeUser } from "@/types/TypeSupabase";
 
 // Utility functions for dashboard layout
 export const getFileTypeIcon = (type: string | null | undefined) => {

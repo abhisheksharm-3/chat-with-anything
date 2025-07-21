@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { signupSchema, TypeSignupFormValues } from "../../schemas/auth";
 import { AuthPasswordInput } from "./AuthPasswordInput";
-import { TypeSignupFormProps } from "@/types/auth";
+import { TypeSignupFormProps } from "@/types/TypeAuth";
 
 /**
  * Defines shared CSS classes for the form's input fields to ensure a consistent style.

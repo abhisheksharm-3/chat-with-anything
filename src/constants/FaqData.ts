@@ -1,4 +1,4 @@
-import { TypeFaqItem } from "@/types/content";
+import { TypeFaqItem } from "@/types/TypeContent";
 
 export const FaqData: TypeFaqItem[] = [
   {

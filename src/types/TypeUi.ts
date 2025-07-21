@@ -1,6 +1,6 @@
 import { buttonVariants } from "@/components/ui/button";
 import { VariantProps } from "class-variance-authority";
-import { TypeChat } from "./supabase";
+import { TypeChat } from "./TypeSupabase";
 
 export interface TypeButtonCta
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {

@@ -16,7 +16,7 @@ import {
   processGenericDocument,
 } from "@/utils/processors";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { TypeFile } from "@/types/supabase";
+import { TypeFile } from "@/types/TypeSupabase";
 import { isYoutubeUrl } from "../youtube-utils";
 
 /**

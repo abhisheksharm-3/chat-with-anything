@@ -1,4 +1,4 @@
-import { TypeAuthError } from "@/types/auth";
+import { TypeAuthError } from "@/types/TypeAuth";
 import { EnumAuthErrorType } from "./EnumAuthErrorTypes";
 
 export const ErrorMessages: Record<string, Partial<TypeAuthError>> = {

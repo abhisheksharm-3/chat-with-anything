@@ -5,7 +5,7 @@ import { usePathname, useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { File, Plus, ChevronsRight, ChevronsLeft } from "lucide-react";
 import PricingDialog from "@/components/dashboard/PricingDialog";
-import { TypeChat, TypeFile } from "@/types/supabase";
+import { TypeChat, TypeFile } from "@/types/TypeSupabase";
 import { useSidebarState } from "@/hooks/useMobileSidebarState";
 import { useChats } from "@/hooks/useChats";
 import { useFileById } from "@/hooks/useFiles";

@@ -1,6 +1,6 @@
 import { ErrorMessages } from "@/constants/AuthErrorMessages";
 import { EnumAuthErrorType } from "@/constants/EnumAuthErrorTypes";
-import { TypeAuthError, TypeUnknownError } from "@/types/auth";
+import { TypeAuthError, TypeUnknownError } from "@/types/TypeAuth";
 
 /**
  * Categorizes and enriches error information

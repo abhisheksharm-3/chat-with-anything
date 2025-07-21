@@ -1,5 +1,5 @@
 import { useFileById } from "@/hooks/useFiles";
-import { TypeChat } from "@/types/supabase";
+import { TypeChat } from "@/types/TypeSupabase";
 import { HistoryPageChatMetadata } from "./HistoryPageChatMetadata";
 import { HistorypageChatDropdown } from "./HistoryPageChatDropdown";
 import Link from "next/link";

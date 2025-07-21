@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
-import { TypeChat } from "@/types/supabase";
+import { TypeChat } from "@/types/TypeSupabase";
 import { useUser } from "./useUser";
 import { createChat as createChatWithGemini } from "@/utils/gemini/actions";
 import { useRouter } from "next/navigation";

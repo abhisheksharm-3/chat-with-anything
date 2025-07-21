@@ -1,5 +1,5 @@
 "use server";
-import { TypeDatabase, TypeUser } from "@/types/supabase";
+import { TypeDatabase, TypeUser } from "@/types/TypeSupabase";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 

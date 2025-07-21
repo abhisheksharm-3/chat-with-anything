@@ -1,4 +1,4 @@
-import { TypeChatInterfaceMobileTabsProps } from "@/types/chat";
+import { TypeChatInterfaceMobileTabsProps } from "@/types/TypeChat";
 import { ChevronsDown, ChevronsUp } from "lucide-react";
 import { Button } from "../ui/button";
 

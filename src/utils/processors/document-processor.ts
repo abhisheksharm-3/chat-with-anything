@@ -7,7 +7,7 @@ import { getPineconeIndex, isPineconeConfigured } from "../pinecone";
 import { Document } from "langchain/document";
 import mammoth from "mammoth";
 import * as XLSX from "xlsx";
-import { TypeSpreadsheetData, TypeSpreadsheetRow } from "@/types/content";
+import { TypeSpreadsheetData, TypeSpreadsheetRow } from "@/types/TypeContent";
 
 // Constants for document processing
 const CHUNK_SIZE = 1000;

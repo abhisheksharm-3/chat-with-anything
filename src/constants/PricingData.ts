@@ -1,4 +1,4 @@
-import { TypePricingData } from "@/types/content";
+import { TypePricingData } from "@/types/TypeContent";
 
 export const PricingData: TypePricingData = {
   annual: {

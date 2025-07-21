@@ -1,4 +1,4 @@
-import { TypeDropdownAction } from "@/types/ui";
+import { TypeDropdownAction } from "@/types/TypeUi";
 import { Download, Send, Trash2 } from "lucide-react";
 
 export const HistoryPageDropdownActions: TypeDropdownAction[] = [

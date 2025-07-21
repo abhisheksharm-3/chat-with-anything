@@ -1,4 +1,4 @@
-import { TypeDetailUploadErrorField, TypeUploadError } from "@/types/upload";
+import { TypeDetailUploadErrorField, TypeUploadError } from "@/types/TypeUpload";
 
 export const UploadErrorHelpConfig = {
   auth: {

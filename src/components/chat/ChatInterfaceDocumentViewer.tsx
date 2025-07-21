@@ -13,7 +13,7 @@ import Image from "next/image";
 import {
   TypeChatInterfaceDocumentViewerProps,
   TypeControlsProps,
-} from "@/types/chat";
+} from "@/types/TypeChat";
 import { Button } from "@/components/ui/button";
 
 /**

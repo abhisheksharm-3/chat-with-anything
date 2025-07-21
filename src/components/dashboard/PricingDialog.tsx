@@ -10,8 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { X, Check } from "lucide-react";
 import { PricingData } from "@/constants/PricingData";
-import { TypeDialogProps } from "@/types/ui";
-import { TypePricingTier } from "@/types/content";
+import { TypeDialogProps } from "@/types/TypeUi";
+import { TypePricingTier } from "@/types/TypeContent";
 
 /**
  * A client-side modal dialog for displaying and selecting from various pricing plans.

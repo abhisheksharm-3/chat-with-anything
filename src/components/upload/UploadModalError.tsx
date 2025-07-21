@@ -7,7 +7,7 @@ import {
   TypeDetailUploadErrorField,
   TypeUploadError,
   TypeUploadModalErrorProps,
-} from "@/types/upload";
+} from "@/types/TypeUpload";
 import {
   getUploadErrorColorClasses,
   getUploadErrorIcon,

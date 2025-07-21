@@ -4,7 +4,7 @@ import {
   TypeAuthError,
   TypeLoginFormData,
   TypeSignupFormData,
-} from "@/types/auth";
+} from "@/types/TypeAuth";
 import { signIn, signUp } from "@/app/(auth)/actions";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
 import { EnumAuthErrorType } from "@/constants/EnumAuthErrorTypes";

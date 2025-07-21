@@ -1,4 +1,4 @@
-import { TypeUser } from "@/types/supabase";
+import { TypeUser } from "@/types/TypeSupabase";
 
 export const SettingsSections = [
   {

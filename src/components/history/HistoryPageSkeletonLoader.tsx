@@ -1,4 +1,4 @@
-import { TypeSkeletonConfig } from "@/types/ui";
+import { TypeSkeletonConfig } from "@/types/TypeUi";
 import { Skeleton } from "../ui/skeleton";
 import { HistoryPageSkeletonConfigs } from "@/constants/HistoryPage";
 

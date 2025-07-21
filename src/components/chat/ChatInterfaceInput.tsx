@@ -1,5 +1,5 @@
 import { Send } from "lucide-react";
-import { TypeChatInputProps } from "@/types/chat";
+import { TypeChatInputProps } from "@/types/TypeChat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 

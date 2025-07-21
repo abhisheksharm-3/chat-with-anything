@@ -1,4 +1,4 @@
-import { TypeUploadModalSuccessProps } from "@/types/upload";
+import { TypeUploadModalSuccessProps } from "@/types/TypeUpload";
 import { Upload, X } from "lucide-react";
 
 /**

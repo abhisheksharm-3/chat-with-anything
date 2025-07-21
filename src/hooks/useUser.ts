@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
-import { TypeUser } from "@/types/supabase";
+import { TypeUser } from "@/types/TypeSupabase";
 
 /** The base query key for all user-related queries in React Query. */
 export const USER_QUERY_KEY = ["user"];

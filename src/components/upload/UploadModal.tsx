@@ -19,7 +19,7 @@ import UploadModalProgress from "./UploadModalProgress";
 import UploadModalSuccess from "./UploadModalSuccess";
 import UploadModalError from "./UploadModalError";
 import UploadModalUrlInput from "./UploadModalUrlInput";
-import { TypeUploadModalProps } from "@/types/upload";
+import { TypeUploadModalProps } from "@/types/TypeUpload";
 
 /**
  * A comprehensive modal dialog for handling various file and URL uploads.

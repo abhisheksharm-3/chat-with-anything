@@ -6,7 +6,7 @@ import imageIcon from "@/assets/images/logos/flat-color-icons_image-file.png";
 import youtubeIcon from "@/assets/images/logos/youtube.png";
 import githubIcon from "@/assets/images/logos/github.png";
 import notionIcon from "@/assets/images/logos/notion.png";
-import { TypeFileTypeConfig } from "@/types/upload";
+import { TypeFileTypeConfig } from "@/types/TypeUpload";
 
 export const FileTypes: TypeFileTypeConfig[] = [
   {

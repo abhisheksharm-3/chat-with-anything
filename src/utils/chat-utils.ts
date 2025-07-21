@@ -1,4 +1,4 @@
-import { TypeChatError } from "@/types/chat";
+import { TypeChatError } from "@/types/TypeChat";
 
 /**
  * Creates a custom error object for chat-related operations.

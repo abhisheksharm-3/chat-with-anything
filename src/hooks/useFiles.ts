@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
-import { TypeFile } from "@/types/supabase";
+import { TypeFile } from "@/types/TypeSupabase";
 import { useUser } from "./useUser";
 import { processPdfDocument, processGenericDocument } from "@/utils/processors";
 

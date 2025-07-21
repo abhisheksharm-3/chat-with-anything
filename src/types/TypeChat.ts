@@ -1,4 +1,4 @@
-import { TypeFile, TypeMessage } from "./supabase";
+import { TypeFile, TypeMessage } from "./TypeSupabase";
 
 export interface TypeChatInterfaceProps {
   title?: string;

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
-import { TypePasswordInputProps } from "@/types/auth";
+import { TypePasswordInputProps } from "@/types/TypeAuth";
 import { Button } from "../ui/button";
 
 /**

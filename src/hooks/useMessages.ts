@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
-import { TypeMessage } from "@/types/supabase";
+import { TypeMessage } from "@/types/TypeSupabase";
 import { useUser } from "./useUser";
 import { sendMessage as sendMessageToGemini } from "@/utils/gemini/actions";
 import { ChatMessage } from "@/utils/gemini/client";

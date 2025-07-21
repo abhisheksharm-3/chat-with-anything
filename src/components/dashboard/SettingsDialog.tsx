@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, X } from "lucide-react";
 import PricingDialog from "./PricingDialog";
 import { useRouter } from "next/navigation";
-import { TypeDialogProps } from "@/types/ui";
+import { TypeDialogProps } from "@/types/TypeUi";
 import { Input } from "../ui/input";
 import { useUser } from "@/hooks/useUser";
 import useIsMobile from "@/hooks/useIsMobile";

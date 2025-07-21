@@ -1,4 +1,4 @@
-import { TypeHistoryPageChatDropdownProps } from "@/types/ui";
+import { TypeHistoryPageChatDropdownProps } from "@/types/TypeUi";
 import {
   DropdownMenu,
   DropdownMenuContent,

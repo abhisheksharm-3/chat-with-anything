@@ -1,4 +1,4 @@
-import { TypeAuthLinkProps } from "@/types/auth";
+import { TypeAuthLinkProps } from "@/types/TypeAuth";
 import Link from "next/link";
 
 /**

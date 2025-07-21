@@ -1,4 +1,4 @@
-import { TypeAuthContainerProps } from "@/types/auth";
+import { TypeAuthContainerProps } from "@/types/TypeAuth";
 import { AuthHeader } from "./AuthHeader";
 import { AuthStatusMessage } from "./AuthStatusMessage";
 
