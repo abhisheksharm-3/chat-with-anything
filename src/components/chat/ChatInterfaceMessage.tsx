@@ -20,19 +20,10 @@ import { useUser } from "@/hooks/useUser";
  */
 export const ChatInterfaceMessages: React.FC<
   TypeChatInterfaceMessagesProps
-> = ({ messages, messagesLoading, messagesEndRef }) => {
+> = ({ messages, messagesLoading, messagesEndRef, isSending = false }) => {
   const { user } = useUser();
 
-  /**
-   * Parses and renders the string content of a single message.
-   * This function provides rich formatting for special cases, such as displaying
-   * detailed error messages for document or YouTube processing failures.
-   *
-   * @param {string} content - The raw string content of the message.
-   * @returns {React.ReactNode} JSX for special error messages or the original string.
-   */
   const renderMessageContent = (content: string): React.ReactNode => {
-    // Check for specific, known error messages to provide better user feedback.
     if (
       content.startsWith("I couldn't process this YouTube video:") ||
       content.startsWith(
@@ -64,20 +55,29 @@ export const ChatInterfaceMessages: React.FC<
       );
     }
 
-    // Return the original content if no special error case is matched.
     return content;
   };
+
+  // Filter out malformed messages but keep temporary user messages and valid temp messages
+  const validMessages = messages.filter(message => 
+    message && 
+    message.id && 
+    message.content && 
+    message.content.trim() !== '' &&
+    // Only filter out temp AI messages with "..." content, keep temp user messages
+    !(message.id.startsWith('temp-ai-') && message.content === '...')
+  );
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4 max-w-screen bg-[#181818]">
       {/* Initial loading state */}
-      {messagesLoading && messages.length === 0 ? (
+      {messagesLoading && validMessages.length === 0 ? (
         <div className="flex items-center justify-center h-full">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
           <span className="ml-2 text-gray-400">Loading messages...</span>
         </div>
-      ) : /* Empty chat state */
-      messages.length === 0 ? (
+      ) : validMessages.length === 0 ? (
+        /* Empty chat state */
         <div className="flex items-center justify-center h-full">
           <p className="text-gray-400 text-sm text-center">
             No messages yet. Start chatting with the document!
@@ -85,7 +85,7 @@ export const ChatInterfaceMessages: React.FC<
         </div>
       ) : (
         /* Render messages */
-        messages.map((message) => (
+        validMessages.map((message) => (
           <div
             key={message.id}
             className={`flex items-start gap-3 ${
@@ -115,8 +115,8 @@ export const ChatInterfaceMessages: React.FC<
                     : "bg-[#272626]"
               }`}
             >
-              {/* "Thinking" indicator */}
-              {message.content === "..." ? (
+              {/* "Thinking" indicator - only show for temporary messages */}
+              {message.content === "..." && message.id.startsWith('temp-') ? (
                 <div className="flex items-center">
                   <span className="tracking-widest">...</span>
                 </div>
@@ -136,6 +136,28 @@ export const ChatInterfaceMessages: React.FC<
           </div>
         ))
       )}
+      
+      {/* Show AI thinking indicator when sending */}
+      {isSending && (
+        <div className="flex items-start gap-3 justify-start">
+          <div className="w-11 h-11 rounded-lg bg-[#272626] flex items-center justify-center flex-shrink-0 p-2">
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              className="object-contain"
+              width={44}
+              height={40}
+              priority
+            />
+          </div>
+          <div className="max-w-[80%] rounded-lg p-3 text-sm bg-[#272626]">
+            <div className="flex items-center">
+              <span className="tracking-widest">...</span>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Invisible div to target for auto-scrolling */}
       <div ref={messagesEndRef} />
     </div>

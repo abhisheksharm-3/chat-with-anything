@@ -10,6 +10,7 @@ export interface TypeChatInterfaceMessagesProps {
   messages: TypeMessage[];
   messagesLoading: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
+  isSending?: boolean;
 }
 
 export interface TypeChatInputProps {

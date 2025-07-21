@@ -39,6 +39,7 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
     isLoading: messagesLoading,
     sendMessage,
     subscribeToMessages,
+    isSending,
   } = useMessages(chatId);
   const { getChatById } = useChats();
   const [inputValue, setInputValue] = useState("");
@@ -293,6 +294,7 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
             messages={localMessages}
             messagesLoading={messagesLoading}
             messagesEndRef={messagesEndRef}
+            isSending={isSending}
           />
           <ChatInterfaceInput
             inputValue={inputValue}
