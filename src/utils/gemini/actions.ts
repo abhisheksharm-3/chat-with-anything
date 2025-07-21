@@ -18,7 +18,6 @@ import {
 import { SupabaseClient } from "@supabase/supabase-js";
 import { TypeFile } from "@/types/supabase";
 import { isYoutubeUrl } from "../youtube-utils";
-import { createImageContext } from "../image-utils";
 
 /**
  * Retrieves and processes the content of a file based on its type.

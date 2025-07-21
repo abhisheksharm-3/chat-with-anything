@@ -61,7 +61,6 @@ export const useMessages = (chatId: string) => {
     enabled: isAuthenticated && isValidChatId,
   });
 
-  /** Mutation to send a user's message to the AI backend via a server action. */
 /** Mutation to send a user's message to the AI backend via a server action. */
 const sendMessageMutation = useMutation({
   mutationFn: async (content: string) => {
@@ -77,6 +76,7 @@ const sendMessageMutation = useMutation({
       content: msg.content,
     }));
 
+    // Use retry mechanism for AI calls
     const result = await sendMessageToGemini(chatId, content, formattedMessages);
     
     // Add a small delay to ensure the server has processed and saved the messages
@@ -84,14 +84,12 @@ const sendMessageMutation = useMutation({
     
     return result;
   },
+  
   onMutate: async (content: string) => {
-    // Cancel any outgoing refetches to avoid conflicts
     await queryClient.cancelQueries({ queryKey: [...MESSAGES_QUERY_KEY, chatId] });
 
-    // Snapshot the previous value for rollback
     const previousMessages = queryClient.getQueryData([...MESSAGES_QUERY_KEY, chatId]) as TypeMessage[] | undefined;
 
-    // Create temporary user message
     const tempUserMessage: TypeMessage = {
       id: `temp-user-${Date.now()}`,
       chat_id: chatId,
@@ -100,7 +98,6 @@ const sendMessageMutation = useMutation({
       created_at: new Date().toISOString(),
     };
 
-    // Create temporary AI thinking message
     const tempAiMessage: TypeMessage = {
       id: `temp-ai-${Date.now()}`,
       chat_id: chatId,
@@ -109,36 +106,56 @@ const sendMessageMutation = useMutation({
       created_at: new Date().toISOString(),
     };
 
-    // Update cache with temporary messages
     queryClient.setQueryData(
       [...MESSAGES_QUERY_KEY, chatId],
       (oldData: TypeMessage[] | undefined) => {
         const currentData = oldData || [];
-        // Remove any existing temporary messages
-        const cleanData = currentData.filter(msg => 
-          !msg.id.startsWith('temp-')
-        );
+        const cleanData = currentData.filter(msg => !msg.id.startsWith('temp-'));
         return [...cleanData, tempUserMessage, tempAiMessage];
       }
     );
 
-    return { previousMessages };
+    return { previousMessages, tempAiMessageId: tempAiMessage.id };
   },
-  onError: (err, variables, context) => {
-    // Rollback on error
-    if (context?.previousMessages) {
-      queryClient.setQueryData([...MESSAGES_QUERY_KEY, chatId], context.previousMessages);
-    }
+
+  onError: (error: Error, variables: string, context?: { previousMessages?: TypeMessage[]; tempAiMessageId?: string }) => {
+    console.error("Send message error:", error);
+
+    // Handle GeminiError specifically
+    const errorMessage = "Sorry, there was an error processing your request. Please try again.";
+
+    // Create error message
+    const errorMessageObj: TypeMessage = {
+      id: `error-${Date.now()}`,
+      chat_id: chatId,
+      role: "assistant",
+      content: errorMessage,
+      created_at: new Date().toISOString(),
+    };
+
+    // Update cache with error message
+    queryClient.setQueryData(
+      [...MESSAGES_QUERY_KEY, chatId],
+      (oldData: TypeMessage[] | undefined) => {
+        if (!oldData) return [errorMessageObj];
+        
+        // Remove temporary AI message and add error message
+        const cleanData = oldData.filter(msg => 
+          msg.id !== context?.tempAiMessageId && !msg.id.startsWith('temp-ai-')
+        );
+        return [...cleanData, errorMessageObj];
+      }
+    );
   },
+
   onSuccess: async () => {
-    // Force invalidate and refetch to get the latest data from server
     await queryClient.invalidateQueries({ 
       queryKey: [...MESSAGES_QUERY_KEY, chatId],
       exact: true
     });
   },
+
   onSettled: () => {
-    // Final cleanup - remove any lingering temporary messages
     queryClient.setQueryData(
       [...MESSAGES_QUERY_KEY, chatId],
       (oldData: TypeMessage[] | undefined) => {
@@ -149,6 +166,7 @@ const sendMessageMutation = useMutation({
     );
   },
 });
+
 
   /** Mutation to create a message directly in the database, bypassing the AI. */
   const createMessageMutation = useMutation({
