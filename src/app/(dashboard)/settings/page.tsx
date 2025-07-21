@@ -88,7 +88,7 @@ const SettingsPage = () => {
             <div className="mt-10">
               <PricingDialog
                 trigger={
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-6 cursor-pointer font-bold text-sm w-fit">
+                  <Button className="rounded-xl py-6 cursor-pointer font-bold w-fit">
                     Upgrade plan
                     <span className="text-xs bg-primary-foreground/20 text-primary-foreground font-semibold px-1.5 py-0.5 rounded">
                       PRO

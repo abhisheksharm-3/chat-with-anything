@@ -68,7 +68,7 @@ const NotFound = () => {
             <Link href="/">
               <Button 
                 size="lg" 
-                className="px-8 py-3 font-medium transition-all duration-200 cursor-pointer"
+                className="px-8 py-3 font-medium duration-200 cursor-pointer"
               >
                 <Home className="mr-2 h-4 w-4" />
                 Go Home

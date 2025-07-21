@@ -247,7 +247,7 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
 
         <div className="p-4 sm:p-6 border-t border-gray-800 flex flex-col gap-3">
           <Button
-            className="w-full py-3 text-sm font-medium rounded-xl hover:bg-primary-dark"
+            className="w-full py-3 rounded-xl hover:bg-primary-dark"
             size="lg"
             disabled={selectedPricing === "free"}
           >
@@ -255,7 +255,7 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
           </Button>
           <Button
             variant="outline"
-            className="w-full py-3 text-sm font-medium rounded-xl border-gray-600 hover:bg-gray-800"
+            className="w-full py-3 rounded-xl border-gray-600 hover:bg-gray-800"
             onClick={handleClose}
             size="lg"
           >

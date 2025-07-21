@@ -100,7 +100,7 @@ const Controls: React.FC<TypeControlsProps> = ({
             <div className="py-1">
               <Button
                 variant="ghost"
-                className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 w-full justify-start"
+                className="px-4 py-2 text-gray-300 hover:bg-gray-800 w-full justify-start"
                 onClick={() => {
                   onDownload();
                   setShowMenu(false);
@@ -111,7 +111,7 @@ const Controls: React.FC<TypeControlsProps> = ({
               </Button>
               <Button
                 variant="ghost"
-                className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 w-full justify-start"
+                className="px-4 py-2 text-gray-300 hover:bg-gray-800 w-full justify-start"
                 onClick={() => {
                   onOpenInNewTab();
                   setShowMenu(false);

@@ -144,7 +144,7 @@ export const DashboardMobileHeader = () => {
           trigger={
             <Button
               size="sm"
-              className="bg-primary hover:bg-primary/90 text-white rounded-lg px-3 py-5 text-lg font-medium"
+              className="text-white rounded-lg px-3 py-5 text-lg font-medium"
             >
               Upgrade
             </Button>

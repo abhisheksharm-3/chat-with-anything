@@ -105,7 +105,7 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
             </p>
             <Button
               onClick={handleClose}
-              className="w-full py-2 text-center bg-primary hover:bg-primary/90 text-white rounded-lg cursor-pointer"
+              className="w-full py-2 text-center text-white rounded-lg cursor-pointer"
             >
               Close
             </Button>
@@ -133,7 +133,7 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
             </p>
             <Button
               onClick={handleClose}
-              className="w-full py-2 text-center bg-primary hover:bg-primary/90 text-white rounded-lg cursor-pointer"
+              className="w-full py-2 text-center text-white rounded-lg cursor-pointer"
             >
               Close
             </Button>
@@ -239,7 +239,7 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
           </Button>
           <Button
             onClick={handleSubmit}
-            className="flex-1 py-2 text-center bg-primary hover:bg-primary/90 text-white rounded-lg cursor-pointer"
+            className="flex-1 py-2 text-center text-white rounded-lg cursor-pointer"
             disabled={isUploading || uploadStatus === "uploaded"}
           >
             {isUploading ? "Uploading..." : "Upload"}
