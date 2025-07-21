@@ -45,7 +45,7 @@ const HistoryPage = () => {
       setSearchError(null);
       if (searchQuery.trim().length > 100) {
         setSearchError(
-          "Search query is too long. Please use fewer than 100 characters."
+          "Search query is too long. Please use fewer than 100 characters.",
         );
         return;
       }
@@ -247,10 +247,10 @@ const HistoryPage = () => {
               {isError
                 ? renderErrorState()
                 : isLoading
-                ? renderLoadingSkeleton()
-                : filteredChats.length === 0
-                ? renderEmptyState()
-                : renderChatList()}
+                  ? renderLoadingSkeleton()
+                  : filteredChats.length === 0
+                    ? renderEmptyState()
+                    : renderChatList()}
             </div>
           </div>
         </div>

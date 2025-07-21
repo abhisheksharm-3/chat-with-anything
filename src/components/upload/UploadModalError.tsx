@@ -3,9 +3,20 @@
 import { RefreshCw, HelpCircle, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { useState } from "react";
-import { TypeDetailUploadErrorField, TypeUploadError, TypeUploadModalErrorProps } from "@/types/upload";
-import { getUploadErrorColorClasses, getUploadErrorIcon, getUploadErrorTitle } from "@/utils/upload-utils";
-import { UploadErrorDetailFields, UploadErrorHelpConfig } from "@/constants/UploadErrorConfig";
+import {
+  TypeDetailUploadErrorField,
+  TypeUploadError,
+  TypeUploadModalErrorProps,
+} from "@/types/upload";
+import {
+  getUploadErrorColorClasses,
+  getUploadErrorIcon,
+  getUploadErrorTitle,
+} from "@/utils/upload-utils";
+import {
+  UploadErrorDetailFields,
+  UploadErrorHelpConfig,
+} from "@/constants/UploadErrorConfig";
 
 /**
  * Enhanced error component that provides contextual error messages, icons, and actions
@@ -26,11 +37,11 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
   // Parse error object or string
   const errorObj: TypeUploadError | null = (() => {
     if (!error) return null;
-    if (typeof error === 'string') {
+    if (typeof error === "string") {
       return {
-        type: 'unknown',
+        type: "unknown",
         message: error,
-        retryable: true
+        retryable: true,
       };
     }
     return error;
@@ -39,9 +50,10 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
   // Helper function to safely convert unknown error to string
   const getErrorText = (error: unknown): string => {
     if (error instanceof Error) return error.message;
-    if (typeof error === 'string') return error;
-    if (error === null || error === undefined) return 'No additional details available';
-    
+    if (typeof error === "string") return error;
+    if (error === null || error === undefined)
+      return "No additional details available";
+
     try {
       return JSON.stringify(error, null, 2);
     } catch {
@@ -55,7 +67,9 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
     if (!config) return null;
 
     return (
-      <div className={`mt-4 p-3 ${config.bgColor} border ${config.borderColor} rounded-md`}>
+      <div
+        className={`mt-4 p-3 ${config.bgColor} border ${config.borderColor} rounded-md`}
+      >
         <p className={`text-xs ${config.textColor}`}>
           {config.icon} {config.message}
         </p>
@@ -64,7 +78,11 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
   };
 
   // Render detail field
-  const renderDetailField = (field: TypeDetailUploadErrorField, errorObj: TypeUploadError, retryCount: number) => {
+  const renderDetailField = (
+    field: TypeDetailUploadErrorField,
+    errorObj: TypeUploadError,
+    retryCount: number,
+  ) => {
     if (field.condition && !field.condition(errorObj, retryCount)) return null;
 
     const value = field.getValue(errorObj, retryCount);
@@ -78,7 +96,7 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
             {getErrorText(value)}
           </pre>
         ) : (
-          <span className={`ml-2 text-gray-600 ${field.className || ''}`}>
+          <span className={`ml-2 text-gray-600 ${field.className || ""}`}>
             {String(value)}
           </span>
         )}
@@ -89,12 +107,17 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
   if (!errorObj) return null;
 
   const colorClasses = getUploadErrorColorClasses(errorObj.type);
-  const shouldShowRetry = canRetry && (errorObj.retryable !== false);
-  const shouldShowDetails = errorObj.originalError || errorObj.type !== 'validation';
-  const shouldShowSupport = (retryCount >= MaxRetries || errorObj.type === 'server') && onContactSupport;
+  const shouldShowRetry = canRetry && errorObj.retryable !== false;
+  const shouldShowDetails =
+    errorObj.originalError || errorObj.type !== "validation";
+  const shouldShowSupport =
+    (retryCount >= MaxRetries || errorObj.type === "server") &&
+    onContactSupport;
 
   return (
-    <div className={`relative border border-dashed ${colorClasses.border} ${colorClasses.bg} rounded-lg p-6 text-center mb-4`}>
+    <div
+      className={`relative border border-dashed ${colorClasses.border} ${colorClasses.bg} rounded-lg p-6 text-center mb-4`}
+    >
       {/* Dismiss Button */}
       {onDismiss && (
         <Button
@@ -121,10 +144,12 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
         <p className={`text-sm ${colorClasses.messageText} mb-2`}>
           {errorObj.message}
         </p>
-        
+
         {/* User Action Guidance */}
         {errorObj.userAction && (
-          <p className={`text-xs ${colorClasses.messageText} opacity-80 italic`}>
+          <p
+            className={`text-xs ${colorClasses.messageText} opacity-80 italic`}
+          >
             💡 {errorObj.userAction}
           </p>
         )}
@@ -143,14 +168,20 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
       <div className="flex flex-col sm:flex-row gap-2 items-center justify-center">
         {/* Retry Button */}
         {shouldShowRetry && (
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleRetry}
             disabled={isRetrying || retryCount >= MaxRetries}
             className="min-w-[100px]"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRetrying ? 'animate-spin' : ''}`} />
-            {isRetrying ? 'Retrying...' : (retryCount > 0 ? 'Try Again' : 'Retry')}
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isRetrying ? "animate-spin" : ""}`}
+            />
+            {isRetrying
+              ? "Retrying..."
+              : retryCount > 0
+                ? "Try Again"
+                : "Retry"}
           </Button>
         )}
 
@@ -163,7 +194,7 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
             className="text-gray-500 hover:text-gray-700"
           >
             <HelpCircle className="h-4 w-4 mr-1" />
-            {showDetails ? 'Hide' : 'Show'} Details
+            {showDetails ? "Hide" : "Show"} Details
           </Button>
         )}
 
@@ -196,26 +227,35 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
       {showDetails && (
         <div className="mt-4 p-3 bg-gray-100 rounded-md border text-left">
           <div className="text-xs space-y-2">
-            {UploadErrorDetailFields.map(field => renderDetailField(field, errorObj, retryCount))}
-            
+            {UploadErrorDetailFields.map((field) =>
+              renderDetailField(field, errorObj, retryCount),
+            )}
+
             <div className="pt-2 border-t border-gray-300">
               <span className="font-medium text-gray-700">Timestamp:</span>
-              <span className="ml-2 text-gray-600">{new Date().toLocaleString()}</span>
+              <span className="ml-2 text-gray-600">
+                {new Date().toLocaleString()}
+              </span>
             </div>
           </div>
         </div>
       )}
 
       {/* Contextual Help Messages */}
-      {(Object.keys(UploadErrorHelpConfig) as Array<keyof typeof UploadErrorHelpConfig>)
-        .filter(type => type === errorObj.type)
-        .map(type => renderHelpMessage(type))}
+      {(
+        Object.keys(UploadErrorHelpConfig) as Array<
+          keyof typeof UploadErrorHelpConfig
+        >
+      )
+        .filter((type) => type === errorObj.type)
+        .map((type) => renderHelpMessage(type))}
 
       {/* Max Retries Reached Message */}
       {retryCount >= MaxRetries && (
         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
           <p className="text-xs text-red-700">
-            ⚠️ Maximum retry attempts reached. If the problem persists, please try a different file or contact support.
+            ⚠️ Maximum retry attempts reached. If the problem persists, please
+            try a different file or contact support.
           </p>
         </div>
       )}

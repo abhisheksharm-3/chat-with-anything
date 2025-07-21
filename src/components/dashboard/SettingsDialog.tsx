@@ -91,16 +91,13 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   /**
    * Renders a settings section based on configuration
    */
-  const renderSettingsSection = (section: typeof SettingsSections[0]) => {
+  const renderSettingsSection = (section: (typeof SettingsSections)[0]) => {
     const value = user?.[section.key] || section.fallback;
-    const isDisplayName = section.id === 'displayName';
+    const isDisplayName = section.id === "displayName";
 
     if (isDisplayName && isEditing) {
       return (
-        <form
-          onSubmit={handleUpdateName}
-          className="flex gap-2 items-center"
-        >
+        <form onSubmit={handleUpdateName} className="flex gap-2 items-center">
           <Input
             type="text"
             value={name}
@@ -202,9 +199,7 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
             <div className="px-6 pb-6 space-y-6">
               {/* Render settings sections using array */}
               {SettingsSections.map((section) => (
-                <div key={section.id}>
-                  {renderSettingsSection(section)}
-                </div>
+                <div key={section.id}>{renderSettingsSection(section)}</div>
               ))}
 
               {/* Current Plan Section */}

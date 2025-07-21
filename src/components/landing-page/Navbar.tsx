@@ -23,11 +23,18 @@ const Navbar = () => {
   const closeMenu = () => setIsOpen(false);
 
   // Navigation items component
-  const NavigationList = ({ isMobile = false, onItemClick }: { 
-    isMobile?: boolean; 
-    onItemClick?: () => void; 
+  const NavigationList = ({
+    isMobile = false,
+    onItemClick,
+  }: {
+    isMobile?: boolean;
+    onItemClick?: () => void;
   }) => (
-    <ul className={isMobile ? "space-y-8" : "flex items-center gap-6 justify-center"}>
+    <ul
+      className={
+        isMobile ? "space-y-8" : "flex items-center gap-6 justify-center"
+      }
+    >
       {PublicNavbarRoutes.map((item, index) => (
         <li key={index}>
           <Link
@@ -48,7 +55,9 @@ const Navbar = () => {
 
   // CTA buttons component
   const CTAButtons = ({ isMobile = false }: { isMobile?: boolean }) => (
-    <div className={isMobile ? "flex flex-col gap-4" : "flex items-center gap-2.5"}>
+    <div
+      className={isMobile ? "flex flex-col gap-4" : "flex items-center gap-2.5"}
+    >
       {CtaButtons.map(({ label, link, variant }) => (
         <ButtonCta
           key={label}

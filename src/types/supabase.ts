@@ -114,6 +114,7 @@ export interface TypeDatabase {
 export type TypeUser = TypeDatabase["public"]["Tables"]["users"]["Row"];
 export type TypeChat = TypeDatabase["public"]["Tables"]["chats"]["Row"];
 export type TypeFile = TypeDatabase["public"]["Tables"]["files"]["Row"];
-export type TypeMessage = TypeDatabase["public"]["Tables"]["messages"]["Row"] & {
-  isError?: boolean;
-};
+export type TypeMessage =
+  TypeDatabase["public"]["Tables"]["messages"]["Row"] & {
+    isError?: boolean;
+  };

@@ -34,5 +34,5 @@ export const PublicNavbarRoutes = [
 
 export const CtaButtons = [
   { label: "Login", link: "/login", variant: "outline" as const },
-  { label: "Try For Free", link: "/signup", variant: "default" as const }
+  { label: "Try For Free", link: "/signup", variant: "default" as const },
 ];

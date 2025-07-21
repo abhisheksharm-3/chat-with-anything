@@ -88,4 +88,4 @@ export const getAllAcceptedFileTypes = (): string[] => {
     }
     return acc;
   }, [] as string[]);
-}
+};

@@ -63,7 +63,14 @@ export type TypeUploadStatus = "idle" | "uploading" | "uploaded" | "error";
 
 // Enhanced error types for better error categorization
 export interface TypeUploadError {
-  type: 'validation' | 'network' | 'server' | 'auth' | 'file_processing' | 'chat_creation' | 'unknown';
+  type:
+    | "validation"
+    | "network"
+    | "server"
+    | "auth"
+    | "file_processing"
+    | "chat_creation"
+    | "unknown";
   message: string;
   originalError?: unknown;
   retryable?: boolean;

@@ -61,112 +61,129 @@ export const useMessages = (chatId: string) => {
     enabled: isAuthenticated && isValidChatId,
   });
 
-/** Mutation to send a user's message to the AI backend via a server action. */
-const sendMessageMutation = useMutation({
-  mutationFn: async (content: string) => {
-    if (!isValidChatId) throw new Error("No chat ID provided");
-    if (!userId) throw new Error("No authenticated user");
+  /** Mutation to send a user's message to the AI backend via a server action. */
+  const sendMessageMutation = useMutation({
+    mutationFn: async (content: string) => {
+      if (!isValidChatId) throw new Error("No chat ID provided");
+      if (!userId) throw new Error("No authenticated user");
 
-    // Convert current messages to ChatMessage format for Gemini (excluding temporary ones)
-    const currentMessages = (messagesQuery.data || []).filter(msg => 
-      !msg.id.startsWith('temp-') && msg.content !== '...'
-    );
-    const formattedMessages: ChatMessage[] = currentMessages.map((msg) => ({
-      role: msg.role === "user" ? "user" : "model",
-      content: msg.content,
-    }));
+      // Convert current messages to ChatMessage format for Gemini (excluding temporary ones)
+      const currentMessages = (messagesQuery.data || []).filter(
+        (msg) => !msg.id.startsWith("temp-") && msg.content !== "...",
+      );
+      const formattedMessages: ChatMessage[] = currentMessages.map((msg) => ({
+        role: msg.role === "user" ? "user" : "model",
+        content: msg.content,
+      }));
 
-    // Use retry mechanism for AI calls
-    const result = await sendMessageToGemini(chatId, content, formattedMessages);
-    
-    // Add a small delay to ensure the server has processed and saved the messages
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    return result;
-  },
-  
-  onMutate: async (content: string) => {
-    await queryClient.cancelQueries({ queryKey: [...MESSAGES_QUERY_KEY, chatId] });
+      // Use retry mechanism for AI calls
+      const result = await sendMessageToGemini(
+        chatId,
+        content,
+        formattedMessages,
+      );
 
-    const previousMessages = queryClient.getQueryData([...MESSAGES_QUERY_KEY, chatId]) as TypeMessage[] | undefined;
+      // Add a small delay to ensure the server has processed and saved the messages
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const tempUserMessage: TypeMessage = {
-      id: `temp-user-${Date.now()}`,
-      chat_id: chatId,
-      role: "user",
-      content: content,
-      created_at: new Date().toISOString(),
-    };
+      return result;
+    },
 
-    const tempAiMessage: TypeMessage = {
-      id: `temp-ai-${Date.now()}`,
-      chat_id: chatId,
-      role: "assistant",
-      content: "...",
-      created_at: new Date().toISOString(),
-    };
+    onMutate: async (content: string) => {
+      await queryClient.cancelQueries({
+        queryKey: [...MESSAGES_QUERY_KEY, chatId],
+      });
 
-    queryClient.setQueryData(
-      [...MESSAGES_QUERY_KEY, chatId],
-      (oldData: TypeMessage[] | undefined) => {
-        const currentData = oldData || [];
-        const cleanData = currentData.filter(msg => !msg.id.startsWith('temp-'));
-        return [...cleanData, tempUserMessage, tempAiMessage];
-      }
-    );
+      const previousMessages = queryClient.getQueryData([
+        ...MESSAGES_QUERY_KEY,
+        chatId,
+      ]) as TypeMessage[] | undefined;
 
-    return { previousMessages, tempAiMessageId: tempAiMessage.id };
-  },
+      const tempUserMessage: TypeMessage = {
+        id: `temp-user-${Date.now()}`,
+        chat_id: chatId,
+        role: "user",
+        content: content,
+        created_at: new Date().toISOString(),
+      };
 
-  onError: (error: Error, variables: string, context?: { previousMessages?: TypeMessage[]; tempAiMessageId?: string }) => {
-    console.error("Send message error:", error);
+      const tempAiMessage: TypeMessage = {
+        id: `temp-ai-${Date.now()}`,
+        chat_id: chatId,
+        role: "assistant",
+        content: "...",
+        created_at: new Date().toISOString(),
+      };
 
-    // Handle GeminiError specifically
-    const errorMessage = "Sorry, there was an error processing your request. Please try again.";
+      queryClient.setQueryData(
+        [...MESSAGES_QUERY_KEY, chatId],
+        (oldData: TypeMessage[] | undefined) => {
+          const currentData = oldData || [];
+          const cleanData = currentData.filter(
+            (msg) => !msg.id.startsWith("temp-"),
+          );
+          return [...cleanData, tempUserMessage, tempAiMessage];
+        },
+      );
 
-    // Create error message
-    const errorMessageObj: TypeMessage = {
-      id: `error-${Date.now()}`,
-      chat_id: chatId,
-      role: "assistant",
-      content: errorMessage,
-      created_at: new Date().toISOString(),
-    };
+      return { previousMessages, tempAiMessageId: tempAiMessage.id };
+    },
 
-    // Update cache with error message
-    queryClient.setQueryData(
-      [...MESSAGES_QUERY_KEY, chatId],
-      (oldData: TypeMessage[] | undefined) => {
-        if (!oldData) return [errorMessageObj];
-        
-        // Remove temporary AI message and add error message
-        const cleanData = oldData.filter(msg => 
-          msg.id !== context?.tempAiMessageId && !msg.id.startsWith('temp-ai-')
-        );
-        return [...cleanData, errorMessageObj];
-      }
-    );
-  },
+    onError: (
+      error: Error,
+      variables: string,
+      context?: { previousMessages?: TypeMessage[]; tempAiMessageId?: string },
+    ) => {
+      console.error("Send message error:", error);
 
-  onSuccess: async () => {
-    await queryClient.invalidateQueries({ 
-      queryKey: [...MESSAGES_QUERY_KEY, chatId],
-      exact: true
-    });
-  },
+      // Handle GeminiError specifically
+      const errorMessage =
+        "Sorry, there was an error processing your request. Please try again.";
 
-  onSettled: () => {
-    queryClient.setQueryData(
-      [...MESSAGES_QUERY_KEY, chatId],
-      (oldData: TypeMessage[] | undefined) => {
-        if (!oldData) return [];
-        const cleaned = oldData.filter(msg => !msg.id.startsWith('temp-'));
-        return cleaned;
-      }
-    );
-  },
-});
+      // Create error message
+      const errorMessageObj: TypeMessage = {
+        id: `error-${Date.now()}`,
+        chat_id: chatId,
+        role: "assistant",
+        content: errorMessage,
+        created_at: new Date().toISOString(),
+      };
 
+      // Update cache with error message
+      queryClient.setQueryData(
+        [...MESSAGES_QUERY_KEY, chatId],
+        (oldData: TypeMessage[] | undefined) => {
+          if (!oldData) return [errorMessageObj];
+
+          // Remove temporary AI message and add error message
+          const cleanData = oldData.filter(
+            (msg) =>
+              msg.id !== context?.tempAiMessageId &&
+              !msg.id.startsWith("temp-ai-"),
+          );
+          return [...cleanData, errorMessageObj];
+        },
+      );
+    },
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [...MESSAGES_QUERY_KEY, chatId],
+        exact: true,
+      });
+    },
+
+    onSettled: () => {
+      queryClient.setQueryData(
+        [...MESSAGES_QUERY_KEY, chatId],
+        (oldData: TypeMessage[] | undefined) => {
+          if (!oldData) return [];
+          const cleaned = oldData.filter((msg) => !msg.id.startsWith("temp-"));
+          return cleaned;
+        },
+      );
+    },
+  });
 
   /** Mutation to create a message directly in the database, bypassing the AI. */
   const createMessageMutation = useMutation({

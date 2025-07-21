@@ -16,7 +16,6 @@ import { FloatingLogosData, RotateWords } from "@/constants/HeroData";
  * @returns {JSX.Element} The rendered hero section.
  */
 const Hero = () => {
-
   // Background grid component
   const BackgroundGrid = () => (
     <div className="absolute inset-0 z-0">
@@ -51,14 +50,11 @@ const Hero = () => {
       <div className="space-y-6 max-w-2xl mx-auto">
         <div className="text-center text-3xl md:text-4xl lg:text-5xl font-extralight tracking-tight">
           Now chat with any{" "}
-          <WordRotate
-            className="font-bold"
-            words={RotateWords}
-          />
+          <WordRotate className="font-bold" words={RotateWords} />
         </div>
         <div className="max-w-md mx-auto text-center text-base md:text-lg text-gray-400 mt-20 px-10 md:mt-10">
-          Using doc2text ask questions, get information from a document,
-          image, video, URL, github repo and more.
+          Using doc2text ask questions, get information from a document, image,
+          video, URL, github repo and more.
         </div>
       </div>
       <div className="mt-10 md:min-w-96 mx-auto px-12 md:px-0">

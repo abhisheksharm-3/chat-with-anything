@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, CircleAlert, AlertCircle } from "lucide-react";
 import { useUploadLogic } from "@/hooks/useUpload";
@@ -151,8 +156,10 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
         className="bg-[#121212] border border-[#333] max-w-md p-0 rounded-xl"
         showCloseButton={false}
       >
-        <DialogTitle className="sr-only">Upload {fileTypeConfig.name}</DialogTitle>
-        
+        <DialogTitle className="sr-only">
+          Upload {fileTypeConfig.name}
+        </DialogTitle>
+
         {/* Header */}
         <div className="p-4 flex justify-between items-start border-b border-[#333]">
           <div>
@@ -192,8 +199,8 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
             />
           )}
           {uploadStatus === "error" && (
-            <UploadModalError 
-              error={error} 
+            <UploadModalError
+              error={error}
               handleRetry={handleRetry}
               onDismiss={handleDismissError}
             />

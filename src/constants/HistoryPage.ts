@@ -31,7 +31,10 @@ export const HistoryPageDropdownActions: TypeDropdownAction[] = [
   },
 ];
 
-export const HistoryPageSkeletonItems = Array.from({ length: 3 }, (_, index) => ({ id: index }));
+export const HistoryPageSkeletonItems = Array.from(
+  { length: 3 },
+  (_, index) => ({ id: index }),
+);
 
 export const HistoryPageSkeletonConfigs = {
   title: { height: "h-4", width: "w-32 sm:w-48" },
@@ -39,5 +42,5 @@ export const HistoryPageSkeletonConfigs = {
   mobileSize: { height: "h-2", width: "w-12" },
   mobileTime: { height: "h-2", width: "w-16" },
   desktopSize: { height: "h-3", width: "w-12" },
-  desktopTime: { height: "h-3", width: "w-20" }
+  desktopTime: { height: "h-3", width: "w-20" },
 } as const;

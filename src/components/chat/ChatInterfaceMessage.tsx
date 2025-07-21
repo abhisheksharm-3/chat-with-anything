@@ -58,13 +58,14 @@ export const ChatInterfaceMessages: React.FC<
   };
 
   // Filter out malformed messages but keep temporary user messages and valid temp messages
-  const validMessages = messages.filter(message => 
-    message && 
-    message.id && 
-    message.content && 
-    message.content.trim() !== '' &&
-    // Only filter out temp AI messages with "..." content, keep temp user messages
-    !(message.id.startsWith('temp-ai-') && message.content === '...')
+  const validMessages = messages.filter(
+    (message) =>
+      message &&
+      message.id &&
+      message.content &&
+      message.content.trim() !== "" &&
+      // Only filter out temp AI messages with "..." content, keep temp user messages
+      !(message.id.startsWith("temp-ai-") && message.content === "..."),
   );
 
   return (
@@ -115,7 +116,7 @@ export const ChatInterfaceMessages: React.FC<
               }`}
             >
               {/* "Thinking" indicator - only show for temporary messages */}
-              {message.content === "..." && message.id.startsWith('temp-') ? (
+              {message.content === "..." && message.id.startsWith("temp-") ? (
                 <div className="flex items-center">
                   <span className="tracking-widest">...</span>
                 </div>
@@ -135,7 +136,7 @@ export const ChatInterfaceMessages: React.FC<
           </div>
         ))
       )}
-      
+
       {/* Show AI thinking indicator when sending */}
       {isSending && (
         <div className="flex items-start gap-3 justify-start">
@@ -156,7 +157,7 @@ export const ChatInterfaceMessages: React.FC<
           </div>
         </div>
       )}
-      
+
       {/* Invisible div to target for auto-scrolling */}
       <div ref={messagesEndRef} />
     </div>

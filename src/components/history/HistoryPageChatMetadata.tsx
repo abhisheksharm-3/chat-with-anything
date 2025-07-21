@@ -1,12 +1,16 @@
 import { TypeHistoryPageChatMetadataProps } from "@/types/ui";
 import { formatFileSize, formatTimeAgo } from "@/utils/history-page-utils";
 
-export const HistoryPageChatMetadata = ({ chat, file, isMobile = false }: TypeHistoryPageChatMetadataProps) => {
+export const HistoryPageChatMetadata = ({
+  chat,
+  file,
+  isMobile = false,
+}: TypeHistoryPageChatMetadataProps) => {
   const title = chat.title || file?.name || "Untitled Chat";
   const fileType = file?.type?.toUpperCase() || "FILE";
-  
+
   const baseClasses = isMobile ? "flex sm:hidden" : "hidden sm:flex";
-  const titleClasses = isMobile 
+  const titleClasses = isMobile
     ? "font-normal text-sm text-white truncate"
     : "font-normal text-base text-white truncate";
   const typeClasses = isMobile
@@ -22,7 +26,9 @@ export const HistoryPageChatMetadata = ({ chat, file, isMobile = false }: TypeHi
             <h3 className={titleClasses}>{title}</h3>
             <span className={typeClasses}>{fileType}</span>
           </div>
-          <div className={`flex items-center gap-3 ${metaTextClasses} text-[#A9A9A9]`}>
+          <div
+            className={`flex items-center gap-3 ${metaTextClasses} text-[#A9A9A9]`}
+          >
             {file?.size && <span>{formatFileSize(file.size)}</span>}
             <span>{formatTimeAgo(chat.created_at)}</span>
           </div>

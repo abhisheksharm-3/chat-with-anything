@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Reusable skeleton loader component for settings pages and dialogs
- * 
+ *
  * @param isMobile - If true, renders mobile-optimized skeleton layout
  */
 export const SettingsLoadingSkeleton = ({ isMobile = false }) => {
@@ -36,7 +36,7 @@ export const SettingsLoadingSkeleton = ({ isMobile = false }) => {
           <Skeleton className="h-6 w-48 bg-gray-600" />
         </div>
       ))}
-      
+
       {/* Current plan section with upgrade button */}
       <div className="flex justify-between items-center pt-2">
         <div className="space-y-2">

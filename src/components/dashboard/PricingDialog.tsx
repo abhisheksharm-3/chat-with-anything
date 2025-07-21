@@ -186,9 +186,7 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
       >
         <div className="p-4 sm:p-6 flex items-center justify-between border-b border-gray-800">
           <div>
-            <DialogTitle className="tracking-tight">
-              Select plan
-            </DialogTitle>
+            <DialogTitle className="tracking-tight">Select plan</DialogTitle>
             <p className="text-muted-foreground text-sm">
               Simple and flexible per-user pricing.
             </p>

@@ -24,7 +24,8 @@ const SignupPage = () => {
    * - `successMessage`: A string for displaying a confirmation message upon successful signup.
    * - `handleSignup`: The function to call when the signup form is submitted.
    */
-  const { isLoading, signupErrorMessage, successMessage, handleSignup } = useAuth();
+  const { isLoading, signupErrorMessage, successMessage, handleSignup } =
+    useAuth();
 
   return (
     <AuthContainer

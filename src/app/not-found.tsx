@@ -14,7 +14,7 @@ const NotFound = () => {
       </div>
 
       {/* Glow Background */}
-      <GlowBackground 
+      <GlowBackground
         glowElements={[
           {
             position: "left-[10%] top-1/3",
@@ -66,8 +66,8 @@ const NotFound = () => {
           {/* Action Button */}
           <div className="flex justify-center items-center pt-4">
             <Link href="/">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="px-8 py-3 font-medium duration-200 cursor-pointer"
               >
                 <Home className="mr-2 h-4 w-4" />

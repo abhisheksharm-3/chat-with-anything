@@ -21,7 +21,7 @@ const Error = ({ error, reset }: ErrorProps) => {
       </div>
 
       {/* Glow Background */}
-      <GlowBackground 
+      <GlowBackground
         glowElements={[
           {
             position: "left-[10%] top-1/3",
@@ -62,14 +62,17 @@ const Error = ({ error, reset }: ErrorProps) => {
               Something went wrong
             </h1>
             <p className="text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
-              We encountered an unexpected error. Don&apos;t worry, our team has been notified and is working to fix it.
+              We encountered an unexpected error. Don&apos;t worry, our team has
+              been notified and is working to fix it.
             </p>
           </div>
 
           {/* Error Details (Development only) */}
           {process.env.NODE_ENV === "development" && (
             <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4 text-left">
-              <h3 className="text-sm font-medium text-destructive mb-2">Error Details:</h3>
+              <h3 className="text-sm font-medium text-destructive mb-2">
+                Error Details:
+              </h3>
               <p className="text-xs text-muted-foreground font-mono break-all">
                 {error.message}
               </p>
@@ -83,19 +86,19 @@ const Error = ({ error, reset }: ErrorProps) => {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button 
+            <Button
               onClick={reset}
-              size="lg" 
+              size="lg"
               className="px-8 py-3 rounded-lg font-medium transition-all duration-200 cursor-pointer"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
               Try Again
             </Button>
-            
+
             <Link href="/">
-              <Button 
-                variant="outline" 
-                size="lg" 
+              <Button
+                variant="outline"
+                size="lg"
                 className="border-border/50 bg-background/50 hover:bg-background/80 text-foreground px-8 py-3 rounded-lg font-medium transition-all duration-200 cursor-pointer"
               >
                 <Home className="mr-2 h-4 w-4" />
@@ -109,4 +112,4 @@ const Error = ({ error, reset }: ErrorProps) => {
   );
 };
 
-export default Error; 
+export default Error;

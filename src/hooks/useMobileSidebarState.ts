@@ -1,7 +1,7 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { useQuery } from '@tanstack/react-query';
+import { useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
-const SIDEBAR_QUERY_KEY = ['sidebar', 'mobile', 'state'];
+const SIDEBAR_QUERY_KEY = ["sidebar", "mobile", "state"];
 
 interface SidebarState {
   isOpen: boolean;
@@ -12,9 +12,9 @@ export const useSidebarState = () => {
 
   const { data: state } = useQuery({
     queryKey: SIDEBAR_QUERY_KEY,
-    queryFn: () => ({ isOpen: false } as SidebarState),
+    queryFn: () => ({ isOpen: false }) as SidebarState,
     staleTime: Infinity, // Never stale
-    gcTime: Infinity,    // Never garbage collect
+    gcTime: Infinity, // Never garbage collect
   });
 
   const updateState = (updater: (prev: SidebarState) => SidebarState) => {

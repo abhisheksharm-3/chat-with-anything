@@ -191,10 +191,7 @@ export const DashboardDesktopHeader = () => {
       {isHistoryPage && <div></div>}
       <PricingDialog
         trigger={
-          <Button
-            size="sm"
-            className="rounded-xl py-5 cursor-pointer"
-          >
+          <Button size="sm" className="rounded-xl py-5 cursor-pointer">
             Upgrade plan
             <span className="ml-2 text-xs bg-primary-foreground/20 text-primary-foreground font-semibold px-1.5 py-0.5 rounded">
               PRO

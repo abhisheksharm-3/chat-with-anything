@@ -5,7 +5,11 @@ import { HistoryPageSkeletonConfigs } from "@/constants/HistoryPage";
 /**
  * Reusable skeleton element component
  */
-const SkeletonElement = ({ height, width, className = "" }: TypeSkeletonConfig) => (
+const SkeletonElement = ({
+  height,
+  width,
+  className = "",
+}: TypeSkeletonConfig) => (
   <Skeleton className={`${height} ${width} bg-[#333] rounded ${className}`} />
 );
 
@@ -15,7 +19,7 @@ const SkeletonElement = ({ height, width, className = "" }: TypeSkeletonConfig) 
 const MobileSkeletonMeta = () => {
   const mobileItems: TypeSkeletonConfig[] = [
     HistoryPageSkeletonConfigs.mobileSize,
-    HistoryPageSkeletonConfigs.mobileTime
+    HistoryPageSkeletonConfigs.mobileTime,
   ];
 
   return (
@@ -33,7 +37,7 @@ const MobileSkeletonMeta = () => {
 const DesktopSkeletonMeta = () => {
   const desktopItems: TypeSkeletonConfig[] = [
     HistoryPageSkeletonConfigs.desktopSize,
-    HistoryPageSkeletonConfigs.desktopTime
+    HistoryPageSkeletonConfigs.desktopTime,
   ];
 
   return (
@@ -51,7 +55,7 @@ const DesktopSkeletonMeta = () => {
 export const HistoryChatlistSkeletonItem = () => {
   const mainSkeletonItems: TypeSkeletonConfig[] = [
     HistoryPageSkeletonConfigs.title,
-    HistoryPageSkeletonConfigs.badge
+    HistoryPageSkeletonConfigs.badge,
   ];
 
   return (

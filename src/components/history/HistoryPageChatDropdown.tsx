@@ -1,10 +1,18 @@
 import { TypeHistoryPageChatDropdownProps } from "@/types/ui";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { MoreVertical } from "lucide-react";
 import { HistoryPageDropdownActions } from "@/constants/HistoryPage";
 
-export const HistorypageChatDropdown = ({ chat, file }: TypeHistoryPageChatDropdownProps) => (
+export const HistorypageChatDropdown = ({
+  chat,
+  file,
+}: TypeHistoryPageChatDropdownProps) => (
   <div className="absolute top-3 right-3 sm:top-4 sm:right-4 transition-opacity">
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

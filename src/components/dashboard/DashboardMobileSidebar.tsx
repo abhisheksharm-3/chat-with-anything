@@ -19,57 +19,53 @@ import { usePathname } from "next/navigation";
  * @param {string} props.pathname - The current URL path to highlight the active link.
  * @param {() => void} props.onItemClick - Callback executed when a navigation item is clicked, used to close the sidebar.
  */
-const MobileNavigation = ({
-  onItemClick,
-}: {
-  onItemClick: () => void;
-}) => {
+const MobileNavigation = ({ onItemClick }: { onItemClick: () => void }) => {
   const pathname = usePathname();
   return (
     <nav className="flex-1 p-6">
-    <div className="space-y-1">
-      {MobileNavItems.map(
-        ({ href, icon: IconComponent, title, description }) => {
-          const Icon = IconComponent as LucideIcon;
-          const isActive = pathname === href;
+      <div className="space-y-1">
+        {MobileNavItems.map(
+          ({ href, icon: IconComponent, title, description }) => {
+            const Icon = IconComponent as LucideIcon;
+            const isActive = pathname === href;
 
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-200 ${
-                isActive
-                  ? "bg-[#2a2a2a] text-white shadow-sm"
-                  : "text-gray-400 hover:text-white hover:bg-[#1f1f1f] active:bg-[#2a2a2a]"
-              }`}
-              onClick={onItemClick}
-            >
-              <div
-                className={`flex-shrink-0 w-10 h-10 rounded-full bg-[#181818] flex items-center justify-center ${
-                  isActive ? "text-white" : "text-gray-400"
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-200 ${
+                  isActive
+                    ? "bg-[#2a2a2a] text-white shadow-sm"
+                    : "text-gray-400 hover:text-white hover:bg-[#1f1f1f] active:bg-[#2a2a2a]"
                 }`}
+                onClick={onItemClick}
               >
-                <Icon size={20} strokeWidth={1.5} />
-              </div>
-              <div className="flex-1 min-w-0">
                 <div
-                  className={`text-base font-medium leading-5 ${
-                    isActive ? "text-white" : "text-gray-300"
+                  className={`flex-shrink-0 w-10 h-10 rounded-full bg-[#181818] flex items-center justify-center ${
+                    isActive ? "text-white" : "text-gray-400"
                   }`}
                 >
-                  {title}
+                  <Icon size={20} strokeWidth={1.5} />
                 </div>
-                <div className="text-sm text-gray-500 leading-4 mt-0.5">
-                  {description}
+                <div className="flex-1 min-w-0">
+                  <div
+                    className={`text-base font-medium leading-5 ${
+                      isActive ? "text-white" : "text-gray-300"
+                    }`}
+                  >
+                    {title}
+                  </div>
+                  <div className="text-sm text-gray-500 leading-4 mt-0.5">
+                    {description}
+                  </div>
                 </div>
-              </div>
-            </Link>
-          );
-        },
-      )}
-    </div>
-  </nav>
-  )
+              </Link>
+            );
+          },
+        )}
+      </div>
+    </nav>
+  );
 };
 
 /**
@@ -141,11 +137,10 @@ const UserProfile = ({
  * @param {string} props.pathname - The current URL path, passed to the navigation component.
  */
 export const DashboardMobileSidebar = () => {
-  
   // User data fetching moved from layout to this component
   const { user, isLoading } = useUser();
 
-    const { isOpen, closeSidebar } = useSidebarState();
+  const { isOpen, closeSidebar } = useSidebarState();
 
   const handleClose = () => {
     closeSidebar();

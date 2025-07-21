@@ -39,7 +39,11 @@ export interface TypeSectionHeaderProps {
 export interface TypeDropdownAction {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
-  handler: (e: React.MouseEvent, chat: TypeChat, file?: { name?: string }) => void;
+  handler: (
+    e: React.MouseEvent,
+    chat: TypeChat,
+    file?: { name?: string },
+  ) => void;
 }
 
 export interface TypeSkeletonConfig {

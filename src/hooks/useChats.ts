@@ -47,7 +47,7 @@ export const useChats = (chatId?: string) => {
           return createChatError(
             "Authentication expired. Please log in again.",
             "AUTH_EXPIRED",
-            401
+            401,
           );
         }
 
@@ -59,7 +59,7 @@ export const useChats = (chatId?: string) => {
           return createChatError(
             "Network error. Please check your connection.",
             "NETWORK_ERROR",
-            0
+            0,
           );
         }
 
@@ -69,10 +69,10 @@ export const useChats = (chatId?: string) => {
       return createChatError(
         `Unknown error in ${context}`,
         "UNKNOWN_ERROR",
-        500
+        500,
       );
     },
-    [router]
+    [router],
   );
 
   // Validation helper
@@ -84,7 +84,7 @@ export const useChats = (chatId?: string) => {
       throw createChatError(
         "Database connection not available",
         "NO_SUPABASE",
-        500
+        500,
       );
     }
   }, [userId, supabase]);
@@ -98,7 +98,7 @@ export const useChats = (chatId?: string) => {
         console.error("Error updating chat list cache:", error);
       }
     },
-    [queryClient]
+    [queryClient],
   );
 
   const addChatToCache = useCallback(
@@ -108,7 +108,7 @@ export const useChats = (chatId?: string) => {
         return [newChat, ...oldData];
       });
     },
-    [updateChatListCache]
+    [updateChatListCache],
   );
 
   const updateChatInCache = useCallback(
@@ -116,18 +116,18 @@ export const useChats = (chatId?: string) => {
       // Update single chat cache
       queryClient.setQueryData(
         [...CHATS_QUERY_KEY, updatedChat.id],
-        updatedChat
+        updatedChat,
       );
 
       // Update list cache
       updateChatListCache((oldData) => {
         if (!Array.isArray(oldData)) return [updatedChat];
         return oldData.map((chat) =>
-          chat.id === updatedChat.id ? updatedChat : chat
+          chat.id === updatedChat.id ? updatedChat : chat,
         );
       });
     },
-    [queryClient, updateChatListCache]
+    [queryClient, updateChatListCache],
   );
 
   const removeChatFromCache = useCallback(
@@ -138,7 +138,7 @@ export const useChats = (chatId?: string) => {
         return oldData.filter((chat) => chat.id !== chatId);
       });
     },
-    [queryClient, updateChatListCache]
+    [queryClient, updateChatListCache],
   );
 
   // --- QUERIES ---
@@ -164,7 +164,7 @@ export const useChats = (chatId?: string) => {
           throw createChatError(
             "Invalid data format received",
             "INVALID_DATA",
-            500
+            500,
           );
         }
 
@@ -190,7 +190,7 @@ export const useChats = (chatId?: string) => {
           throw createChatError(
             "Invalid chat ID provided",
             "INVALID_CHAT_ID",
-            400
+            400,
           );
         }
 
@@ -228,7 +228,7 @@ export const useChats = (chatId?: string) => {
           throw createChatError(
             "Valid file ID is required",
             "INVALID_FILE_ID",
-            400
+            400,
           );
         }
 
@@ -251,7 +251,7 @@ export const useChats = (chatId?: string) => {
           throw createChatError(
             "File access denied",
             "FILE_ACCESS_DENIED",
-            403
+            403,
           );
         }
 
@@ -261,7 +261,7 @@ export const useChats = (chatId?: string) => {
           throw createChatError(
             "Failed to create chat - invalid response",
             "INVALID_CHAT_RESPONSE",
-            500
+            500,
           );
         }
 
@@ -277,7 +277,7 @@ export const useChats = (chatId?: string) => {
   /** Mutation to create a new chat record directly. */
   const createChatMutation = useMutation({
     mutationFn: async (
-      chatData: Omit<TypeChat, "id" | "user_id" | "created_at">
+      chatData: Omit<TypeChat, "id" | "user_id" | "created_at">,
     ) => {
       try {
         validateUserAuth();
@@ -298,7 +298,7 @@ export const useChats = (chatId?: string) => {
           throw createChatError(
             "No data returned from chat creation",
             "NO_DATA_RETURNED",
-            500
+            500,
           );
         }
 
@@ -327,7 +327,7 @@ export const useChats = (chatId?: string) => {
           throw createChatError(
             "Valid chat ID is required",
             "INVALID_CHAT_ID",
-            400
+            400,
           );
         }
 
@@ -349,7 +349,7 @@ export const useChats = (chatId?: string) => {
           throw createChatError(
             "Chat not found or access denied",
             "CHAT_NOT_FOUND",
-            404
+            404,
           );
         }
 
@@ -372,7 +372,7 @@ export const useChats = (chatId?: string) => {
           throw createChatError(
             "Valid chat ID is required",
             "INVALID_CHAT_ID",
-            400
+            400,
           );
         }
 
@@ -419,7 +419,7 @@ export const useChats = (chatId?: string) => {
         return undefined;
       }
     },
-    [queryClient, chatsQuery.data]
+    [queryClient, chatsQuery.data],
   );
 
   const handleDeleteChat = useCallback(
@@ -429,7 +429,7 @@ export const useChats = (chatId?: string) => {
           throw createChatError(
             "Valid chat ID is required",
             "INVALID_CHAT_ID",
-            400
+            400,
           );
         }
 
@@ -442,7 +442,7 @@ export const useChats = (chatId?: string) => {
         setDeletingId(null);
       }
     },
-    [deleteChatMutation, handleError]
+    [deleteChatMutation, handleError],
   );
 
   return {
