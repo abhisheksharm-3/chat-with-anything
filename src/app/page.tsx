@@ -3,7 +3,7 @@ import Footer from "@/components/landing-page/Footer";
 import Hero from "@/components/landing-page/Hero";
 import Pricing from "@/components/landing-page/Pricing";
 import Navbar from "@/components/landing-page/Navbar";
-import Faqs from "@/components/landing-page/Faqs";
+import Faqs from "@/components/landing-page/Faq";
 
 /**
  * Renders the main landing page of the application.
