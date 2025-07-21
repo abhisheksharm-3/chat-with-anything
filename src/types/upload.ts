@@ -45,6 +45,7 @@ export interface TypeUploadModalErrorProps {
   isRetrying?: boolean;
   retryCount?: number;
   onContactSupport?: () => void;
+  onDismiss?: () => void;
 }
 
 export interface TypeUploadModalProps {

@@ -1,12 +1,11 @@
 "use client";
 
-import { RefreshCw, HelpCircle } from "lucide-react";
+import { RefreshCw, HelpCircle, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { useState } from "react";
 import { TypeDetailUploadErrorField, TypeUploadError, TypeUploadModalErrorProps } from "@/types/upload";
 import { getUploadErrorColorClasses, getUploadErrorIcon, getUploadErrorTitle } from "@/utils/upload-utils";
 import { UploadErrorDetailFields, UploadErrorHelpConfig } from "@/constants/UploadErrorConfig";
-
 
 /**
  * Enhanced error component that provides contextual error messages, icons, and actions
@@ -19,6 +18,7 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
   isRetrying = false,
   retryCount = 0,
   onContactSupport,
+  onDismiss,
 }) => {
   const [showDetails, setShowDetails] = useState(false);
   const MaxRetries = 3;
@@ -94,7 +94,20 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
   const shouldShowSupport = (retryCount >= MaxRetries || errorObj.type === 'server') && onContactSupport;
 
   return (
-    <div className={`border border-dashed ${colorClasses.border} ${colorClasses.bg} rounded-lg p-6 text-center mb-4`}>
+    <div className={`relative border border-dashed ${colorClasses.border} ${colorClasses.bg} rounded-lg p-6 text-center mb-4`}>
+      {/* Dismiss Button */}
+      {onDismiss && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onDismiss}
+          className="absolute top-2 right-2 h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+          aria-label="Dismiss error"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
+
       {/* Error Header */}
       <div className="flex items-center justify-center mb-3">
         {getUploadErrorIcon(errorObj.type)}
@@ -163,6 +176,18 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
             className="text-blue-500 hover:text-blue-700"
           >
             Contact Support
+          </Button>
+        )}
+
+        {/* Dismiss Button (alternative placement) */}
+        {onDismiss && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDismiss}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            Dismiss
           </Button>
         )}
       </div>

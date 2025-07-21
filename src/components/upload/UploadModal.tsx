@@ -70,10 +70,20 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
     handleUrlSubmit,
     handleKeyDown,
     isUploading,
+    resetState,
   } = useUploadLogic({
     fileType,
     onClose: handleClose,
   });
+
+  /**
+   * Handles dismissing the error and resetting to idle state
+   */
+  const handleDismissError = () => {
+    if (resetState) {
+      resetState(); // Reset to idle state
+    }
+  };
 
   // Render guards for authentication and feature availability
   if (!isAuthenticated) {
@@ -182,7 +192,11 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
             />
           )}
           {uploadStatus === "error" && (
-            <UploadModalError error={error} handleRetry={handleRetry} />
+            <UploadModalError 
+              error={error} 
+              handleRetry={handleRetry}
+              onDismiss={handleDismissError}
+            />
           )}
 
           {/* OR divider */}
