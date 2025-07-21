@@ -1,3 +1,4 @@
+// components/dashboard/SettingsDialog.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -15,6 +16,8 @@ import { TypeDialogProps } from "@/types/ui";
 import { Input } from "../ui/input";
 import { useUser } from "@/hooks/useUser";
 import useIsMobile from "@/hooks/useIsMobile";
+import { SettingsSections } from "@/constants/SettingsData";
+import { SettingsLoadingSkeleton } from "../settings/SettingsLoadingSkeleton";
 
 /**
  * A dialog for viewing and editing user account settings.
@@ -86,6 +89,79 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
     }
   };
 
+  /**
+   * Renders a settings section based on configuration
+   */
+  const renderSettingsSection = (section: typeof SettingsSections[0]) => {
+    const value = user?.[section.key] || section.fallback;
+    const isDisplayName = section.id === 'displayName';
+
+    if (isDisplayName && isEditing) {
+      return (
+        <form
+          onSubmit={handleUpdateName}
+          className="flex gap-2 items-center"
+        >
+          <Input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="bg-[#1a1a1a] border border-gray-700 rounded px-2 py-1 text-sm w-full"
+            placeholder={section.placeholder}
+            disabled={isUpdating}
+          />
+          <Button
+            type="submit"
+            size="sm"
+            disabled={isUpdating}
+            className="text-xs"
+          >
+            {isUpdating ? (
+              <>
+                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save"
+            )}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setIsEditing(false);
+              setName(user?.name || "");
+            }}
+            className="text-xs"
+            disabled={isUpdating}
+          >
+            Cancel
+          </Button>
+        </form>
+      );
+    }
+
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <p className="text-[#A9A9A9] text-sm">{section.label}</p>
+          {section.editable && !isEditing && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsEditing(true)}
+              className="text-xs text-primary hover:text-primary/90"
+            >
+              Edit
+            </Button>
+          )}
+        </div>
+        <p>{value}</p>
+      </div>
+    );
+  };
+
   // On mobile, render only the trigger. The redirection is handled by the useEffect hook.
   if (isMounted && isMobile) {
     return trigger ? <>{trigger}</> : null;
@@ -120,84 +196,17 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
           </div>
         </div>
 
-        <div className="px-6 pb-6 space-y-6 font-medium text-lg">
+        <div className="font-medium text-lg">
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="ml-2 text-sm text-gray-400">
-                Loading account details...
-              </span>
-            </div>
+            <SettingsLoadingSkeleton isMobile={false} />
           ) : (
-            <>
-              {/* Display Name Section */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <p className="text-[#A9A9A9] text-sm">Display name</p>
-                  {!isEditing && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsEditing(true)}
-                      className="text-xs text-primary hover:text-primary/90"
-                    >
-                      Edit
-                    </Button>
-                  )}
+            <div className="px-6 pb-6 space-y-6">
+              {/* Render settings sections using array */}
+              {SettingsSections.map((section) => (
+                <div key={section.id}>
+                  {renderSettingsSection(section)}
                 </div>
-
-                {isEditing ? (
-                  <form
-                    onSubmit={handleUpdateName}
-                    className="flex gap-2 items-center"
-                  >
-                    <Input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="bg-[#1a1a1a] border border-gray-700 rounded px-2 py-1 text-sm w-full"
-                      placeholder="Your name"
-                      disabled={isUpdating}
-                    />
-                    <Button
-                      type="submit"
-                      size="sm"
-                      disabled={isUpdating}
-                      className="text-xs"
-                    >
-                      {isUpdating ? (
-                        <>
-                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        "Save"
-                      )}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setIsEditing(false);
-                        setName(user?.name || "");
-                      }}
-                      className="text-xs"
-                      disabled={isUpdating}
-                    >
-                      Cancel
-                    </Button>
-                  </form>
-                ) : (
-                  <p>{user?.name || "Not set"}</p>
-                )}
-              </div>
-
-              {/* Email Address Section */}
-              <div className="space-y-1">
-                <p className="text-[#A9A9A9] text-sm">Email Address</p>
-                <p>{user?.email || "Not available"}</p>
-              </div>
+              ))}
 
               {/* Current Plan Section */}
               <div className="flex justify-between items-center">
@@ -220,7 +229,7 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
                   }
                 />
               </div>
-            </>
+            </div>
           )}
         </div>
       </DialogContent>

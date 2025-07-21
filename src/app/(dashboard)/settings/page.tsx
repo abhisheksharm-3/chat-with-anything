@@ -1,13 +1,15 @@
+// app/settings/page.tsx or components/SettingsPage.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
 import PricingDialog from "@/components/dashboard/PricingDialog";
 import LogoutDialog from "@/components/dashboard/LogoutDialog";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import useIsMobile from "@/hooks/useIsMobile";
+import { SettingsLoadingSkeleton } from "@/components/settings/SettingsLoadingSkeleton";
+import { MobileSettingsSections } from "@/constants/SettingsData";
 
 /**
  * Renders the user account settings page, designed specifically for mobile devices.
@@ -23,7 +25,6 @@ const SettingsPage = () => {
   const [, setName] = useState("");
   const isMobile = useIsMobile();
   const router = useRouter();
-  // State to track if the component has mounted on the client, preventing hydration errors.
   const [isMounted, setIsMounted] = useState(false);
 
   /**
@@ -70,50 +71,35 @@ const SettingsPage = () => {
       </div>
 
       {/* Main content area - centered */}
-      <div className="flex-1 flex items-center justify-center px-6">
-        <div className="w-full max-w-md space-y-6 font-medium text-lg text-center">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="ml-2 text-sm text-gray-400">
-                Loading account details...
-              </span>
+      {isLoading ? (
+        <SettingsLoadingSkeleton isMobile={true} />
+      ) : (
+        <div className="flex-1 flex items-center justify-center px-6">
+          <div className="w-full max-w-md space-y-6 font-medium text-lg text-center">
+            {/* Render settings sections using array */}
+            {MobileSettingsSections.map((section) => (
+              <div key={section.id} className="space-y-1 text-lg">
+                <p className="text-[#A9A9A9]">{section.label}</p>
+                <p>{section.getUserValue(user)}</p>
+              </div>
+            ))}
+
+            {/* Upgrade Plan Button */}
+            <div className="mt-10">
+              <PricingDialog
+                trigger={
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-6 cursor-pointer font-bold text-sm w-fit">
+                    Upgrade plan
+                    <span className="text-xs bg-primary-foreground/20 text-primary-foreground font-semibold px-1.5 py-0.5 rounded">
+                      PRO
+                    </span>
+                  </Button>
+                }
+              />
             </div>
-          ) : (
-            <>
-              {/* Display Name Section */}
-              <div className="space-y-1 text-lg">
-                <p className="text-[#A9A9A9]">Display name</p>
-                <p>{user?.name || "Not set"}</p>
-              </div>
-
-              {/* Email and Plan Sections */}
-              <div className="space-y-1 text-lg">
-                <p className="text-[#A9A9A9]">Email Address</p>
-                <p>{user?.email || "Not available"}</p>
-              </div>
-              <div className="space-y-1 text-lg">
-                <p className="text-[#A9A9A9]">Current Plan</p>
-                <p>Free</p>
-              </div>
-
-              {/* Upgrade Plan Button */}
-              <div className="mt-10">
-                <PricingDialog
-                  trigger={
-                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl py-6 cursor-pointer font-bold text-sm w-fit">
-                      Upgrade plan
-                      <span className="text-xs bg-primary-foreground/20 text-primary-foreground font-semibold px-1.5 py-0.5 rounded">
-                        PRO
-                      </span>
-                    </Button>
-                  }
-                />
-              </div>
-            </>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Logout button fixed at the bottom */}
       <div className="px-12 pb-16 pt-4">
