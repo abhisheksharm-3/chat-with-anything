@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { TypeChatInterfaceMessagesProps } from "@/types/chat";
 import Image from "next/image";
 import { getUserInitials } from "@/utils/dashboard-utils";
-import { useUser } from "@/hooks";
+import { useUser } from "@/hooks/useUser";
 
 /**
  * Renders the main message display area for the chat interface.
@@ -118,8 +118,7 @@ export const ChatInterfaceMessages: React.FC<
               {/* "Thinking" indicator */}
               {message.content === "..." ? (
                 <div className="flex items-center">
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  <span>AI is thinking...</span>
+                  <span className="tracking-widest">...</span>
                 </div>
               ) : (
                 <div className="whitespace-pre-wrap break-words">

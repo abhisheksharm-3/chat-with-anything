@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Search, Plus, Send, AlertCircle, RefreshCw } from "lucide-react";
-import { useChats } from "@/hooks";
+import { useChats } from "@/hooks/useChats";
 import { Input } from "@/components/ui/input";
 import { HistoryPageSkeletonItems } from "@/constants/HistoryPage";
 import { HistoryChatlistSkeletonItem } from "@/components/history/HistoryPageSkeletonLoader";

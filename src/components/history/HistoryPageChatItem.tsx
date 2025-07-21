@@ -1,4 +1,4 @@
-import { useFileById } from "@/hooks";
+import { useFileById } from "@/hooks/useFiles";
 import { TypeChat } from "@/types/supabase";
 import { HistoryPageChatMetadata } from "./HistoryPageChatMetadata";
 import { HistorypageChatDropdown } from "./HistoryPageChatDropdown";

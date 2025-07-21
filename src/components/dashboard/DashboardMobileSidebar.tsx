@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import PricingDialog from "@/components/dashboard/PricingDialog";
 import { MobileNavItems } from "@/constants/NavItems";
 import { TypeUser } from "@/types/supabase";
-import { useUser } from "@/hooks";
+import { useUser } from "@/hooks/useUser";
 import avatarImage from "@/assets/images/avatar.svg";
 import { useSidebarState } from "@/hooks/useMobileSidebarState";
 import { usePathname } from "next/navigation";

@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import PricingDialog from "@/components/dashboard/PricingDialog";
 import LogoutDialog from "@/components/dashboard/LogoutDialog";
-import { useUser, useIsMobile } from "@/hooks";
 import { useRouter } from "next/navigation";
+import { useUser } from "@/hooks/useUser";
+import useIsMobile from "@/hooks/useIsMobile";
 
 /**
  * Renders the user account settings page, designed specifically for mobile devices.

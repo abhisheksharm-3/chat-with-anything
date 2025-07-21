@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ChatInterface from "@/components/chat/ChatInterface";
-import { useChats } from "@/hooks";
 import { Loader2 } from "lucide-react";
+import { useChats } from "@/hooks/useChats";
 
 /**
  * Renders the page for an individual chat session.

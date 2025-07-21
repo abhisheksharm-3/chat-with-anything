@@ -39,8 +39,12 @@ export interface TypeUploadModalUrlInputProps {
 }
 
 export interface TypeUploadModalErrorProps {
-  error: string;
+  error: TypeUploadError | string | null | undefined;
   handleRetry: () => void;
+  canRetry?: boolean;
+  isRetrying?: boolean;
+  retryCount?: number;
+  onContactSupport?: () => void;
 }
 
 export interface TypeUploadModalProps {
@@ -52,4 +56,24 @@ export interface TypeUploadModalProps {
 export interface TypeUseUploadLogicProps {
   fileType: string;
   onClose: () => void;
+}
+
+export type TypeUploadStatus = "idle" | "uploading" | "uploaded" | "error";
+
+// Enhanced error types for better error categorization
+export interface TypeUploadError {
+  type: 'validation' | 'network' | 'server' | 'auth' | 'file_processing' | 'chat_creation' | 'unknown';
+  message: string;
+  originalError?: unknown;
+  retryable?: boolean;
+  userAction?: string;
+}
+
+export interface TypeDetailUploadErrorField {
+  key: string;
+  label: string;
+  getValue: (error: TypeUploadError, retryCount?: number) => unknown;
+  condition?: (error: TypeUploadError, retryCount?: number) => boolean;
+  isCodeBlock?: boolean;
+  className?: string;
 }

@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useMessages, useChats, useFileById } from "@/hooks";
 import { TypeMessage } from "@/types/supabase";
 import { TypeChatInterfaceProps } from "@/types/chat";
 import { ChatInterfaceMessages } from "./ChatInterfaceMessage";
 import { ChatInterfaceInput } from "./ChatInterfaceInput";
 import { ChatInterfaceDocumentViewer } from "./ChatInterfaceDocumentViewer";
 import { ChatInterfaceMobileTabs } from "./ChatInterfaceMobileTabs";
+import { useMessages } from "@/hooks/useMessages";
+import { useChats } from "@/hooks/useChats";
+import { useFileById } from "@/hooks/useFiles";
 
 /**
  * The main component for the chat interface, orchestrating the document viewer,

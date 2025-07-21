@@ -79,3 +79,13 @@ export const FileTypes: TypeFileTypeConfig[] = [
 export const getFileTypeConfig = (fileType: string): TypeFileTypeConfig => {
   return FileTypes.find((ft) => ft.type === fileType) || FileTypes[0];
 };
+
+// Helper function to get all accepted file types
+export const getAllAcceptedFileTypes = (): string[] => {
+  return FileTypes.reduce((acc, ft) => {
+    if (ft.accept) {
+      acc.push(...ft.accept.split(","));
+    }
+    return acc;
+  }, [] as string[]);
+}

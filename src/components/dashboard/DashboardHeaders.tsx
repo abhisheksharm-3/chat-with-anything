@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { File, Plus, ChevronsRight, ChevronsLeft } from "lucide-react";
 import PricingDialog from "@/components/dashboard/PricingDialog";
 import { TypeChat, TypeFile } from "@/types/supabase";
-import { useChats, useFileById } from "@/hooks";
 import { useSidebarState } from "@/hooks/useMobileSidebarState";
+import { useChats } from "@/hooks/useChats";
+import { useFileById } from "@/hooks/useFiles";
 
 /**
  * Renders the application logo for the mobile header.

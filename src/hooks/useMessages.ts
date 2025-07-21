@@ -62,27 +62,93 @@ export const useMessages = (chatId: string) => {
   });
 
   /** Mutation to send a user's message to the AI backend via a server action. */
-  const sendMessageMutation = useMutation({
-    mutationFn: async (content: string) => {
-      if (!isValidChatId) throw new Error("No chat ID provided");
-      if (!userId) throw new Error("No authenticated user");
+/** Mutation to send a user's message to the AI backend via a server action. */
+const sendMessageMutation = useMutation({
+  mutationFn: async (content: string) => {
+    if (!isValidChatId) throw new Error("No chat ID provided");
+    if (!userId) throw new Error("No authenticated user");
 
-      // Convert current messages to ChatMessage format for Gemini
-      const currentMessages = messagesQuery.data || [];
-      const formattedMessages: ChatMessage[] = currentMessages.map((msg) => ({
-        role: msg.role === "user" ? "user" : "model",
-        content: msg.content,
-      }));
+    // Convert current messages to ChatMessage format for Gemini (excluding temporary ones)
+    const currentMessages = (messagesQuery.data || []).filter(msg => 
+      !msg.id.startsWith('temp-') && msg.content !== '...'
+    );
+    const formattedMessages: ChatMessage[] = currentMessages.map((msg) => ({
+      role: msg.role === "user" ? "user" : "model",
+      content: msg.content,
+    }));
 
-      return await sendMessageToGemini(chatId, content, formattedMessages);
-    },
-    onSuccess: () => {
-      // Invalidate the messages query to refetch the conversation, including the AI's response.
-      queryClient.invalidateQueries({
-        queryKey: [...MESSAGES_QUERY_KEY, chatId],
-      });
-    },
-  });
+    const result = await sendMessageToGemini(chatId, content, formattedMessages);
+    
+    // Add a small delay to ensure the server has processed and saved the messages
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    return result;
+  },
+  onMutate: async (content: string) => {
+    // Cancel any outgoing refetches to avoid conflicts
+    await queryClient.cancelQueries({ queryKey: [...MESSAGES_QUERY_KEY, chatId] });
+
+    // Snapshot the previous value for rollback
+    const previousMessages = queryClient.getQueryData([...MESSAGES_QUERY_KEY, chatId]) as TypeMessage[] | undefined;
+
+    // Create temporary user message
+    const tempUserMessage: TypeMessage = {
+      id: `temp-user-${Date.now()}`,
+      chat_id: chatId,
+      role: "user",
+      content: content,
+      created_at: new Date().toISOString(),
+    };
+
+    // Create temporary AI thinking message
+    const tempAiMessage: TypeMessage = {
+      id: `temp-ai-${Date.now()}`,
+      chat_id: chatId,
+      role: "assistant",
+      content: "...",
+      created_at: new Date().toISOString(),
+    };
+
+    // Update cache with temporary messages
+    queryClient.setQueryData(
+      [...MESSAGES_QUERY_KEY, chatId],
+      (oldData: TypeMessage[] | undefined) => {
+        const currentData = oldData || [];
+        // Remove any existing temporary messages
+        const cleanData = currentData.filter(msg => 
+          !msg.id.startsWith('temp-')
+        );
+        return [...cleanData, tempUserMessage, tempAiMessage];
+      }
+    );
+
+    return { previousMessages };
+  },
+  onError: (err, variables, context) => {
+    // Rollback on error
+    if (context?.previousMessages) {
+      queryClient.setQueryData([...MESSAGES_QUERY_KEY, chatId], context.previousMessages);
+    }
+  },
+  onSuccess: async () => {
+    // Force invalidate and refetch to get the latest data from server
+    await queryClient.invalidateQueries({ 
+      queryKey: [...MESSAGES_QUERY_KEY, chatId],
+      exact: true
+    });
+  },
+  onSettled: () => {
+    // Final cleanup - remove any lingering temporary messages
+    queryClient.setQueryData(
+      [...MESSAGES_QUERY_KEY, chatId],
+      (oldData: TypeMessage[] | undefined) => {
+        if (!oldData) return [];
+        const cleaned = oldData.filter(msg => !msg.id.startsWith('temp-'));
+        return cleaned;
+      }
+    );
+  },
+});
 
   /** Mutation to create a message directly in the database, bypassing the AI. */
   const createMessageMutation = useMutation({

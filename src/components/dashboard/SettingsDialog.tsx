@@ -10,10 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2, X } from "lucide-react";
 import PricingDialog from "./PricingDialog";
-import { useUser, useIsMobile } from "@/hooks";
 import { useRouter } from "next/navigation";
 import { TypeDialogProps } from "@/types/ui";
 import { Input } from "../ui/input";
+import { useUser } from "@/hooks/useUser";
+import useIsMobile from "@/hooks/useIsMobile";
 
 /**
  * A dialog for viewing and editing user account settings.
