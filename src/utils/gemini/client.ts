@@ -26,7 +26,7 @@ export const getGeminiModel = () =>
   genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 // Check if the API is configured
-export const isConfigured = () => !!API_KEY;
+export const isGeminiConfigured = () => !!API_KEY;
 
 // Function to create a chat session
 export const createChatSession = () => {
@@ -69,7 +69,7 @@ export const sendMessageToGemini = async (
   imageData?: ImageData,
 ) => {
   try {
-    if (!isConfigured()) {
+    if (!isGeminiConfigured()) {
       throw new Error("Gemini API key is not configured");
     }
 

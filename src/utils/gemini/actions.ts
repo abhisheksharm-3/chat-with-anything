@@ -4,11 +4,11 @@ import { revalidatePath } from "next/cache";
 import {
   ChatMessage,
   sendMessageToGemini,
-  isConfigured,
+  isGeminiConfigured,
   ImageData,
 } from "@/utils/gemini/client";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
-import { getFileContent, getImageData } from "../gemini-utils";
+import { getFileContent, getImageData } from "../file-processing-utils";
 import { queryDocuments } from "../processors";
 
 /**
@@ -23,7 +23,7 @@ export const createChat = async (fileId: string, userId?: string) => {
   console.log("createChat called with:", { fileId, userId });
 
   // Check if Gemini API is configured
-  if (!isConfigured()) {
+  if (!isGeminiConfigured()) {
     console.error("Gemini API not configured");
     throw new Error(
       "Gemini API is not configured. Please set the GEMINI_API_KEY environment variable.",
@@ -159,7 +159,7 @@ export const sendMessage = async (
     }
 
     // Check if Gemini is configured
-    if (!isConfigured()) {
+    if (!isGeminiConfigured()) {
       const errorMessage =
         "Gemini API is not configured. Please check your environment variables.";
       console.error(errorMessage);
