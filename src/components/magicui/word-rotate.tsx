@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, MotionProps } from "motion/react";
 import { useEffect, useState } from "react";
 
-import { cn } from "@/utils/utils";
+import { cn } from "@/utils/cn";
 
 interface WordRotateProps {
   words: string[];
