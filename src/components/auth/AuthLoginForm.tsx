@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { loginSchema, TypeLoginFormValues } from "../../schemas/auth";
+import { loginSchema, TypeLoginFormValues } from "../../schemas/AuthSchema";
 import { AuthPasswordInput } from "./AuthPasswordInput";
 import { TypeLoginFormProps } from "@/types/TypeAuth";
 

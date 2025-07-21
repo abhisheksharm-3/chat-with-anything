@@ -32,3 +32,8 @@ export type TypeSpreadsheetRow = (
   | undefined
 )[];
 export type TypeSpreadsheetData = TypeSpreadsheetRow[];
+
+export interface TypeGeminiImageData {
+  buffer: Buffer;
+  mimeType: string;
+}

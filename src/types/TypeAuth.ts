@@ -1,5 +1,5 @@
 import { EnumAuthErrorType } from "@/constants/EnumAuthErrorTypes";
-import { TypeLoginFormValues, TypeSignupFormValues } from "@/schemas/auth";
+import { TypeLoginFormValues, TypeSignupFormValues } from "@/schemas/AuthSchema";
 
 export interface TypeLoginFormData {
   email: string;
