@@ -1,4 +1,5 @@
 "use client";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -17,20 +18,18 @@ import { AuthPasswordInput } from "./AuthPasswordInput";
 import { AuthStatusMessage } from "./AuthStatusMessage";
 import { useAuth } from "@/hooks/useAuth";
 
-/**
- * Defines the shared CSS classes for the form's input fields for a consistent look.
- */
+/** Shared styling for form inputs to ensure a consistent appearance. */
 const inputClassName =
   "bg-[#1a1a1a] border-gray-700 text-white focus-visible:ring-primary";
 
 /**
- * Renders a user login form with email and password fields.
+ * Renders the user login form.
  *
- * This component uses `react-hook-form` for state management and `zod` for
- * validation. It handles UI state for submission, such as displaying a loader
- * and disabling the submit button. It also displays error messages related to login.
+ * Manages form state with `react-hook-form` and validates input using a Zod schema.
+ * It connects to the `useAuth` hook to handle the submission logic, loading state,
+ * and display of any server-side error messages.
  *
- * @returns {React.ReactElement} The rendered login form.
+ * @returns {JSX.Element} The login form component.
  */
 export const AuthLoginForm = () => {
   const form = useForm<TypeLoginFormValues>({
@@ -45,7 +44,7 @@ export const AuthLoginForm = () => {
 
   return (
     <>
-      {/* Display error message if present */}
+      {/* Display global error message from the API if present */}
       {loginErrorMessage && (
         <AuthStatusMessage message={loginErrorMessage} type="error" />
       )}

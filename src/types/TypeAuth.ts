@@ -19,6 +19,7 @@ export interface TypePasswordInputProps {
   field: React.InputHTMLAttributes<HTMLInputElement>;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export interface TypeAuthLinkProps {

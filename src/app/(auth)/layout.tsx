@@ -3,8 +3,7 @@ import Navbar from "@/components/landing-page/Navbar";
 import Footer from "@/components/landing-page/Footer";
 
 /**
- * Metadata for pages using this layout.
- * This sets the title and description for the browser tab and for SEO purposes.
+ * SEO metadata for all authentication pages.
  */
 export const metadata: Metadata = {
   title: "Authentication - Chat With Anything",
@@ -12,20 +11,22 @@ export const metadata: Metadata = {
 };
 
 /**
- * Provides a consistent layout wrapper for authentication pages like login and signup.
+ * Defines the shared layout for authentication pages like login and signup.
  *
  * This server component wraps its children with a standard Navbar and Footer,
  * ensuring a uniform look and feel across the authentication flow.
  *
- * @param {object} props - The component props.
- * @param {React.ReactNode} props.children - The specific page content (e.g., a login or signup form) to be rendered inside the layout.
- * @returns {JSX.Element} The authentication layout component.
+ * @param props The properties for the component.
+ * @param props.children The specific page content (e.g., a login form) to be rendered.
+ * @returns The authentication layout component with the page content.
  */
 const AuthLayout = async ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="min-h-screen bg-[#121212]">
+    <div className="min-h-screen bg-[#121212] flex flex-col w-full items-center justify-between">
       <Navbar />
-      {children}
+      <main className="flex-1 flex items-center justify-center w-full px-4">
+        {children}
+      </main>
       <Footer />
     </div>
   );

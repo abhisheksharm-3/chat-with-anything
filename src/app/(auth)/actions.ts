@@ -3,15 +3,30 @@
 import { supabaseServerClient } from "@/utils/supabase/server";
 
 /**
+ * Extracts form data safely with type casting
+ */
+const extractFormData = (formData: FormData, fields: string[]) => {
+  return fields.reduce((acc, field) => {
+    acc[field] = formData.get(field) as string;
+    return acc;
+  }, {} as Record<string, string>);
+};
+
+/**
+ * Handles authentication errors consistently
+ */
+const handleAuthError = (error: unknown): string => {
+  return `${error}`;
+};
+
+/**
  * Signs in a user using their email and password credentials.
  * This function is a Next.js Server Action.
  * @param {FormData} formData - The form data submitted by the user. Expected to contain 'email' and 'password'.
  * @returns {Promise<string | void>} Returns an error message as a string if sign-in fails, otherwise returns nothing on success.
  */
 export const signIn = async (formData: FormData) => {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
+  const { email, password } = extractFormData(formData, ["email", "password"]);
   const supabase = await supabaseServerClient();
 
   try {
@@ -24,8 +39,7 @@ export const signIn = async (formData: FormData) => {
       throw error;
     }
   } catch (error) {
-    // Return the error message to be displayed on the client.
-    return `${error}`;
+    return handleAuthError(error);
   }
 };
 
@@ -36,10 +50,7 @@ export const signIn = async (formData: FormData) => {
  * @returns {Promise<string | void>} Returns an error message as a string if sign-up fails, otherwise returns nothing on success.
  */
 export const signUp = async (formData: FormData) => {
-  const fullName = formData.get("full-name") as string;
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
+  const { "full-name": fullName, email, password } = extractFormData(formData, ["full-name", "email", "password"]);
   const supabase = await supabaseServerClient();
 
   try {
@@ -47,7 +58,6 @@ export const signUp = async (formData: FormData) => {
       email,
       password,
       options: {
-        // Add custom user metadata here.
         data: {
           full_name: fullName,
         },
@@ -58,7 +68,6 @@ export const signUp = async (formData: FormData) => {
       throw error;
     }
   } catch (error) {
-    // Return the error message to be displayed on the client.
-    return `${error}`;
+    return handleAuthError(error);
   }
 };
