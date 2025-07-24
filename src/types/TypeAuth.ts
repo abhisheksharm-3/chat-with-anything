@@ -1,5 +1,4 @@
 import { EnumAuthErrorType } from "@/constants/EnumAuthErrorTypes";
-import { TypeLoginFormValues, TypeSignupFormValues } from "@/schemas/AuthSchema";
 
 export interface TypeLoginFormData {
   email: string;
@@ -22,16 +21,6 @@ export interface TypePasswordInputProps {
   className?: string;
 }
 
-export interface TypeLoginFormProps {
-  onSubmit: (data: TypeLoginFormValues) => void;
-  isLoading: boolean;
-}
-
-export interface TypeSignupFormProps {
-  onSubmit: (data: TypeSignupFormValues) => void;
-  isLoading: boolean;
-}
-
 export interface TypeAuthLinkProps {
   text: string;
   linkText: string;
@@ -42,8 +31,6 @@ export interface TypeAuthContainerProps {
   title: string;
   subtitle: string;
   children: React.ReactNode;
-  errorMessage?: string | null;
-  successMessage?: string | null;
 }
 
 export interface TypeAuthHeaderProps {
