@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw, HelpCircle, X } from "lucide-react";
+import { RefreshCw, HelpCircle, X, Wifi, Server, Shield, FileX, MessageSquare, Info, AlertCircle } from "lucide-react";
 import { Button } from "../ui/button";
 import { useState } from "react";
 import {
@@ -10,7 +10,6 @@ import {
 } from "@/types/TypeUpload";
 import {
   getUploadErrorColorClasses,
-  getUploadErrorIcon,
   getUploadErrorTitle,
 } from "@/utils/upload-utils";
 import {
@@ -33,6 +32,25 @@ const UploadModalError: React.FC<TypeUploadModalErrorProps> = ({
 }) => {
   const [showDetails, setShowDetails] = useState(false);
   const MaxRetries = 3;
+
+  const getUploadErrorIcon = (type: string) => {
+  switch (type) {
+    case "network":
+      return <Wifi className="text-red-500 h-5 w-5 mr-2" />;
+    case "server":
+      return <Server className="text-red-500 h-5 w-5 mr-2" />;
+    case "auth":
+      return <Shield className="text-red-500 h-5 w-5 mr-2" />;
+    case "file_processing":
+      return <FileX className="text-red-500 h-5 w-5 mr-2" />;
+    case "chat_creation":
+      return <MessageSquare className="text-red-500 h-5 w-5 mr-2" />;
+    case "validation":
+      return <Info className="text-amber-500 h-5 w-5 mr-2" />;
+    default:
+      return <AlertCircle className="text-red-500 h-5 w-5 mr-2" />;
+  }
+};
 
   // Parse error object or string
   const errorObj: TypeUploadError | null = (() => {

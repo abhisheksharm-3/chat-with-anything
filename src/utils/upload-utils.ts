@@ -2,16 +2,6 @@
  * Upload utility functions
  */
 
-import {
-  AlertCircle,
-  FileX,
-  Info,
-  MessageSquare,
-  Server,
-  Shield,
-  Wifi,
-} from "lucide-react";
-
 export const isValidUrl = (url: string): boolean => {
   try {
     const urlObj = new URL(url);
@@ -56,25 +46,6 @@ export const getErrorMessage = (error: unknown): string => {
   return message;
 };
 
-// Get appropriate icon based on error type
-export const getUploadErrorIcon = (type: string) => {
-  switch (type) {
-    case "network":
-      return <Wifi className="text-red-500 h-5 w-5 mr-2" />;
-    case "server":
-      return <Server className="text-red-500 h-5 w-5 mr-2" />;
-    case "auth":
-      return <Shield className="text-red-500 h-5 w-5 mr-2" />;
-    case "file_processing":
-      return <FileX className="text-red-500 h-5 w-5 mr-2" />;
-    case "chat_creation":
-      return <MessageSquare className="text-red-500 h-5 w-5 mr-2" />;
-    case "validation":
-      return <Info className="text-amber-500 h-5 w-5 mr-2" />;
-    default:
-      return <AlertCircle className="text-red-500 h-5 w-5 mr-2" />;
-  }
-};
 
 // Get error title based on type
 export const getUploadErrorTitle = (type: string) => {
