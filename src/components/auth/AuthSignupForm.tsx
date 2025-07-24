@@ -1,4 +1,5 @@
-"use client"
+"use client";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -17,23 +18,19 @@ import { AuthPasswordInput } from "./AuthPasswordInput";
 import { AuthStatusMessage } from "./AuthStatusMessage";
 import { useAuth } from "@/hooks/useAuth";
 
-/**
- * Defines shared CSS classes for the form's input fields to ensure a consistent style.
- */
+/** Shared styling for form inputs to ensure a consistent appearance. */
 const inputClassName =
   "bg-[#1a1a1a] border-gray-700 text-white focus-visible:ring-primary";
 
 /**
- * Renders a user registration form with fields for full name, email, and password.
+ * Renders the user registration form.
  *
- * This component leverages `react-hook-form` for form state management and `zod`
- * for validation, including a check to ensure the password and confirm password fields match.
- * It also handles the UI loading state during form submission and displays error/success messages.
+ * Manages form state with `react-hook-form` and validates input using a Zod schema,
+ * including a password confirmation check. It connects to the `useAuth` hook to
+ * handle the submission logic, loading state, and display of server-side
+ * error or success messages.
  *
- * @param {(values: TypeSignupFormValues) => void} props.onSubmit - The callback function to execute upon successful form validation and submission.
- * @param {boolean} props.isLoading - If true, the form is disabled and a loading indicator is shown on the submit button.
- * @param {string | null | undefined} props.successMessage - An optional success message to display.
- * @returns {React.ReactElement} The rendered signup form.
+ * @returns {JSX.Element} The signup form component.
  */
 export const AuthSignupForm = () => {
   const form = useForm<TypeSignupFormValues>({
@@ -46,16 +43,21 @@ export const AuthSignupForm = () => {
     },
   });
 
-  const { signupErrorMessage, successMessage, handleSignup: onSubmit, isSignupLoading: isLoading } = useAuth();
+  const {
+    signupErrorMessage,
+    successMessage,
+    handleSignup: onSubmit,
+    isSignupLoading: isLoading,
+  } = useAuth();
 
   return (
     <>
-      {/* Display error message if present */}
+      {/* Display server-side error message if present */}
       {signupErrorMessage && (
         <AuthStatusMessage message={signupErrorMessage} type="error" />
       )}
-      
-      {/* Display success message if present */}
+
+      {/* Display success message after registration */}
       {successMessage && (
         <AuthStatusMessage message={successMessage} type="success" />
       )}
