@@ -16,7 +16,8 @@ export async function generateMetadata({
 }: {
   params: { id: string };
 }): Promise<Metadata> {
-  const chatId = params.id;
+  const PageParams = await params;
+  const chatId = PageParams.id;
   return generateChatMetadata(chatId);
 }
 
@@ -31,8 +32,9 @@ export async function generateMetadata({
  * @param props.params The route parameters containing the chat `id`.
  * @returns The chat page UI or a 404 page if the ID is invalid.
  */
-const ChatPage = ({ params }: { params: { id:string } }) => {
-  const chatId = params.id;
+const ChatPage = async ({ params }: { params: { id:string } }) => {
+  const PageParams = await params;
+  const chatId = PageParams.id;
 
   // Server-side validation to protect the route.
   if (!validateChatId(chatId)) {

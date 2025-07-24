@@ -1,130 +1,140 @@
 import { TypeFile, TypeMessage } from "@/types/TypeSupabase";
 
 /**
- * Checks if two messages are duplicates based on content and timing
+ * Compares two messages to determine if they are duplicates.
+ *
+ * This function uses different logic based on the message role:
+ * - For 'user' roles, it checks for identical content.
+ * - For 'assistant' roles, it checks for identical content within a 5-second window.
+ *
+ * @param msg1 The first message to compare.
+ * @param msg2 The second message to compare.
+ * @returns `true` if the messages are considered duplicates, otherwise `false`.
  */
-export function areMessagesDuplicate(msg1: TypeMessage, msg2: TypeMessage): boolean {
-    // Same role and content
-    if (msg1.role === msg2.role && msg1.content === msg2.content) {
-        // If they're both user messages, they're likely duplicates
-        if (msg1.role === "user") {
-            return true;
-        }
-
-        // For assistant messages, check if they're within a short time window (5 seconds)
-        const time1 = new Date(msg1.created_at).getTime();
-        const time2 = new Date(msg2.created_at).getTime();
-        const timeDiff = Math.abs(time1 - time2);
-        return timeDiff < 5000; // 5 seconds
+export function areMessagesDuplicate(
+  msg1: TypeMessage,
+  msg2: TypeMessage
+): boolean {
+  if (msg1.role === msg2.role && msg1.content === msg2.content) {
+    if (msg1.role === "user") {
+      return true;
     }
-
-    return false;
+    // For assistant messages, check if they're within a short time window.
+    const timeDiff = Math.abs(
+      new Date(msg1.created_at).getTime() - new Date(msg2.created_at).getTime()
+    );
+    return timeDiff < 5000; // 5 seconds
+  }
+  return false;
 }
 
 /**
- * Checks if a file has YouTube processing errors
+ * Checks if a file object indicates a YouTube processing failure.
+ *
+ * @param file The file object to inspect.
+ * @returns `true` if the file is a YouTube type with a 'failed' status and an error message.
  */
 export function checkYouTubeProcessingError(file: TypeFile): boolean {
-    return (
-        file?.type === "youtube" &&
-        file?.processing_status === "failed" &&
-        typeof file?.processing_error === "string" &&
-        !!file.processing_error
-    );
+  return (
+    file?.type === "youtube" &&
+    file?.processing_status === "failed" &&
+    typeof file?.processing_error === "string" &&
+    !!file.processing_error
+  );
 }
 
 /**
- * Syncs server-fetched messages with local optimistic updates
+ * Synchronizes server-fetched messages with a local list containing optimistic updates.
+ *
+ * It preserves temporary local messages (e.g., user messages not yet confirmed by the
+ * server) and discards temporary messages that have been replaced by a server version.
+ *
+ * @param serverMessages The authoritative list of messages from the server.
+ * @param localMessages The current local state, which may include optimistic UI messages.
+ * @returns A new, synchronized, and deduplicated array of messages.
  */
 export function syncMessagesWithOptimisticUpdates(
-    serverMessages: TypeMessage[],
-    localMessages: TypeMessage[]
+  serverMessages: TypeMessage[],
+  localMessages: TypeMessage[]
 ): TypeMessage[] {
-    // Get all temporary messages (optimistic updates)
-    const tempMessages = localMessages.filter(
-        (msg) => msg.id.startsWith("temp-") || msg.id.startsWith("error-")
+  // Filter for temporary local messages that are still pending.
+  const uniqueTempMessages = localMessages.filter((localMsg) => {
+    if (!localMsg.id.startsWith("temp-")) return false; // Not a temp message
+    // Check if a confirmed version of this temp message exists on the server.
+    return !serverMessages.some((serverMsg) =>
+      areMessagesDuplicate(localMsg, serverMsg)
     );
+  });
 
-    // Get server message IDs to avoid duplicates
-    const serverMessageIds = new Set(serverMessages.map((msg) => msg.id));
-
-    // Filter out temp messages that have been replaced by server messages
-    const uniqueTempMessages = tempMessages.filter((tempMsg) => {
-        // If it's a temp user message, check if there's a server message with same content
-        if (tempMsg.role === "user" && tempMsg.id.startsWith("temp-")) {
-            const hasMatchingServerMessage = serverMessages.some((serverMsg) =>
-                areMessagesDuplicate(tempMsg, serverMsg)
-            );
-            return !hasMatchingServerMessage;
-        }
-
-        // For other temp messages (AI thinking, errors), just check by ID
-        return !serverMessageIds.has(tempMsg.id);
-    });
-
-    // Create new local messages array with server messages + unique temp messages
-    const newLocalMessages = [...serverMessages, ...uniqueTempMessages];
-
-    // Final deduplication pass to ensure no duplicates exist
-    return newLocalMessages.filter((msg, index) => {
-        // Check if this message is a duplicate of any previous message
-        const isDuplicate = newLocalMessages
-            .slice(0, index)
-            .some((prevMsg) => areMessagesDuplicate(msg, prevMsg));
-
-        return !isDuplicate;
-    });
+  // The new list is the server messages plus any still-pending optimistic messages.
+  return [...serverMessages, ...uniqueTempMessages];
 }
 
 /**
- * Creates optimistic messages for immediate UI feedback
+ * Creates a pair of optimistic messages for immediate UI feedback when a user sends a message.
+ *
+ * @param chatId The ID of the current chat.
+ * @param content The text content of the user's message.
+ * @returns An object containing a temporary user message and a temporary "thinking" assistant message.
  */
 export function createOptimisticMessages(chatId: string, content: string) {
-    const timestamp = Date.now();
+  const timestamp = Date.now();
+  const createdAt = new Date().toISOString();
 
-    const tempUserMessage: TypeMessage = {
-        id: `temp-${timestamp}`,
-        chat_id: chatId,
-        role: "user",
-        content,
-        created_at: new Date().toISOString(),
-    };
+  const tempUserMessage: TypeMessage = {
+    id: `temp-${timestamp}`,
+    chat_id: chatId,
+    role: "user",
+    content,
+    created_at: createdAt,
+  };
 
-    const tempAiMessage: TypeMessage = {
-        id: `temp-ai-${timestamp}`,
-        chat_id: chatId,
-        role: "assistant",
-        content: "...",
-        created_at: new Date().toISOString(),
-    };
+  const tempAiMessage: TypeMessage = {
+    id: `temp-ai-${timestamp}`,
+    chat_id: chatId,
+    role: "assistant",
+    content: "...",
+    created_at: createdAt,
+  };
 
-    return { tempUserMessage, tempAiMessage };
+  return { tempUserMessage, tempAiMessage };
 }
 
 /**
- * Creates a YouTube processing error message
+ * Creates a formatted error message for a failed YouTube video processing job.
+ *
+ * @param chatId The ID of the current chat.
+ * @param file The file object that failed to process.
+ * @returns A message object formatted as an error from the assistant.
  */
-export function createYouTubeErrorMessage(chatId: string, file: TypeFile): TypeMessage {
-    return {
-        id: `error-${Date.now()}`,
-        chat_id: chatId,
-        role: "assistant" as const,
-        content: `I couldn't process this YouTube video: ${
-            file?.processing_error || "No transcript available"
-        }`,
-        created_at: new Date().toISOString(),
-    };
+export function createYouTubeErrorMessage(
+  chatId: string,
+  file: TypeFile
+): TypeMessage {
+  return {
+    id: `error-${Date.now()}`,
+    chat_id: chatId,
+    role: "assistant" as const,
+    content: `I couldn't process this YouTube video: ${
+      file?.processing_error || "No transcript available"
+    }`,
+    created_at: new Date().toISOString(),
+  };
 }
 
 /**
- * Creates a generic error message for failed requests
+ * Creates a generic error message for a failed message send request.
+ *
+ * @param chatId The ID of the current chat.
+ * @returns A generic error message object from the assistant.
  */
 export function createErrorMessage(chatId: string): TypeMessage {
-    return {
-        id: `error-${Date.now()}`,
-        chat_id: chatId,
-        role: "assistant" as const,
-        content: "Sorry, there was an error processing your request. Please try again.",
-        created_at: new Date().toISOString(),
-    };
+  return {
+    id: `error-${Date.now()}`,
+    chat_id: chatId,
+    role: "assistant" as const,
+    content:
+      "Sorry, there was an error processing your request. Please try again.",
+    created_at: new Date().toISOString(),
+  };
 }

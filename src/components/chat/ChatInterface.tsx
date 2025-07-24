@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { ChatInterfaceMessages } from "./ChatInterfaceMessage";
 import { ChatInterfaceInput } from "./ChatInterfaceInput";
 import { ChatInterfaceDocumentViewer } from "./ChatInterfaceDocumentViewer";
@@ -8,24 +7,18 @@ import { ChatInterfaceMobileTabs } from "./ChatInterfaceMobileTabs";
 import { Loader2 } from "lucide-react";
 import { useChatInterface } from "@/hooks/useChatInterface";
 
-interface ChatInterfaceProps {
-  chatId: string;
-}
-
 /**
- * The main component for the chat interface, orchestrating the document viewer,
- * message display, and user input. It handles data fetching, real-time message
- * updates, and responsive layouts for desktop and mobile.
+ * Renders the main user interface for a chat session.
  *
- * This component has been refactored to use the useChatInterface hook for state
- * management and the messageUtils for complex message handling logic.
+ * This is a presentational component that orchestrates the chat UI by composing
+ * various child components. All business logic, state management, and data
+ * fetching are encapsulated within the `useChatInterface` custom hook.
  *
- * @component
- * @param {ChatInterfaceProps} props - The props for the component.
- * @param {string} props.chatId - The unique identifier for the current chat session.
- * @returns {JSX.Element} The fully interactive chat interface.
+ * @param props The component props.
+ * @param props.chatId The unique identifier for the chat session to render.
+ * @returns The rendered chat interface component.
  */
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
+const ChatInterface = ({ chatId }: { chatId: string }) => {
   const {
     // State
     inputValue,
@@ -34,7 +27,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
     setShowPDF,
     localMessages,
     messagesEndRef,
-    
+
     // Derived state
     chat,
     file,
@@ -44,13 +37,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
     isFileLoading,
     isFileError,
     isSending,
-    
+
     // Handlers
     handleSendMessage,
     handleKeyPress,
   } = useChatInterface({ chatId });
 
-  // Loading state for chat validation
+  // Loading state for initial chat validation
   if (isChatLoading || !chat) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -60,7 +53,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
     );
   }
 
-  // Error state - chat not found
+  // Error state for when the chat is not found
   if (isChatError) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -72,7 +65,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
     );
   }
 
-  // Initial loading state for messages
+  // Initial loading state for fetching messages
   if (messagesLoading && !localMessages.length) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-64px)]">
