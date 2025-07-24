@@ -1,6 +1,6 @@
 import Image from "next/image";
 import ButtonCta from "./ButtonCta";
-import { WordRotate } from "../magicui/word-rotate";
+import { WordRotate } from "../shared/WordRotate";
 import GlowBackground from "../shared/GlowBackground";
 import { FloatingLogosData, RotateWords } from "@/constants/HeroData";
 
