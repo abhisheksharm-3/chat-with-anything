@@ -1,289 +1,56 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { TypeMessage } from "@/types/TypeSupabase";
+import React from "react";
 import { ChatInterfaceMessages } from "./ChatInterfaceMessage";
 import { ChatInterfaceInput } from "./ChatInterfaceInput";
 import { ChatInterfaceDocumentViewer } from "./ChatInterfaceDocumentViewer";
 import { ChatInterfaceMobileTabs } from "./ChatInterfaceMobileTabs";
-import { useMessages } from "@/hooks/useMessages";
-import { useChats } from "@/hooks/useChats";
-import { useFileById } from "@/hooks/useFiles";
 import { Loader2 } from "lucide-react";
+import { useChatInterface } from "@/hooks/useChatInterface";
+
+interface ChatInterfaceProps {
+  chatId: string;
+}
 
 /**
  * The main component for the chat interface, orchestrating the document viewer,
  * message display, and user input. It handles data fetching, real-time message
  * updates, and responsive layouts for desktop and mobile.
  *
- * This component manages the lifecycle of a chat session, including:
- * - Fetching initial chat and file data.
- * - Subscribing to real-time messages from Supabase.
- * - Handling optimistic UI updates for sending messages.
- * - Displaying various states (loading, errors, empty).
- * - Toggling between document and chat views on mobile.
- * - Managing chat validation and redirects.
+ * This component has been refactored to use the useChatInterface hook for state
+ * management and the messageUtils for complex message handling logic.
  *
  * @component
  * @param {ChatInterfaceProps} props - The props for the component.
  * @param {string} props.chatId - The unique identifier for the current chat session.
  * @returns {JSX.Element} The fully interactive chat interface.
  */
-const ChatInterface: React.FC<{ chatId: string }> = ({ chatId }) => {
-  const router = useRouter();
-  
-  // --- Hooks for data fetching and state management ---
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId }) => {
   const {
-    messages: chatMessages,
-    isLoading: messagesLoading,
-    sendMessage,
-    subscribeToMessages,
+    // State
+    inputValue,
+    setInputValue,
+    showPDF,
+    setShowPDF,
+    localMessages,
+    messagesEndRef,
+    
+    // Derived state
+    chat,
+    file,
+    isChatLoading,
+    isChatError,
+    messagesLoading,
+    isFileLoading,
+    isFileError,
     isSending,
-  } = useMessages(chatId);
-  
-  const { getChatById } = useChats();
-  const [inputValue, setInputValue] = useState("");
-  const [showPDF, setShowPDF] = useState(false); // For mobile view toggle
-  const [localMessages, setLocalMessages] = useState<TypeMessage[]>([]);
-  const [shouldRedirect, setShouldRedirect] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const localMessagesRef = useRef<TypeMessage[]>([]);
+    
+    // Handlers
+    handleSendMessage,
+    handleKeyPress,
+  } = useChatInterface({ chatId });
 
-  // Fetch chat and associated file metadata
-  const chat = getChatById(chatId);
-  const {
-    data: file,
-    isLoading: isFileLoading,
-    isError: isFileError,
-  } = useFileById(chat?.file_id || "");
-
-  // Chat validation states
-  const isChatLoading = !chat && messagesLoading;
-  const isChatError = !chat && !messagesLoading;
-
-  // Keep ref in sync with state
-  useEffect(() => {
-    localMessagesRef.current = localMessages;
-  }, [localMessages]);
-
-  /**
-   * Sets up a delayed redirect if the chat is not found or an error occurs.
-   * This provides a better user experience by showing a message before redirecting.
-   */
-  useEffect(() => {
-    if (!isChatLoading && (isChatError || !chat)) {
-      const timer = setTimeout(() => {
-        setShouldRedirect(true);
-      }, 2000); // Wait 2 seconds before redirecting.
-
-      // Cleanup function to clear the timer if the component unmounts.
-      return () => clearTimeout(timer);
-    }
-  }, [chat, isChatLoading, isChatError]);
-
-  /**
-   * Executes the redirection when the `shouldRedirect` state is updated.
-   */
-  useEffect(() => {
-    if (shouldRedirect) {
-      router.push("/not-found");
-    }
-  }, [shouldRedirect, router]);
-
-  /**
-   * Checks if two messages are duplicates based on content and timing
-   */
-  const areMessagesDuplicate = (
-    msg1: TypeMessage,
-    msg2: TypeMessage,
-  ): boolean => {
-    // Same role and content
-    if (msg1.role === msg2.role && msg1.content === msg2.content) {
-      // If they're both user messages, they're likely duplicates
-      if (msg1.role === "user") {
-        return true;
-      }
-
-      // For assistant messages, check if they're within a short time window (5 seconds)
-      const time1 = new Date(msg1.created_at).getTime();
-      const time2 = new Date(msg2.created_at).getTime();
-      const timeDiff = Math.abs(time1 - time2);
-      return timeDiff < 5000; // 5 seconds
-    }
-
-    return false;
-  };
-
-  // Derived state to check for a specific YouTube processing error
-  const hasYouTubeProcessingError =
-    file?.type === "youtube" &&
-    file?.processing_status === "failed" &&
-    file?.processing_error;
-
-  // --- Effects ---
-
-  /**
-   * Syncs server-fetched messages (`chatMessages`) with the local display state (`localMessages`).
-   * This is designed to prevent infinite re-renders by comparing the states and to preserve
-   * temporary optimistic UI messages (like user messages just sent or AI 'thinking' indicators).
-   */
-  useEffect(() => {
-    if (!chatMessages) return;
-
-    // Get all temporary messages (optimistic updates)
-    const tempMessages = localMessagesRef.current.filter(
-      (msg) => msg.id.startsWith("temp-") || msg.id.startsWith("error-"),
-    );
-
-    // Get server message IDs to avoid duplicates
-    const serverMessageIds = new Set(chatMessages.map((msg) => msg.id));
-
-    // Filter out temp messages that have been replaced by server messages
-    // Also filter out temp user messages that have corresponding server messages with same content
-    const uniqueTempMessages = tempMessages.filter((tempMsg) => {
-      // If it's a temp user message, check if there's a server message with same content
-      if (tempMsg.role === "user" && tempMsg.id.startsWith("temp-")) {
-        const hasMatchingServerMessage = chatMessages.some((serverMsg) =>
-          areMessagesDuplicate(tempMsg, serverMsg),
-        );
-        return !hasMatchingServerMessage;
-      }
-
-      // For other temp messages (AI thinking, errors), just check by ID
-      return !serverMessageIds.has(tempMsg.id);
-    });
-
-    // Create new local messages array with server messages + unique temp messages
-    const newLocalMessages = [...chatMessages, ...uniqueTempMessages];
-
-    // Final deduplication pass to ensure no duplicates exist
-    const finalMessages = newLocalMessages.filter((msg, index) => {
-      // Check if this message is a duplicate of any previous message
-      const isDuplicate = newLocalMessages
-        .slice(0, index)
-        .some((prevMsg) => areMessagesDuplicate(msg, prevMsg));
-
-      return !isDuplicate;
-    });
-
-    // Only update if the arrays are actually different
-    if (
-      JSON.stringify(finalMessages) !== JSON.stringify(localMessagesRef.current)
-    ) {
-      setLocalMessages(finalMessages);
-    }
-  }, [chatMessages]);
-
-  /**
-   * Injects an error message into the chat if a YouTube video fails processing.
-   * This runs only once if the condition is met and the chat is empty.
-   */
-  useEffect(() => {
-    if (hasYouTubeProcessingError && localMessages.length === 0) {
-      const errorMessage: TypeMessage = {
-        id: `error-${Date.now()}`,
-        chat_id: chatId,
-        role: "assistant" as const,
-        content: `I couldn't process this YouTube video: ${file?.processing_error || "No transcript available"}`,
-        created_at: new Date().toISOString(),
-      };
-      setLocalMessages([errorMessage]);
-    }
-  }, [
-    hasYouTubeProcessingError,
-    file?.processing_error,
-    chatId,
-    localMessages.length,
-  ]);
-
-  /**
-   * Subscribes to real-time message updates from Supabase when the component mounts.
-   * Unsubscribes on cleanup to prevent memory leaks.
-   */
-  useEffect(() => {
-    const unsubscribe = subscribeToMessages();
-    return () => unsubscribe();
-  }, [subscribeToMessages]);
-
-  /**
-   * Automatically scrolls the message list to the bottom whenever new messages are added.
-   */
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [localMessages]);
-
-  // --- Event Handlers ---
-
-  /**
-   * Handles sending a new message. It implements an optimistic UI update by
-   * immediately adding temporary user and AI "thinking" messages to the state.
-   */
-  const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
-
-    const tempUserMessage: TypeMessage = {
-      id: `temp-${Date.now()}`,
-      chat_id: chatId,
-      role: "user",
-      content: inputValue,
-      created_at: new Date().toISOString(),
-    };
-
-    const tempAiMessage: TypeMessage = {
-      id: `temp-ai-${Date.now()}`,
-      chat_id: chatId,
-      role: "assistant",
-      content: "...",
-      created_at: new Date().toISOString(),
-    };
-
-    setLocalMessages((prev) => [...prev, tempUserMessage, tempAiMessage]);
-    const messageToSend = inputValue;
-    setInputValue(""); // Clear input immediately
-
-    try {
-      await sendMessage(messageToSend);
-      // Remove the temporary AI message after successful send
-      // The temporary user message will be handled by the useEffect when server messages arrive
-      setLocalMessages((prev) =>
-        prev.filter((msg) => msg.id !== tempAiMessage.id),
-      );
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      // Remove temporary AI message and add error message
-      setLocalMessages((prev) => {
-        const filtered = prev.filter((msg) => !msg.id.startsWith("temp-ai-"));
-        return [
-          ...filtered,
-          {
-            id: `error-${Date.now()}`,
-            chat_id: chatId,
-            role: "assistant" as const,
-            content:
-              "Sorry, there was an error processing your request. Please try again.",
-            created_at: new Date().toISOString(),
-          },
-        ];
-      });
-    }
-  };
-
-  /**
-   * Sends the message when the user presses Enter without the Shift key.
-   */
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  // --- Render Logic ---
-
-  // Display a loading indicator while fetching chat data.
+  // Loading state for chat validation
   if (isChatLoading || !chat) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -293,7 +60,7 @@ const ChatInterface: React.FC<{ chatId: string }> = ({ chatId }) => {
     );
   }
 
-  // Display an error/redirect message if the chat could not be loaded.
+  // Error state - chat not found
   if (isChatError) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -305,7 +72,7 @@ const ChatInterface: React.FC<{ chatId: string }> = ({ chatId }) => {
     );
   }
 
-  // Initial loading state for the chat messages
+  // Initial loading state for messages
   if (messagesLoading && !localMessages.length) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-64px)]">
@@ -357,7 +124,7 @@ const ChatInterface: React.FC<{ chatId: string }> = ({ chatId }) => {
         </div>
       </div>
 
-      {/* Mobile Layout: Toggable view */}
+      {/* Mobile Layout: Toggleable view */}
       <div className="md:hidden flex flex-col h-full">
         <div
           className={`flex items-center justify-between p-4 bg-[#121212] ${
