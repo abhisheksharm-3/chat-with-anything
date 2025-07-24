@@ -1,11 +1,5 @@
 import { TypeFile, TypeMessage } from "./TypeSupabase";
 
-export interface TypeChatInterfaceProps {
-  title?: string;
-  chatId: string;
-  source?: string;
-}
-
 export interface TypeChatInterfaceMessagesProps {
   messages: TypeMessage[];
   messagesLoading: boolean;

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { TypeMessage } from "@/types/TypeSupabase";
-import { TypeChatInterfaceProps } from "@/types/TypeChat";
 import { ChatInterfaceMessages } from "./ChatInterfaceMessage";
 import { ChatInterfaceInput } from "./ChatInterfaceInput";
 import { ChatInterfaceDocumentViewer } from "./ChatInterfaceDocumentViewer";
@@ -10,6 +10,7 @@ import { ChatInterfaceMobileTabs } from "./ChatInterfaceMobileTabs";
 import { useMessages } from "@/hooks/useMessages";
 import { useChats } from "@/hooks/useChats";
 import { useFileById } from "@/hooks/useFiles";
+import { Loader2 } from "lucide-react";
 
 /**
  * The main component for the chat interface, orchestrating the document viewer,
@@ -22,17 +23,16 @@ import { useFileById } from "@/hooks/useFiles";
  * - Handling optimistic UI updates for sending messages.
  * - Displaying various states (loading, errors, empty).
  * - Toggling between document and chat views on mobile.
+ * - Managing chat validation and redirects.
  *
  * @component
- * @param {TypeChatInterfaceProps} props - The props for the component.
- * @param {string} [props.title="Untitled Chat"] - The fallback title for the chat, used if a document title is not available.
+ * @param {ChatInterfaceProps} props - The props for the component.
  * @param {string} props.chatId - The unique identifier for the current chat session.
  * @returns {JSX.Element} The fully interactive chat interface.
  */
-const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
-  title = "Untitled Chat",
-  chatId,
-}) => {
+const ChatInterface: React.FC<{ chatId: string }> = ({ chatId }) => {
+  const router = useRouter();
+  
   // --- Hooks for data fetching and state management ---
   const {
     messages: chatMessages,
@@ -41,17 +41,55 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
     subscribeToMessages,
     isSending,
   } = useMessages(chatId);
+  
   const { getChatById } = useChats();
   const [inputValue, setInputValue] = useState("");
   const [showPDF, setShowPDF] = useState(false); // For mobile view toggle
   const [localMessages, setLocalMessages] = useState<TypeMessage[]>([]);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const localMessagesRef = useRef<TypeMessage[]>([]);
+
+  // Fetch chat and associated file metadata
+  const chat = getChatById(chatId);
+  const {
+    data: file,
+    isLoading: isFileLoading,
+    isError: isFileError,
+  } = useFileById(chat?.file_id || "");
+
+  // Chat validation states
+  const isChatLoading = !chat && messagesLoading;
+  const isChatError = !chat && !messagesLoading;
 
   // Keep ref in sync with state
   useEffect(() => {
     localMessagesRef.current = localMessages;
   }, [localMessages]);
+
+  /**
+   * Sets up a delayed redirect if the chat is not found or an error occurs.
+   * This provides a better user experience by showing a message before redirecting.
+   */
+  useEffect(() => {
+    if (!isChatLoading && (isChatError || !chat)) {
+      const timer = setTimeout(() => {
+        setShouldRedirect(true);
+      }, 2000); // Wait 2 seconds before redirecting.
+
+      // Cleanup function to clear the timer if the component unmounts.
+      return () => clearTimeout(timer);
+    }
+  }, [chat, isChatLoading, isChatError]);
+
+  /**
+   * Executes the redirection when the `shouldRedirect` state is updated.
+   */
+  useEffect(() => {
+    if (shouldRedirect) {
+      router.push("/not-found");
+    }
+  }, [shouldRedirect, router]);
 
   /**
    * Checks if two messages are duplicates based on content and timing
@@ -76,14 +114,6 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
 
     return false;
   };
-
-  // Fetch chat and associated file metadata
-  const chat = getChatById(chatId);
-  const {
-    data: file,
-    isLoading: isFileLoading,
-    isError: isFileError,
-  } = useFileById(chat?.file_id || "");
 
   // Derived state to check for a specific YouTube processing error
   const hasYouTubeProcessingError =
@@ -253,7 +283,29 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
 
   // --- Render Logic ---
 
-  // Initial loading state for the chat
+  // Display a loading indicator while fetching chat data.
+  if (isChatLoading || !chat) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-gray-400">Loading chat...</span>
+      </div>
+    );
+  }
+
+  // Display an error/redirect message if the chat could not be loaded.
+  if (isChatError) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-gray-400">
+          Chat not found, redirecting...
+        </span>
+      </div>
+    );
+  }
+
+  // Initial loading state for the chat messages
   if (messagesLoading && !localMessages.length) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-64px)]">
@@ -276,7 +328,7 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
               file={file}
               isLoading={isFileLoading}
               isError={isFileError}
-              title={title}
+              title={chat.title || "Untitled Chat"}
             />
           )}
         </div>
@@ -323,7 +375,7 @@ const ChatInterface: React.FC<TypeChatInterfaceProps> = ({
                 file={file}
                 isLoading={isFileLoading}
                 isError={isFileError}
-                title={title}
+                title={chat.title || "Untitled Chat"}
               />
             )}
           </div>
