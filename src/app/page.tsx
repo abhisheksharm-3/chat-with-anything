@@ -6,13 +6,12 @@ import Navbar from "@/components/landing-page/Navbar";
 import Faqs from "@/components/landing-page/Faq";
 
 /**
- * Renders the main landing page of the application.
+ * Renders the main landing page for the application.
  *
- * This server component assembles the various sections of the homepage,
- * including the navigation bar, hero section, features, pricing, FAQs,
- * and the footer, into a single, cohesive view.
+ * This server component serves as a layout that assembles all the major
+ * sections of the homepage, such as the Hero, Features, Pricing, and Footer.
  *
- * @returns {Promise<React.ReactElement>} The fully rendered homepage component.
+ * @returns {JSX.Element} The complete homepage component.
  */
 const Home = () => {
   return (

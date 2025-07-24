@@ -1,6 +1,15 @@
 import { Loader2 } from "lucide-react";
 import GlowBackground from "@/components/shared/GlowBackground";
 
+/**
+ * Renders a full-screen loading state for the application.
+ *
+ * This component is designed to be used as a special `loading.tsx` file in Next.js,
+ * which automatically wraps a page or layout in a React Suspense Boundary.
+ * It provides a visually appealing fallback while server components are rendering.
+ *
+ * @returns {JSX.Element} The rendered loading page.
+ */
 const Loading = () => {
   return (
     <div className="min-h-screen bg-[#121212] relative overflow-hidden flex items-center justify-center">

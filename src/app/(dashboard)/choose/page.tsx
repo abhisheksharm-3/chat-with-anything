@@ -4,21 +4,21 @@ import { FileTypes } from "@/constants/FileTypes";
 import UploadModal from "@/components/upload/UploadModal";
 import { Metadata } from "next";
 
+/**
+ * SEO metadata for the file type selection page.
+ */
 export const metadata: Metadata = {
   title: "Choose File Type - Chat With Anything",
   description: "Select a file type to start chatting",
 };
 
-
 /**
- * Renders the page where users select a file type to begin a new chat.
+ * Renders the file type selection page for creating a new chat.
  *
- * This component displays a grid of cards, each representing a supported
- * file type. It dynamically renders each card as either an interactive
- * upload trigger that opens a modal, or as a disabled "coming soon"
- * placeholder for features not yet available.
+ * Displays a grid of supported file types. Available types trigger an
+ * upload modal, while unavailable types are shown as disabled "coming soon" cards.
  *
- * @returns {React.ReactElement} The rendered page for choosing a file type.
+* @returns {JSX.Element} The file type selection page.
  */
 const ChoosePage = () => {
   return (
@@ -28,12 +28,11 @@ const ChoosePage = () => {
       </h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-2xl">
-        {/* Iterate over the list of supported file types to generate the selection grid. */}
+        {/* Map over available file types to create the selection grid */}
         {FileTypes.map((fileType) => (
           <div key={fileType.type} className="group">
-            {/* Conditionally render a disabled card or an interactive upload modal. */}
             {fileType.comingSoon ? (
-              // Render a disabled "coming soon" card for features that are not yet released.
+              // Case: Feature is not yet available, render a disabled card.
               <Card className="h-32 w-full hover:bg-muted/50 transition-colors">
                 <CardContent className="flex flex-col items-center justify-center gap-3 h-full relative">
                   <div className="h-12 w-12 flex items-center justify-center">
@@ -56,7 +55,7 @@ const ChoosePage = () => {
                 </CardContent>
               </Card>
             ) : (
-              // For available file types, the card itself becomes the trigger for an upload modal.
+              // Case: Feature is available, wrap the card in an upload modal trigger.
               <UploadModal
                 fileType={fileType.type}
                 trigger={

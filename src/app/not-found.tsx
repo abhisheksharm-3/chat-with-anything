@@ -3,6 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 import GlowBackground from "@/components/shared/GlowBackground";
 
+/**
+ * Renders the application's custom 404 'Not Found' page.
+ *
+ * This component is designed to be used as a special `not-found.tsx` file in Next.js,
+ * which automatically handles requests for routes that do not exist. It provides
+ * a user-friendly message and a clear action to navigate back to the homepage.
+ *
+ * @returns {JSX.Element} The rendered 404 page.
+ */
 const NotFound = () => {
   return (
     <div className="min-h-screen bg-[#121212] relative overflow-hidden">

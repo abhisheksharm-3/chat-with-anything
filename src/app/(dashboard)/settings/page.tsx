@@ -11,51 +11,34 @@ import { SettingsLoadingSkeleton } from "@/components/settings/SettingsLoadingSk
 import { MobileSettingsSections } from "@/constants/SettingsData";
 
 /**
- * Renders the user account settings page, designed specifically for mobile devices.
+ * Renders the user account settings page, optimized for mobile devices.
  *
- * This component allows users to view their account details, edit their display name,
- * upgrade their plan, and log out. It includes logic to redirect desktop users
- * to the main dashboard to ensure a mobile-optimized experience.
+ * This component displays user account details and provides options to upgrade
+ * or log out. It enforces a mobile-only view by redirecting desktop users
+ * to the main dashboard.
  *
- * @returns {React.ReactElement | null} The rendered settings page or null if on a desktop device.
+ * @returns {JSX.Element | null} The mobile settings page or null if redirecting.
  */
 const SettingsPage = () => {
   const { user, isLoading } = useUser();
-  const [, setName] = useState("");
   const isMobile = useIsMobile();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
 
-  /**
-   * Effect to confirm that the component has mounted on the client side.
-   * This is crucial for running client-only logic like device detection.
-   */
+  // Effect to track component mount, enabling client-side-only logic.
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  /**
-   * Effect to handle redirection for non-mobile users.
-   * If the component is mounted and the device is not mobile, it redirects
-   * to the '/choose' page, making this view mobile-only.
-   */
+  // Effect to enforce mobile-only view by redirecting desktop users.
   useEffect(() => {
     if (isMounted && !isMobile) {
       router.push("/choose");
     }
   }, [isMobile, router, isMounted]);
 
-  /**
-   * Effect to synchronize the local 'name' state with the user data once it loads.
-   */
-  useEffect(() => {
-    if (user?.name) {
-      setName(user.name);
-    }
-  }, [user?.name]);
-
-  // Avoid rendering the page on the server or on desktop to prevent a UI flash before redirect.
-  if (!isMounted || (isMounted && !isMobile)) {
+  // Prevent a flash of content on desktop before redirecting.
+  if (!isMounted || !isMobile) {
     return null;
   }
 
@@ -69,13 +52,13 @@ const SettingsPage = () => {
         </p>
       </div>
 
-      {/* Main content area - centered */}
+      {/* Main content: show skeleton on load, otherwise show settings */}
       {isLoading ? (
         <SettingsLoadingSkeleton isMobile={true} />
       ) : (
         <div className="flex-1 flex items-center justify-center px-6">
           <div className="w-full max-w-md space-y-6 font-medium text-lg text-center">
-            {/* Render settings sections using array */}
+            {/* Render user details from a configuration array */}
             {MobileSettingsSections.map((section) => (
               <div key={section.id} className="space-y-1 text-lg">
                 <p className="text-[#A9A9A9]">{section.label}</p>

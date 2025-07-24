@@ -6,23 +6,22 @@ import {
 } from "@/components/dashboard/DashboardHeaders";
 
 /**
- * Provides the main layout structure for the authenticated dashboard area.
+ * Defines the main layout structure for the authenticated dashboard.
  *
- * This component wraps all dashboard pages, rendering the appropriate sidebars
- * and headers for both mobile and desktop views. All dynamic logic and state
- * management has been moved to individual child components to enable server-side rendering.
+ * This server component assembles the responsive headers and sidebars for both
+ * mobile and desktop views, wrapping the active page content.
  *
- * @param {object} props - The component props.
- * @param {React.ReactNode} props.children - The specific page content to render within the layout.
- * @returns {Promise<React.ReactElement>} The complete dashboard layout.
+ * @param props The properties for the component.
+ * @param props.children The specific page content to render within the layout.
+ * @returns {JSX.Element} The complete dashboard layout with page content.
  */
-const DashboardLayout = async ({ children }: { children: React.ReactNode }) => {
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="relative flex h-screen bg-[#121212] text-foreground">
-      {/* Sidebar for desktop view, always visible. */}
+      {/* Sidebar for desktop view (always visible) */}
       <DashboardDesktopSidebar />
 
-      {/* Sidebar for mobile view */}
+      {/* Sidebar for mobile view (hidden by default) */}
       <DashboardMobileSidebar />
 
       <div className="flex-1 flex flex-col md:pl-14">

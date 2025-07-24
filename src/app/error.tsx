@@ -6,6 +6,19 @@ import Link from "next/link";
 import GlowBackground from "@/components/shared/GlowBackground";
 import { TypeErrorProps } from "@/types/TypeUi";
 
+/**
+ * Renders a user-friendly error boundary page for the application.
+ *
+ * This component is designed to be used as a special `error.tsx` file in Next.js.
+ * It catches runtime errors within its route segment and provides a fallback UI.
+ * Features include a generic message, a "Try Again" button to re-render,
+ * and detailed error information that is only displayed during development.
+ *
+ * @param props The props for the component, automatically provided by Next.js.
+ * @param props.error The error object, extended with a `digest` for server errors.
+ * @param props.reset A function to reset the error boundary by re-rendering the segment.
+ * @returns {JSX.Element} The rendered error page.
+ */
 const Error = ({ error, reset }: TypeErrorProps) => {
   return (
     <div className="min-h-screen bg-[#121212] relative overflow-hidden">
