@@ -62,3 +62,8 @@ export interface TypeHistoryPageChatDropdownProps {
   chat: TypeChat;
   file?: { name?: string } | null;
 }
+
+export interface TypeErrorProps {
+  error: Error & { digest?: string };
+  reset: () => void;
+}

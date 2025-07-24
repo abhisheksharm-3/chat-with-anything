@@ -2,6 +2,13 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileTypes } from "@/constants/FileTypes";
 import UploadModal from "@/components/upload/UploadModal";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Choose File Type - Chat With Anything",
+  description: "Select a file type to start chatting",
+};
+
 
 /**
  * Renders the page where users select a file type to begin a new chat.

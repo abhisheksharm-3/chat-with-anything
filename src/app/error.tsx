@@ -4,13 +4,9 @@ import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import GlowBackground from "@/components/shared/GlowBackground";
+import { TypeErrorProps } from "@/types/TypeUi";
 
-interface ErrorProps {
-  error: Error & { digest?: string };
-  reset: () => void;
-}
-
-const Error = ({ error, reset }: ErrorProps) => {
+const Error = ({ error, reset }: TypeErrorProps) => {
   return (
     <div className="min-h-screen bg-[#121212] relative overflow-hidden">
       {/* Background Grid */}
