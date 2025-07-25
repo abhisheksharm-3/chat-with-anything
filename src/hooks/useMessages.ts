@@ -6,6 +6,7 @@ import { TypeMessage } from "@/types/TypeSupabase";
 import { useUser } from "./useUser";
 import { sendMessage as sendMessageToGemini } from "@/utils/gemini/actions";
 import { ChatMessage } from "@/utils/gemini/client";
+import { useMemo, useCallback } from "react";
 
 /** The base query key for all message-related queries in React Query. */
 export const MESSAGES_QUERY_KEY = ["messages"];
@@ -60,6 +61,11 @@ export const useMessages = (chatId: string) => {
     },
     enabled: isAuthenticated && isValidChatId,
   });
+
+  // Memoize the messages array to prevent unnecessary re-renders
+  const messages = useMemo(() => {
+    return messagesQuery.data || [];
+  }, [messagesQuery.data]);
 
   /** Mutation to send a user's message to the AI backend via a server action. */
   const sendMessageMutation = useMutation({
@@ -268,7 +274,7 @@ export const useMessages = (chatId: string) => {
    *
    * @returns {() => void} An `unsubscribe` function to be called on component cleanup.
    */
-  const subscribeToMessages = () => {
+  const subscribeToMessages = useCallback(() => {
     if (!isValidChatId || !isAuthenticated) return () => {};
 
     const channel = supabase.channel(`messages:${chatId}`);
@@ -312,11 +318,11 @@ export const useMessages = (chatId: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  };
+  }, [isValidChatId, isAuthenticated, chatId, queryClient, supabase]);
 
   return {
-    // Queries
-    messages: messagesQuery.data || [],
+    // Queries - now using memoized messages
+    messages,
     isLoading: messagesQuery.isLoading,
     isError: messagesQuery.isError,
     error: messagesQuery.error,
@@ -338,7 +344,7 @@ export const useMessages = (chatId: string) => {
     deleteMessageAsync: deleteMessageMutation.mutateAsync,
     isDeleting: deleteMessageMutation.isPending,
 
-    // Real-time subscription
+    // Real-time subscription - now memoized with useCallback
     subscribeToMessages,
   };
 };
