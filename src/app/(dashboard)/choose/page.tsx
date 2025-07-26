@@ -18,7 +18,7 @@ export const metadata: Metadata = {
  * Displays a grid of supported file types. Available types trigger an
  * upload modal, while unavailable types are shown as disabled "coming soon" cards.
  *
-* @returns {JSX.Element} The file type selection page.
+ * @returns {JSX.Element} The file type selection page.
  */
 const ChoosePage = () => {
   return (

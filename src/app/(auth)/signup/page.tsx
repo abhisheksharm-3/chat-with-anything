@@ -13,23 +13,23 @@ import { AuthSignupForm } from "@/components/auth/AuthSignupForm";
  */
 const SignupPage = () => {
   return (
-      <div className="w-full max-w-md space-y-8">
-        {/* Auth Header */}
-        <AuthHeader
-          title="Create your account"
-          subtitle="Sign up to get started with Chat With Anything"
-        />
+    <div className="w-full max-w-md space-y-8">
+      {/* Auth Header */}
+      <AuthHeader
+        title="Create your account"
+        subtitle="Sign up to get started with Chat With Anything"
+      />
 
-        {/* Signup Form */}
-        <AuthSignupForm />
-        
-        {/* Link to Login Page */}
-        <AuthLink
-          text="Already have an account?"
-          linkText="Sign in"
-          href="/login"
-        />
-      </div>
+      {/* Signup Form */}
+      <AuthSignupForm />
+
+      {/* Link to Login Page */}
+      <AuthLink
+        text="Already have an account?"
+        linkText="Sign in"
+        href="/login"
+      />
+    </div>
   );
 };
 

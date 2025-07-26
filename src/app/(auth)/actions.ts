@@ -50,7 +50,11 @@ export const signIn = async (formData: FormData) => {
  * @returns {Promise<string | void>} Returns an error message as a string if sign-up fails, otherwise returns nothing on success.
  */
 export const signUp = async (formData: FormData) => {
-  const { "full-name": fullName, email, password } = extractFormData(formData, ["full-name", "email", "password"]);
+  const {
+    "full-name": fullName,
+    email,
+    password,
+  } = extractFormData(formData, ["full-name", "email", "password"]);
   const supabase = await supabaseServerClient();
 
   try {

@@ -14,20 +14,20 @@ import { AuthHeader } from "@/components/auth/AuthHeader";
  */
 const LoginPage = () => {
   return (
-      <div className="w-full max-w-md space-y-8">
-        <AuthHeader
-          title="Welcome back"
-          subtitle="Sign in to your account to continue"
-        />
+    <div className="w-full max-w-md space-y-8">
+      <AuthHeader
+        title="Welcome back"
+        subtitle="Sign in to your account to continue"
+      />
 
-        <AuthLoginForm />
+      <AuthLoginForm />
 
-        <AuthLink
-          text="Don't have an account?"
-          linkText="Sign up"
-          href="/signup"
-        />
-      </div>
+      <AuthLink
+        text="Don't have an account?"
+        linkText="Sign up"
+        href="/signup"
+      />
+    </div>
   );
 };
 

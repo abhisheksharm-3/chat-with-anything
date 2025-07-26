@@ -131,8 +131,11 @@
   background-color: #121212;
   background-size: 50px 20px;
   /* Define the grid lines ONLY */
-  background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+  background-image: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px
+    ),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
 
   /* Apply a radial mask to create the "blur" (fade-out) effect */
