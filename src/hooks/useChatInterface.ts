@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { TypeMessage } from "@/types/TypeSupabase";
 import { useMessages } from "@/hooks/useMessages";
@@ -13,6 +13,9 @@ import {
   createYouTubeErrorMessage,
   syncMessagesWithOptimisticUpdates,
 } from "@/utils/message-utils";
+import { TypeUseChatInterfaceProps, TypeUseChatInterfaceReturn } from "@/types/TypeChat";
+
+const RedirectDelay = 2000;
 
 /**
  * Manages all state and logic for the chat interface.
@@ -21,12 +24,8 @@ import {
  * optimistic UI updates, loading/error states, and event handlers for a given
  * chat session. It returns a comprehensive API for the presentational
  * `ChatInterface` component.
- *
- * @param props The hook's properties.
- * @param props.chatId The unique identifier of the chat to manage.
- * @returns An object containing all the necessary state and handlers for the chat UI.
  */
-export const useChatInterface = ({ chatId }: { chatId: string }) => {
+export const useChatInterface = ({ chatId }: TypeUseChatInterfaceProps): TypeUseChatInterfaceReturn => {
   const router = useRouter();
 
   // --- Core Hooks ---
@@ -43,7 +42,6 @@ export const useChatInterface = ({ chatId }: { chatId: string }) => {
   const [inputValue, setInputValue] = useState("");
   const [showDocument, setShowDocument] = useState(false);
   const [localMessages, setLocalMessages] = useState<TypeMessage[]>([]);
-  const [shouldRedirect, setShouldRedirect] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // --- Derived State ---
@@ -57,87 +55,92 @@ export const useChatInterface = ({ chatId }: { chatId: string }) => {
   const isChatLoading = !chat && messagesLoading;
   const isChatError = !chat && !messagesLoading;
 
-  // --- Effects ---
-
-  // Redirect if chat is not found after a delay.
-  useEffect(() => {
-    if (!isChatLoading && isChatError) {
-      const timer = setTimeout(() => setShouldRedirect(true), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isChatError, isChatLoading]);
-
-  useEffect(() => {
-    if (shouldRedirect) router.push("/not-found");
-  }, [shouldRedirect, router]);
-
-  // Synchronize server messages with local optimistic state.
-  useEffect(() => {
-    if (!serverMessages) return;
-    setLocalMessages((currentMessages) =>
-      syncMessagesWithOptimisticUpdates(serverMessages, currentMessages)
-    );
-  }, [serverMessages]);
-
-  // Inject a specific error message if a YouTube video fails processing.
-  useEffect(() => {
-    const hasYouTubeError = file ? checkYouTubeProcessingError(file) : false;
-    if (hasYouTubeError && localMessages.length === 0 && file) {
-      const errorMessage = createYouTubeErrorMessage(chatId, file );
-      setLocalMessages([errorMessage]);
-    }
-  }, [file, chatId, localMessages.length]);
-
-  // Subscribe to real-time message updates on mount.
-  useEffect(() => {
-    const unsubscribe = subscribeToMessages();
-    return () => unsubscribe();
-  }, [subscribeToMessages]);
-
-  // Auto-scroll to the latest message.
-  useEffect(() => {
+  // --- Memoized Handlers ---
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [localMessages]);
+  }, []);
 
-  // --- Event Handlers ---
-
-  // Handles sending a new message with optimistic UI updates.
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isSending) return;
+  const handleSendMessage = useCallback(async () => {
+    const trimmedInput = inputValue.trim();
+    if (!trimmedInput || isSending) return;
 
     const { tempUserMessage, tempAiMessage } = createOptimisticMessages(
       chatId,
-      inputValue
+      trimmedInput
     );
 
+    // Update UI optimistically
     setLocalMessages((prev) => [...prev, tempUserMessage, tempAiMessage]);
-    const messageToSend = inputValue;
     setInputValue(""); // Clear input immediately
 
     try {
-      await sendMessage(messageToSend);
-      // On success, the sync effect will automatically replace temp messages.
+      await sendMessage(trimmedInput);
+      // Success: sync effect will automatically replace temp messages
     } catch (error) {
       console.error("Failed to send message:", error);
-      // On failure, replace the temporary messages with a single error message.
+      
+      // Replace temporary messages with error message
       const errorMessage = createErrorMessage(chatId);
-      setLocalMessages((prev) => [
-        ...prev.filter(
-          (msg) =>
+      setLocalMessages((prev) => 
+        prev
+          .filter((msg) => 
             msg.id !== tempUserMessage.id && msg.id !== tempAiMessage.id
-        ),
-        errorMessage,
-      ]);
+          )
+          .concat(errorMessage)
+      );
     }
-  };
+  }, [inputValue, isSending, chatId, sendMessage]);
 
-  // Handles Enter key press for sending a message.
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
-  };
+  }, [handleSendMessage]);
+
+  // --- Effects ---
+
+  // Handle chat not found with redirect
+  useEffect(() => {
+    if (!isChatLoading && isChatError) {
+      const timer = setTimeout(() => {
+        router.push("/not-found");
+      }, RedirectDelay);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isChatError, isChatLoading, router]);
+
+  // Synchronize server messages with local optimistic state
+  useEffect(() => {
+    if (serverMessages) {
+      setLocalMessages((currentMessages) =>
+        syncMessagesWithOptimisticUpdates(serverMessages, currentMessages)
+      );
+    }
+  }, [serverMessages]);
+
+  // Handle YouTube processing errors
+  useEffect(() => {
+    if (!file || localMessages.length > 0) return;
+
+    const hasYouTubeError = checkYouTubeProcessingError(file);
+    if (hasYouTubeError) {
+      const errorMessage = createYouTubeErrorMessage(chatId, file);
+      setLocalMessages([errorMessage]);
+    }
+  }, [file, chatId, localMessages.length]);
+
+  // Subscribe to real-time message updates
+  useEffect(() => {
+    const unsubscribe = subscribeToMessages();
+    return unsubscribe;
+  }, [subscribeToMessages]);
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    scrollToBottom();
+  }, [localMessages, scrollToBottom]);
 
   return {
     // State

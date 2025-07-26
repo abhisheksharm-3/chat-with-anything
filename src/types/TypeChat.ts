@@ -1,4 +1,6 @@
+import { useChats } from "@/hooks/useChats";
 import { TypeFile, TypeMessage } from "./TypeSupabase";
+import { useFileById } from "@/hooks/useFiles";
 
 export interface TypeChatInterfaceMessagesProps {
   messages: TypeMessage[];
@@ -42,3 +44,31 @@ export type TypeChatError = Error & {
   code?: string;
   statusCode?: number;
 };
+
+export interface TypeUseChatInterfaceProps {
+  chatId: string;
+}
+
+export interface TypeUseChatInterfaceReturn {
+  // State
+  inputValue: string;
+  setInputValue: (value: string) => void;
+  showDocument: boolean;
+  setShowDocument: (show: boolean) => void;
+  localMessages: TypeMessage[];
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
+  
+  // Derived state
+  chat: ReturnType<ReturnType<typeof useChats>['getChatById']>;
+  file: ReturnType<typeof useFileById>['data'];
+  isChatLoading: boolean;
+  isChatError: boolean;
+  messagesLoading: boolean;
+  isFileLoading: boolean;
+  isFileError: boolean;
+  isSending: boolean;
+  
+  // Handlers
+  handleSendMessage: () => Promise<void>;
+  handleKeyPress: (e: React.KeyboardEvent) => void;
+}

@@ -1,3 +1,5 @@
+import { TypeFile } from "./TypeSupabase";
+
 export interface TypePricingTier {
   price: string;
   subtitle: string;
@@ -37,3 +39,13 @@ export interface TypeGeminiImageData {
   buffer: Buffer;
   mimeType: string;
 }
+
+export type TypeUploadFileParams = {
+  file: File;
+  fileData: Omit<TypeFile, "id" | "user_id" | "uploaded_at" | "url">;
+};
+
+export type TypeUpdateFileParams = {
+  fileId: string;
+  fileData: Partial<TypeFile>;
+};
