@@ -9,13 +9,13 @@ import { Button } from "../ui/button";
  *
  * @component
  * @param {TypeChatInterfaceMobileTabsProps} props - The properties for the component.
- * @param {boolean} props.showPDF - The current state indicating if the document viewer is visible.
+ * @param {boolean} props.showDocument - The current state indicating if the document viewer is visible.
  * @param {React.Dispatch<React.SetStateAction<boolean>>} props.setShowPDF - The state setter function to toggle the document's visibility.
  * @returns {JSX.Element} A button element that toggles the mobile view.
  */
 export const ChatInterfaceMobileTabs: React.FC<
   TypeChatInterfaceMobileTabsProps
-> = ({ showPDF, setShowPDF }) => {
+> = ({ showDocument, setShowDocument }) => {
   /**
    * Handles the click event on the button to toggle the view
    * and stops the event from propagating to parent elements.
@@ -24,13 +24,13 @@ export const ChatInterfaceMobileTabs: React.FC<
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setShowPDF(!showPDF);
+    setShowDocument(!showDocument);
   };
 
   return (
     <div
       className={`w-full z-10 mb-3 ${
-        showPDF ? "fixed bottom-0 left-0 mx-3" : "sticky top-0 mx-auto"
+        showDocument ? "fixed bottom-0 left-0 mx-3" : "sticky top-0 mx-auto"
       }`}
     >
       <Button
@@ -39,7 +39,7 @@ export const ChatInterfaceMobileTabs: React.FC<
         onClick={handleClick}
       >
         <span className="flex items-center justify-center gap-2 text-gray-400 bg-[#1d1d1d] w-full">
-          {showPDF ? (
+          {showDocument ? (
             <>
               <ChevronsUp className="w-6 h-6" />
               <span className="text-sm">Click to Chat with the doc</span>

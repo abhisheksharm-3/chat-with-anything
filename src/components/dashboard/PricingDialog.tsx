@@ -13,169 +13,146 @@ import { PricingData } from "@/constants/PricingData";
 import { TypeDialogProps } from "@/types/TypeUi";
 import { TypePricingTier } from "@/types/TypeContent";
 
+type PricingTier = "free" | "personal" | "pro";
+type BillingCycle = "annual" | "lifetime";
+
 /**
  * A client-side modal dialog for displaying and selecting from various pricing plans.
  * It allows users to toggle between 'annual' and 'lifetime' billing cycles and
  * select a specific pricing tier (e.g., Free, Personal, Pro).
- *
- * @component
- * @param {TypeDialogProps} props - The properties for the component.
- * @param {React.ReactNode} props.trigger - The clickable element that opens the dialog.
- * @param {boolean} [props.defaultOpen=false] - If true, the dialog will be open on initial render.
- * @returns {JSX.Element} The rendered pricing dialog component.
  */
 const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   const [open, setOpen] = useState(defaultOpen);
-  const [selectedPlan, setSelectedPlan] = useState<"annual" | "lifetime">(
-    "annual",
-  );
-  const [selectedPricing, setSelectedPricing] = useState<
-    "free" | "personal" | "pro"
-  >("personal");
-  const [expandedPlan, setExpandedPlan] = useState<"free" | "personal" | "pro">(
-    "personal",
-  );
+  const [selectedPlan, setSelectedPlan] = useState<BillingCycle>("annual");
+  const [selectedPricing, setSelectedPricing] = useState<PricingTier>("personal");
+  const [expandedPlan, setExpandedPlan] = useState<PricingTier>("personal");
 
   const handleClose = () => setOpen(false);
-
-  // Get the pricing data based on the selected billing cycle (annual/lifetime)
   const currentPricing = PricingData[selectedPlan];
 
-  /**
-   * Handle plan selection on mobile - expands the clicked plan and selects it
-   */
-  const handleMobilePlanClick = (tier: "free" | "personal" | "pro") => {
-    if (expandedPlan === tier) {
-      // If clicking the already expanded plan, just update selection
-      setSelectedPricing(tier);
-    } else {
-      // Expand the new plan and select it
-      setExpandedPlan(tier);
-      setSelectedPricing(tier);
-    }
+  const handleMobilePlanClick = (tier: PricingTier) => {
+    setExpandedPlan(tier);
+    setSelectedPricing(tier);
   };
 
-  /**
-   * A helper function to render a single pricing tier card for desktop.
-   */
-  const renderDesktopPricingCard = (
-    tier: "free" | "personal" | "pro",
-    tierData: TypePricingTier,
-  ) => {
+  const getCardClassName = (tier: PricingTier, isSelected: boolean) => {
+    const baseClasses = "border rounded-lg p-4 relative cursor-pointer transition-all";
+    return `${baseClasses} ${
+      isSelected
+        ? "border-primary bg-gray-900"
+        : "border-gray-700 hover:border-primary"
+    }`;
+  };
+
+  const getMobileCardClassName = (isSelected: boolean) => {
+    const baseClasses = "border rounded-xl transition-all";
+    return `${baseClasses} ${
+      isSelected ? "border-primary" : "border-gray-700"
+    }`;
+  };
+
+  const getRadioButtonClassName = (isSelected: boolean) => {
+    const baseClasses = "w-5 h-5 rounded-full border-2 flex items-center justify-center";
+    return `${baseClasses} ${
+      isSelected ? "border-primary bg-primary" : "border-gray-500"
+    }`;
+  };
+
+  const getPlanButtonClassName = (plan: BillingCycle, isSelected: boolean) => {
+    const baseClasses = "px-4 sm:px-6 py-2 rounded-xl text-sm font-medium transition-colors";
+    return `${baseClasses} ${
+      isSelected
+        ? "bg-primary shadow-sm"
+        : "text-gray-400 hover:text-white"
+    }`;
+  };
+
+  const PricingHeader = ({ tier, tierData }: { tier: PricingTier; tierData: TypePricingTier }) => (
+    <div>
+      <h3 className="text-xl font-semibold">{tierData.price}</h3>
+      <p className="text-gray-400 text-sm">{tierData.subtitle}</p>
+      {tier === "pro" && selectedPlan === "annual" && (
+        <p className="text-gray-500 text-xs mt-1">5000mins/month</p>
+      )}
+      {tierData.billingNote && (
+        <p className="text-gray-500 text-xs mt-1">{tierData.billingNote}</p>
+      )}
+    </div>
+  );
+
+  const RadioButton = ({ isSelected }: { isSelected: boolean }) => (
+    <div className={getRadioButtonClassName(isSelected)}>
+      {isSelected && <Check size={12} className="text-white" />}
+    </div>
+  );
+
+  const FeatureList = ({ features }: { features: string[] }) => (
+    <div className="space-y-3">
+      {features.map((feature, index) => (
+        <div key={index} className="flex items-start gap-3">
+          <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
+          <span className="text-sm">{feature}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  const DesktopPricingCard = ({ tier, tierData }: { tier: PricingTier; tierData: TypePricingTier }) => {
     const isSelected = selectedPricing === tier;
 
     return (
       <div
-        key={tier}
-        className={`border rounded-lg p-4 relative cursor-pointer transition-all ${
-          isSelected
-            ? "border-primary bg-gray-900"
-            : "border-gray-700 hover:border-primary"
-        }`}
+        className={getCardClassName(tier, isSelected)}
         onClick={() => setSelectedPricing(tier)}
       >
         <div className="flex items-start justify-between mb-4">
-          <div>
-            <h3 className="text-xl font-semibold">{tierData.price}</h3>
-            <p className="text-gray-400 text-sm">{tierData.subtitle}</p>
-            {tier === "pro" && selectedPlan === "annual" && (
-              <p className="text-gray-500 text-xs mt-1">5000mins/month</p>
-            )}
-            {tierData.billingNote && (
-              <p className="text-gray-500 text-xs mt-1">
-                {tierData.billingNote}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center">
-            <div
-              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                isSelected ? "border-primary bg-primary" : "border-gray-500"
-              }`}
-            >
-              {isSelected && <Check size={12} className="text-white" />}
-            </div>
-          </div>
+          <PricingHeader tier={tier} tierData={tierData} />
+          <RadioButton isSelected={isSelected} />
         </div>
-
-        <div className="space-y-3">
-          {tierData.features.map((feature, index) => (
-            <div key={index} className="flex items-start gap-3">
-              <Check size={16} className="text-primary mt-0.5 flex-shrink-0" />
-              <span className="text-sm">{feature}</span>
-            </div>
-          ))}
-        </div>
+        <FeatureList features={tierData.features} />
       </div>
     );
   };
 
-  /**
-   * A helper function to render a single pricing tier card for mobile with accordion behavior.
-   */
-  const renderMobilePricingCard = (
-    tier: "free" | "personal" | "pro",
-    tierData: TypePricingTier,
-  ) => {
+  const MobilePricingCard = ({ tier, tierData }: { tier: PricingTier; tierData: TypePricingTier }) => {
     const isSelected = selectedPricing === tier;
     const isExpanded = expandedPlan === tier;
 
     return (
-      <div
-        key={tier}
-        className={`border rounded-xl transition-all ${
-          isSelected ? "border-primary" : "border-gray-700"
-        }`}
-      >
-        {/* Header - Always visible */}
-        <div
-          className="p-4 cursor-pointer"
-          onClick={() => handleMobilePlanClick(tier)}
-        >
+      <div className={getMobileCardClassName(isSelected)}>
+        <div className="p-4 cursor-pointer" onClick={() => handleMobilePlanClick(tier)}>
           <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-xl font-semibold">{tierData.price}</h3>
-              <p className="text-gray-400 text-sm">{tierData.subtitle}</p>
-              {tier === "pro" && selectedPlan === "annual" && (
-                <p className="text-gray-500 text-xs mt-1">5000mins/month</p>
-              )}
-              {tierData.billingNote && (
-                <p className="text-gray-500 text-xs mt-1">
-                  {tierData.billingNote}
-                </p>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  isSelected ? "border-primary bg-primary" : "border-gray-500"
-                }`}
-              >
-                {isSelected && <Check size={12} className="text-white" />}
-              </div>
-            </div>
+            <PricingHeader tier={tier} tierData={tierData} />
+            <RadioButton isSelected={isSelected} />
           </div>
         </div>
 
-        {/* Expandable content - Features */}
         {isExpanded && (
           <div className="px-4 pb-4 border-t border-gray-700 pt-4">
-            <div className="space-y-3">
-              {tierData.features.map((feature, index) => (
-                <div key={index} className="flex items-start gap-3">
-                  <Check
-                    size={16}
-                    className="text-primary mt-0.5 flex-shrink-0"
-                  />
-                  <span className="text-sm">{feature}</span>
-                </div>
-              ))}
-            </div>
+            <FeatureList features={tierData.features} />
           </div>
         )}
       </div>
     );
   };
+
+  const PlanSelector = () => (
+    <div className="flex justify-center mb-6">
+      <div className="bg-gray-800 rounded-xl p-1 inline-flex">
+        {(["annual", "lifetime"] as const).map((plan) => (
+          <button
+            key={plan}
+            className={getPlanButtonClassName(plan, selectedPlan === plan)}
+            onClick={() => setSelectedPlan(plan)}
+          >
+            {plan.charAt(0).toUpperCase() + plan.slice(1)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const tiers: PricingTier[] = ["free", "personal", "pro"];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -202,44 +179,20 @@ const PricingDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
         </div>
 
         <div className="p-4 sm:p-6">
-          {/* Plan selector */}
-          <div className="flex justify-center mb-6">
-            <div className="bg-gray-800 rounded-xl p-1 inline-flex">
-              <button
-                className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-medium transition-colors ${
-                  selectedPlan === "annual"
-                    ? "bg-primary shadow-sm"
-                    : "text-gray-400 hover:text-white"
-                }`}
-                onClick={() => setSelectedPlan("annual")}
-              >
-                Annual
-              </button>
-              <button
-                className={`px-4 sm:px-6 py-2 rounded-xl text-sm font-medium transition-colors ${
-                  selectedPlan === "lifetime"
-                    ? "bg-primary shadow-sm"
-                    : "text-gray-400 hover:text-white"
-                }`}
-                onClick={() => setSelectedPlan("lifetime")}
-              >
-                Lifetime
-              </button>
-            </div>
-          </div>
+          <PlanSelector />
 
           {/* Mobile view - accordion style */}
           <div className="md:hidden space-y-3">
-            {renderMobilePricingCard("free", currentPricing.free)}
-            {renderMobilePricingCard("personal", currentPricing.personal)}
-            {renderMobilePricingCard("pro", currentPricing.pro)}
+            {tiers.map((tier) => (
+              <MobilePricingCard key={tier} tier={tier} tierData={currentPricing[tier]} />
+            ))}
           </div>
 
           {/* Desktop view - show all pricing cards */}
           <div className="hidden md:grid md:grid-cols-3 gap-4">
-            {renderDesktopPricingCard("free", currentPricing.free)}
-            {renderDesktopPricingCard("personal", currentPricing.personal)}
-            {renderDesktopPricingCard("pro", currentPricing.pro)}
+            {tiers.map((tier) => (
+              <DesktopPricingCard key={tier} tier={tier} tierData={currentPricing[tier]} />
+            ))}
           </div>
         </div>
 

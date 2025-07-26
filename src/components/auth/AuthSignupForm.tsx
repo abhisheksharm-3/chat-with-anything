@@ -69,7 +69,9 @@ export const AuthSignupForm = () => {
             name="fullName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm text-gray-300">Full Name</FormLabel>
+                <FormLabel className="text-sm text-gray-300">
+                  Full Name
+                </FormLabel>
                 <FormControl>
                   <Input
                     placeholder="John Doe"
@@ -105,7 +107,9 @@ export const AuthSignupForm = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm text-gray-300">Password</FormLabel>
+                <FormLabel className="text-sm text-gray-300">
+                  Password
+                </FormLabel>
                 <FormControl>
                   <AuthPasswordInput field={field} className={inputClassName} />
                 </FormControl>

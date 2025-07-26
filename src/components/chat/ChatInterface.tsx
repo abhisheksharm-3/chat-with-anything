@@ -23,8 +23,8 @@ const ChatInterface = ({ chatId }: { chatId: string }) => {
     // State
     inputValue,
     setInputValue,
-    showPDF,
-    setShowPDF,
+    showDocument,
+    setShowDocument,
     localMessages,
     messagesEndRef,
 
@@ -121,13 +121,16 @@ const ChatInterface = ({ chatId }: { chatId: string }) => {
       <div className="md:hidden flex flex-col h-full">
         <div
           className={`flex items-center justify-between p-4 bg-[#121212] ${
-            showPDF ? "border-t" : "border-b"
+            showDocument ? "border-t" : "border-b"
           } border-[#272626]`}
         >
-          <ChatInterfaceMobileTabs showPDF={showPDF} setShowPDF={setShowPDF} />
+          <ChatInterfaceMobileTabs
+            showDocument={showDocument}
+            setShowDocument={setShowDocument}
+          />
         </div>
 
-        {showPDF ? (
+        {showDocument ? (
           // View 1: Document Viewer
           <div className="flex-1 overflow-hidden">
             {file && (

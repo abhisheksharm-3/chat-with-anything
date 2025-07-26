@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -47,6 +47,7 @@ const LogoutDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+      <DialogTitle className="sr-only">Logout Confirmation</DialogTitle>
       <DialogContent
         className="bg-[#121212] border border-[#333] max-w-md p-6 rounded-xl gap-2"
         showCloseButton={false}

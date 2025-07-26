@@ -41,7 +41,7 @@ export const useChatInterface = ({ chatId }: { chatId: string }) => {
 
   // --- Local State ---
   const [inputValue, setInputValue] = useState("");
-  const [showPDF, setShowPDF] = useState(false);
+  const [showDocument, setShowDocument] = useState(false);
   const [localMessages, setLocalMessages] = useState<TypeMessage[]>([]);
   const [shouldRedirect, setShouldRedirect] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -143,8 +143,8 @@ export const useChatInterface = ({ chatId }: { chatId: string }) => {
     // State
     inputValue,
     setInputValue,
-    showPDF,
-    setShowPDF,
+    showDocument,
+    setShowDocument,
     localMessages,
     messagesEndRef,
 

@@ -1,18 +1,12 @@
 "use client";
 
-import { AnimatePresence, motion, MotionProps } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 
 import { cn } from "@/utils/cn";
+import { TypeWordRotateProps } from "@/types/TypeUi";
 
-interface WordRotateProps {
-  words: string[];
-  duration?: number;
-  motionProps?: MotionProps;
-  className?: string;
-}
-
-export function WordRotate({
+export const WordRotate = ({
   words,
   duration = 2500,
   motionProps = {
@@ -22,7 +16,7 @@ export function WordRotate({
     transition: { duration: 0.25, ease: "easeOut" },
   },
   className,
-}: WordRotateProps) {
+}: TypeWordRotateProps) => {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -30,7 +24,6 @@ export function WordRotate({
       setIndex((prevIndex) => (prevIndex + 1) % words.length);
     }, duration);
 
-    // Clean up interval on unmount
     return () => clearInterval(interval);
   }, [words, duration]);
 
@@ -47,4 +40,4 @@ export function WordRotate({
       </AnimatePresence>
     </div>
   );
-}
+};

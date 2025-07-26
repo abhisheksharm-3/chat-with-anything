@@ -27,7 +27,7 @@ export const AuthPasswordInput = ({
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = useCallback(() => {
-    setShowPassword(prev => !prev);
+    setShowPassword((prev) => !prev);
   }, []);
 
   const isPasswordVisible = showPassword;
@@ -53,13 +53,11 @@ export const AuthPasswordInput = ({
         tabIndex={-1}
         aria-label={buttonAriaLabel}
       >
-        <VisibilityIcon 
-          size={16} 
+        <VisibilityIcon
+          size={16}
           className={cn(
             "transition-colors",
-            disabled 
-              ? "text-gray-300" 
-              : "text-gray-400 hover:text-gray-600"
+            disabled ? "text-gray-300" : "text-gray-400 hover:text-gray-600"
           )}
         />
       </Button>

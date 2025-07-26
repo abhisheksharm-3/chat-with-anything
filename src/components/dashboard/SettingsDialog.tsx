@@ -8,18 +8,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, X } from "lucide-react";
+import { X } from "lucide-react";
 import PricingDialog from "./PricingDialog";
 import { useRouter } from "next/navigation";
 import { TypeDialogProps } from "@/types/TypeUi";
-import { Input } from "../ui/input";
 import { useUser } from "@/hooks/useUser";
 import useIsMobile from "@/hooks/useIsMobile";
 import { SettingsSections } from "@/constants/SettingsData";
 import { SettingsLoadingSkeleton } from "../settings/SettingsLoadingSkeleton";
 
 /**
- * A dialog for viewing and editing user account settings.
+ * A dialog for viewing user account settings.
  *
  * This component exhibits responsive behavior:
  * - On desktop, it opens as a modal dialog.
@@ -34,25 +33,17 @@ import { SettingsLoadingSkeleton } from "../settings/SettingsLoadingSkeleton";
  */
 const SettingsDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   const [open, setOpen] = useState(defaultOpen);
-  const { user, isLoading, updateUser, isUpdating } = useUser();
-  const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState("");
+  const { user, isLoading } = useUser();
+  const [isMounted, setIsMounted] = useState(false);
   const isMobile = useIsMobile();
   const router = useRouter();
-  const [isMounted, setIsMounted] = useState(false);
 
-  /**
-   * Effect to safely update state only after the component has mounted on the client.
-   * This prevents hydration mismatches between server and client renders.
-   */
+  // Handle client-side mounting to prevent hydration mismatches
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  /**
-   * Effect to handle the mobile-specific behavior. If the dialog is triggered on a mobile
-   * device, it closes itself and redirects to the full-page settings route.
-   */
+  // Handle mobile redirect behavior
   useEffect(() => {
     if (isMounted && isMobile && open) {
       setOpen(false);
@@ -61,98 +52,14 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
   }, [isMobile, open, router, isMounted]);
 
   /**
-   * Effect to populate the local name state once the user data is loaded.
-   */
-  useEffect(() => {
-    if (user?.name) {
-      setName(user.name);
-    }
-  }, [user?.name]);
-
-  /**
-   * Handles the form submission to update the user's display name.
-   * @param {React.FormEvent} e - The form event.
-   */
-  const handleUpdateName = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (name.trim() === user?.name) {
-      setIsEditing(false);
-      return;
-    }
-
-    try {
-      await updateUser({ name });
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Failed to update name:", error);
-    }
-  };
-
-  /**
    * Renders a settings section based on configuration
    */
   const renderSettingsSection = (section: (typeof SettingsSections)[0]) => {
     const value = user?.[section.key] || section.fallback;
-    const isDisplayName = section.id === "displayName";
-
-    if (isDisplayName && isEditing) {
-      return (
-        <form onSubmit={handleUpdateName} className="flex gap-2 items-center">
-          <Input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="bg-[#1a1a1a] border border-gray-700 rounded px-2 py-1 text-sm w-full"
-            placeholder={section.placeholder}
-            disabled={isUpdating}
-          />
-          <Button
-            type="submit"
-            size="sm"
-            disabled={isUpdating}
-            className="text-xs"
-          >
-            {isUpdating ? (
-              <>
-                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Save"
-            )}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setIsEditing(false);
-              setName(user?.name || "");
-            }}
-            className="text-xs"
-            disabled={isUpdating}
-          >
-            Cancel
-          </Button>
-        </form>
-      );
-    }
 
     return (
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <p className="text-[#A9A9A9] text-sm">{section.label}</p>
-          {section.editable && !isEditing && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsEditing(true)}
-              className="text-xs text-primary hover:text-primary/90"
-            >
-              Edit
-            </Button>
-          )}
-        </div>
+      <div className="space-y-1" key={section.id}>
+        <p className="text-[#A9A9A9] text-sm">{section.label}</p>
         <p>{value}</p>
       </div>
     );
@@ -170,6 +77,7 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
         className="bg-[#121212] border border-[#333] max-w-lg p-0 rounded-lg"
         showCloseButton={false}
       >
+        {/* Header */}
         <div className="p-6 pb-4 border-b border-[#333]">
           <div className="flex items-start justify-between mb-2">
             <div>
@@ -192,15 +100,14 @@ const SettingsDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
           </div>
         </div>
 
+        {/* Content */}
         <div className="font-medium text-lg">
           {isLoading ? (
             <SettingsLoadingSkeleton isMobile={false} />
           ) : (
             <div className="px-6 pb-6 space-y-6">
-              {/* Render settings sections using array */}
-              {SettingsSections.map((section) => (
-                <div key={section.id}>{renderSettingsSection(section)}</div>
-              ))}
+              {/* Settings sections */}
+              {SettingsSections.map(renderSettingsSection)}
 
               {/* Current Plan Section */}
               <div className="flex justify-between items-center">

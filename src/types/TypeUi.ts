@@ -1,6 +1,7 @@
 import { buttonVariants } from "@/components/ui/button";
 import { VariantProps } from "class-variance-authority";
 import { TypeChat } from "./TypeSupabase";
+import { MotionProps } from "motion/react";
 
 export interface TypeButtonCta
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -66,4 +67,11 @@ export interface TypeHistoryPageChatDropdownProps {
 export interface TypeErrorProps {
   error: Error & { digest?: string };
   reset: () => void;
+}
+
+export interface TypeWordRotateProps {
+  words: string[];
+  duration?: number;
+  motionProps?: MotionProps;
+  className?: string;
 }

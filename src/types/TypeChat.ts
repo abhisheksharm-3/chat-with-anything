@@ -23,8 +23,8 @@ export interface TypeChatInterfaceDocumentViewerProps {
 }
 
 export interface TypeChatInterfaceMobileTabsProps {
-  showPDF: boolean;
-  setShowPDF: (show: boolean) => void;
+  showDocument: boolean;
+  setShowDocument: (show: boolean) => void;
 }
 
 export interface TypeControlsProps {

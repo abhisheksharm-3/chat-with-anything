@@ -26,7 +26,7 @@ export const ChatInterfaceMessages: React.FC<
     if (
       content.startsWith("I couldn't process this YouTube video:") ||
       content.startsWith(
-        "ERROR: No transcript available for this YouTube video",
+        "ERROR: No transcript available for this YouTube video"
       )
     ) {
       return (
@@ -65,7 +65,7 @@ export const ChatInterfaceMessages: React.FC<
       message.content &&
       message.content.trim() !== "" &&
       // Only filter out temp AI messages with "..." content, keep temp user messages
-      !(message.id.startsWith("temp-ai-") && message.content === "..."),
+      !(message.id.startsWith("temp-ai-") && message.content === "...")
   );
 
   return (
@@ -111,8 +111,8 @@ export const ChatInterfaceMessages: React.FC<
                 message.role === "user"
                   ? "bg-primary"
                   : message.isError
-                    ? "bg-red-900/20 text-red-400"
-                    : "bg-[#272626]"
+                  ? "bg-red-900/20 text-red-400"
+                  : "bg-[#272626]"
               }`}
             >
               {/* "Thinking" indicator - only show for temporary messages */}
