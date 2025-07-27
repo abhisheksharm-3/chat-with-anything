@@ -3,15 +3,15 @@
 import { useState, useEffect } from "react";
 import { Send, AlertCircle } from "lucide-react";
 import { TypeUploadModalUrlInputProps } from "@/types/TypeUpload";
-import { extractYoutubeVideoId } from "@/utils/youtube-utils"; // UPDATED
+import { extractYoutubeVideoId } from "@/utils/youtube-utils";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 
 /**
- * A controlled input component for users to submit a URL for processing.
+ * A controlled input component for submitting a URL for processing.
  *
- * It includes a submit button and special logic to detect YouTube URLs
- * to display a relevant informational message.
+ * It features a submit button and displays a specific informational message
+ * when a YouTube URL is detected.
  *
  * @param {TypeUploadModalUrlInputProps} props - The properties for the component.
  * @returns {JSX.Element} The rendered URL input component.
@@ -28,7 +28,7 @@ const UploadModalUrlInput: React.FC<TypeUploadModalUrlInputProps> = ({
   const [isYouTube, setIsYouTube] = useState(false);
 
   /**
-   * Effect to check if the currently entered URL is a valid YouTube link.
+   * Checks if the entered URL is a YouTube link to conditionally show a help message.
    */
   useEffect(() => {
     setIsYouTube(!!extractYoutubeVideoId(url));
@@ -63,13 +63,13 @@ const UploadModalUrlInput: React.FC<TypeUploadModalUrlInputProps> = ({
         </Button>
       </div>
 
-      {/* YouTube-specific message */}
+      {/* Conditional message for YouTube URLs */}
       {isYouTube && (
         <div className="mt-2 flex items-start gap-2 bg-blue-900/20 p-2 rounded-md">
           <AlertCircle size={16} className="text-blue-400 mt-0.5" />
           <p className="text-xs text-blue-400">
-            Note: Only YouTube videos with available captions/transcripts can be
-            processed. Private or automatically generated captions may not work.
+            Note: Only videos with available captions can be processed. Private or
+            auto-generated captions may not work.
           </p>
         </div>
       )}
