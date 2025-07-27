@@ -1,35 +1,37 @@
 /**
- * YouTube utilities module
+ * YouTube utilities module.
  *
  * This module contains client-side utility functions for working with YouTube videos.
  * These functions are not marked with "use server" and can be used on the client.
  */
 
 /**
- * Helper function to extract YouTube video ID from URL
+ * Extracts a YouTube video ID from various URL formats.
+ * @param {string} url - The YouTube URL.
+ * @returns {string | null} The 11-character video ID or null if not found.
  */
 export const extractYoutubeVideoId = (url: string): string | null => {
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const regExp =
+    /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
   const match = url.match(regExp);
   return match && match[2].length === 11 ? match[2] : null;
 };
 
 /**
- * Check if a URL is a YouTube URL
- */
-export const isYoutubeUrl = (url: string): boolean => {
-  return url.includes("youtube.com") || url.includes("youtu.be");
-};
-
-/**
- * Check if a YouTube video has available transcripts
- * This function validates the URL format but defers actual transcript checking to server-side processing
+ * Performs a preliminary, client-side check to validate a YouTube URL and extract its video ID.
+ *
+ * Note: This function assumes a transcript is available if the URL is valid.
+ * The actual check for transcript existence is handled server-side.
+ *
+ * @param {string} url - The YouTube URL to check.
+ * @returns {Promise<{ available: boolean; error?: string }>} An object indicating
+ * preliminary availability and an error message if validation fails.
  */
 export const checkYoutubeTranscriptAvailability = async (
   url: string,
 ): Promise<{ available: boolean; error?: string }> => {
   try {
-    // Extract video ID from URL
+    // Extract video ID from URL. This also validates the URL's structure.
     const videoId = extractYoutubeVideoId(url);
     if (!videoId) {
       return {
@@ -38,19 +40,8 @@ export const checkYoutubeTranscriptAvailability = async (
       };
     }
 
-    // Basic validation - check if it's a valid YouTube URL format
-    if (!isYoutubeUrl(url)) {
-      return {
-        available: false,
-        error: "Invalid YouTube URL format.",
-      };
-    }
-
-    // For now, we'll assume the video is valid and let the server-side processing handle transcript availability
-    // This avoids the API call issue and lets the actual transcript processing determine availability
-    return {
-      available: true,
-    };
+    // Assume the video is valid and let server-side logic handle the actual transcript check.
+    return { available: true };
   } catch (error) {
     console.error("Error checking YouTube transcript availability:", error);
     return {
@@ -58,19 +49,20 @@ export const checkYoutubeTranscriptAvailability = async (
       error:
         error instanceof Error
           ? error.message
-          : "Unknown error checking transcript availability",
+          : "An unknown error occurred while checking the URL.",
     };
   }
 };
 
 /**
- * Create a system prompt for YouTube videos
+ * Creates a system prompt for an AI assistant that answers questions about a
+ * YouTube video using its transcript.
+ * @param {string} transcriptContent - The transcript of the YouTube video.
+ * @returns {string} A formatted system prompt string.
  */
-export const createYoutubeSystemPrompt = (
-  transcriptContent: string,
-): string => {
+export const createYoutubeSystemPrompt = (transcriptContent: string): string => {
   return `You are a helpful assistant that answers questions about a YouTube video based on its transcript.
-  
+
 Here is the relevant transcript content to use when answering questions:
 
 ${transcriptContent}

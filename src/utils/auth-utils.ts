@@ -1,126 +1,124 @@
-import { ErrorMessages } from "@/constants/AuthErrorMessages";
+import { ErrorMessages, HttpStatusErrorMap } from "@/constants/AuthErrorMessages";
 import { EnumAuthErrorType } from "@/constants/EnumAuthErrorTypes";
 import { TypeAuthError, TypeUnknownError } from "@/types/TypeAuth";
 
 /**
- * Categorizes and enriches error information
+ * Normalizes an unknown error into a structured object with a message, code, and status.
+ * @private
  */
-export const categorizeAuthError = (
-  error: TypeUnknownError,
-  context?: Record<string, unknown>,
+const _normalizeUnknownError = (
+  error: TypeUnknownError
+): { message: string; code?: string; status?: number } => {
+  if (error instanceof Error) {
+    const errObj = error as { code?: string; status?: number };
+    return {
+      message: error.message,
+      code: errObj.code,
+      status: errObj.status,
+    };
+  }
+
+  if (error && typeof error === "object") {
+    const errObj = error as {
+      message?: string;
+      error_description?: string;
+      code?: string;
+      error?: string;
+      status?: number;
+    };
+    return {
+      message: errObj.message || errObj.error_description || "An unknown error occurred.",
+      code: errObj.code || errObj.error,
+      status: errObj.status,
+    };
+  }
+
+  return { message: String(error) };
+};
+
+/**
+ * Builds the final TypeAuthError object.
+ * @private
+ */
+const _buildAuthError = (
+  normalizedError: { message: string; code?: string },
+  errorInfo: { type: EnumAuthErrorType; userMessage: string; retryable: boolean; retryAfter?: number },
+  context?: Record<string, unknown>
 ): TypeAuthError => {
-  const errorMessage = (() => {
-    if (typeof error === "string") return error;
-    if (error instanceof Error) return error.message;
-    if (error && typeof error === "object") {
-      const errorObj = error as {
-        message?: string;
-        error_description?: string;
-      };
-      return errorObj.message || errorObj.error_description || String(error);
-    }
-    return String(error);
-  })();
-
-  // Check for known error patterns
-  for (const [pattern, errorInfo] of Object.entries(ErrorMessages)) {
-    if (errorMessage.toLowerCase().includes(pattern.toLowerCase())) {
-      return {
-        type: errorInfo.type!,
-        message: errorMessage,
-        userMessage: errorInfo.userMessage!,
-        code: (() => {
-          if (error && typeof error === "object") {
-            const errorObj = error as { error?: string; code?: string };
-            return errorObj.error || errorObj.code;
-          }
-          return undefined;
-        })(),
-        retryable: errorInfo.retryable!,
-        retryAfter: errorInfo.retryAfter,
-        context,
-      };
-    }
-  }
-
-  // Check for HTTP status codes
-  const status = (() => {
-    if (error && typeof error === "object") {
-      const errorObj = error as { status?: number };
-      return errorObj.status;
-    }
-    return undefined;
-  })();
-
-  if (status) {
-    switch (status) {
-      case 400:
-        return {
-          type: EnumAuthErrorType.VALIDATION_ERROR,
-          message: errorMessage,
-          userMessage: "Please check your input and try again.",
-          retryable: false,
-          context,
-        };
-      case 401:
-        return {
-          type: EnumAuthErrorType.AUTHENTICATION_ERROR,
-          message: errorMessage,
-          userMessage: "Authentication failed. Please check your credentials.",
-          retryable: true,
-          context,
-        };
-      case 403:
-        return {
-          type: EnumAuthErrorType.AUTHORIZATION_ERROR,
-          message: errorMessage,
-          userMessage:
-            "Access denied. You don't have permission to perform this action.",
-          retryable: false,
-          context,
-        };
-      case 429:
-        return {
-          type: EnumAuthErrorType.RATE_LIMIT_ERROR,
-          message: errorMessage,
-          userMessage: "Too many requests. Please wait a moment and try again.",
-          retryable: true,
-          retryAfter: 60,
-          context,
-        };
-      case 500:
-      case 502:
-      case 503:
-      case 504:
-        return {
-          type: EnumAuthErrorType.SERVER_ERROR,
-          message: errorMessage,
-          userMessage:
-            "Our servers are experiencing issues. Please try again in a few minutes.",
-          retryable: true,
-          context,
-        };
-    }
-  }
-
-  // Default unknown error
   return {
-    type: EnumAuthErrorType.UNKNOWN_ERROR,
-    message: errorMessage,
-    userMessage:
-      "An unexpected error occurred. Please try again or contact support if the problem persists.",
-    retryable: true,
+    type: errorInfo.type,
+    userMessage: errorInfo.userMessage,
+    retryable: errorInfo.retryable,
+    retryAfter: errorInfo.retryAfter,
+    message: normalizedError.message,
+    code: normalizedError.code,
     context,
   };
 };
 
-// Shared error handling logic
+/**
+ * Categorizes an unknown error into a structured TypeAuthError.
+ * It identifies errors based on string patterns, HTTP status codes, or falls back to a generic type.
+ *
+ * @param error The unknown error to categorize.
+ * @param context Optional additional data to attach to the categorized error.
+ * @returns A structured TypeAuthError object.
+ */
+export const categorizeAuthError = (
+  error: TypeUnknownError,
+  context?: Record<string, unknown>
+): TypeAuthError => {
+  const normalizedError = _normalizeUnknownError(error);
+  const errorMessageLower = normalizedError.message.toLowerCase();
+
+  // 1. Check for known error message patterns
+  for (const [pattern, errorInfo] of Object.entries(ErrorMessages)) {
+    if (errorMessageLower.includes(pattern)) {
+      // Ensure errorInfo.type is always defined
+      if (!errorInfo.type) {
+        errorInfo.type = EnumAuthErrorType.UNKNOWN_ERROR;
+      }
+      return _buildAuthError(normalizedError, errorInfo as {
+        type: EnumAuthErrorType;
+        userMessage: string;
+        retryable: boolean;
+        retryAfter?: number;
+      }, context);
+    }
+  }
+
+  // 2. Check for HTTP status codes
+  if (normalizedError.status && HttpStatusErrorMap.has(normalizedError.status)) {
+    const errorInfo = HttpStatusErrorMap.get(normalizedError.status)!;
+    return _buildAuthError(normalizedError, errorInfo, context);
+  }
+
+  // 3. Default to an unknown error
+  const defaultErrorInfo = {
+    type: EnumAuthErrorType.UNKNOWN_ERROR,
+    userMessage: "An unexpected error occurred. Please try again or contact support.",
+    retryable: true,
+  };
+
+  return _buildAuthError(normalizedError, defaultErrorInfo, context);
+};
+
+/**
+ * A shared error handler that categorizes and re-throws errors as TypeAuthError.
+ * If the error is already a categorized TypeAuthError, it is thrown as-is.
+ *
+ * @param error The unknown error caught in a try-catch block.
+ * @param action A string describing the action that failed (e.g., 'login').
+ * @param context Optional additional data for debugging.
+ * @throws {TypeAuthError} Always throws a structured authentication error.
+ */
 export const handleAuthErrors = (
   error: unknown,
   action: string,
-  context: Record<string, unknown> = {},
+  context: Record<string, unknown> = {}
 ) => {
-  if (error && typeof error === "object" && "type" in error) {
+  // If the error is already one of our custom types, re-throw it.
+  if (error && typeof error === "object" && "type" in error && "userMessage" in error) {
     throw error as TypeAuthError;
   }
 

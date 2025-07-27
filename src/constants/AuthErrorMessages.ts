@@ -1,4 +1,4 @@
-import { TypeAuthError } from "@/types/TypeAuth";
+import { TypeAuthError, TypeAuthErrorInfo } from "@/types/TypeAuth";
 import { EnumAuthErrorType } from "./EnumAuthErrorTypes";
 
 export const ErrorMessages: Record<string, Partial<TypeAuthError>> = {
@@ -86,3 +86,41 @@ export const ErrorMessages: Record<string, Partial<TypeAuthError>> = {
     retryable: true,
   },
 };
+
+// Define a shared object for server errors to avoid repetition
+const ServerErrorInfo: TypeAuthErrorInfo = {
+  type: EnumAuthErrorType.SERVER_ERROR,
+  userMessage: "Our servers are experiencing issues. Please try again in a few minutes.",
+  retryable: true,
+};
+
+/**
+ * A map that converts HTTP status codes to structured error information.
+ */
+export const HttpStatusErrorMap = new Map<number, TypeAuthErrorInfo>([
+  [400, {
+    type: EnumAuthErrorType.VALIDATION_ERROR,
+    userMessage: "Please check your input and try again.",
+    retryable: false,
+  }],
+  [401, {
+    type: EnumAuthErrorType.AUTHENTICATION_ERROR,
+    userMessage: "Authentication failed. Please check your credentials.",
+    retryable: true,
+  }],
+  [403, {
+    type: EnumAuthErrorType.AUTHORIZATION_ERROR,
+    userMessage: "Access denied. You don't have permission for this action.",
+    retryable: false,
+  }],
+  [429, {
+    type: EnumAuthErrorType.RATE_LIMIT_ERROR,
+    userMessage: "Too many requests. Please wait a moment and try again.",
+    retryable: true,
+    retryAfter: 60,
+  }],
+  [500, ServerErrorInfo],
+  [502, ServerErrorInfo],
+  [503, ServerErrorInfo],
+  [504, ServerErrorInfo],
+]);

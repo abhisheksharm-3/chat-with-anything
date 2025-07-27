@@ -64,3 +64,10 @@ export type TypeUnknownError =
 
 export type TypeAuthAction = "login" | "signup";
 export type TypeAuthFormData = TypeLoginFormData | TypeSignupFormData;
+
+export type TypeAuthErrorInfo = {
+  type: EnumAuthErrorType;
+  userMessage: string;
+  retryable: boolean;
+  retryAfter?: number;
+};

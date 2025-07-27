@@ -1,8 +1,23 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+/**
+ * Next.js middleware to refresh the user's session and handle route protection.
+ *
+ * This function runs on every request to:
+ * 1. Refresh the Supabase session token by managing cookies.
+ * 2. Redirect unauthenticated users from protected routes to the login page.
+ * 3. Redirect authenticated users from auth routes (login/signup) to the dashboard.
+ *
+ * @param request The incoming Next.js request object.
+ * @returns A NextResponse object that either continues the request chain or issues a redirect.
+ */
 export const updateSession = async (request: NextRequest) => {
-  let supabaseResponse = NextResponse.next({ request });
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,81 +27,63 @@ export const updateSession = async (request: NextRequest) => {
         getAll: () => request.cookies.getAll(),
         setAll: (cookiesToSet) => {
           cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
+            request.cookies.set(name, value)
           );
-          supabaseResponse = NextResponse.next({ request });
+          response = NextResponse.next({
+            request,
+          });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
+            response.cookies.set(name, value, options)
           );
         },
       },
-    },
+    }
   );
 
-  try {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    if (error) {
-      console.error("Auth error:", error);
+  const { pathname } = request.nextUrl;
+
+  // --- Route Definitions ---
+  const publicRoutes = ["/"];
+  const authRoutes = ["/login", "/signup"];
+  const resourceExtensions = /\.(ico|png|jpg|jpeg|gif|svg|webp|css|js)$/;
+  const isResourceRoute =
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/favicon") ||
+    resourceExtensions.test(pathname);
+
+  // Allow all resource requests to pass through without checks.
+  if (isResourceRoute) {
+    return response;
+  }
+
+  const isPublic = publicRoutes.includes(pathname);
+  const isAuthRoute = authRoutes.includes(pathname);
+  const dashboardUrl = new URL("/choose", request.url);
+
+  // --- Redirect Logic ---
+
+  // If the user is authenticated...
+  if (user) {
+    // and tries to access an auth route or the root page, redirect to the dashboard.
+    if (isAuthRoute || pathname === "/") {
+      return NextResponse.redirect(dashboardUrl);
     }
-
-    const { pathname } = request.nextUrl;
-
-    // Define public routes (only root, login, and signup)
-    const isPublicRoute =
-      pathname === "/" || pathname === "/login" || pathname === "/signup";
-
-    // Define resource routes (static files, API routes, etc.)
-    const isResourceRoute =
-      pathname.startsWith("/_next") ||
-      pathname.startsWith("/api") ||
-      pathname.startsWith("/favicon") ||
-      pathname.match(/\.(ico|png|jpg|jpeg|gif|svg|webp|css|js)$/);
-
-    // If it's a resource route, allow it through
-    if (isResourceRoute) {
-      return supabaseResponse;
-    }
-
-    // If user is not authenticated and trying to access a protected route
-    if (!user && !isPublicRoute) {
-      const loginUrl = request.nextUrl.clone();
-      loginUrl.pathname = "/login";
+  }
+  // If the user is not authenticated...
+  else {
+    // and tries to access a protected route, redirect to the login page.
+    if (!isPublic && !isAuthRoute) {
+      const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("redirectTo", pathname);
       return NextResponse.redirect(loginUrl);
     }
-
-    // If user is authenticated and trying to access auth routes, redirect to dashboard
-    if (user && (pathname === "/login" || pathname === "/signup")) {
-      const dashboardUrl = request.nextUrl.clone();
-      dashboardUrl.pathname = "/choose";
-      return NextResponse.redirect(dashboardUrl);
-    }
-
-    // If user is authenticated and on root, redirect to dashboard
-    if (user && pathname === "/") {
-      const dashboardUrl = request.nextUrl.clone();
-      dashboardUrl.pathname = "/choose";
-      return NextResponse.redirect(dashboardUrl);
-    }
-
-    return supabaseResponse;
-  } catch (error) {
-    console.error("Middleware error:", error);
-    // On error, redirect to login for protected routes
-    const { pathname } = request.nextUrl;
-    const isPublicRoute =
-      pathname === "/" || pathname === "/login" || pathname === "/signup";
-
-    if (!isPublicRoute) {
-      const loginUrl = request.nextUrl.clone();
-      loginUrl.pathname = "/login";
-      return NextResponse.redirect(loginUrl);
-    }
-
-    return supabaseResponse;
   }
+
+  // Otherwise, allow the request to proceed.
+  return response;
 };

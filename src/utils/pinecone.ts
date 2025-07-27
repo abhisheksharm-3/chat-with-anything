@@ -1,63 +1,74 @@
 "use server";
 
-import { Pinecone } from "@pinecone-database/pinecone";
-import { Index } from "@pinecone-database/pinecone";
+import { Pinecone, Index } from "@pinecone-database/pinecone";
 
-// Singleton instance
+// Singleton instances for the Pinecone client and index.
 let pineconeClientInstance: Pinecone | null = null;
 let pineconeIndexInstance: Index | null = null;
 
-// Get Pinecone client using singleton pattern
-export const getPineconeClient = async () => {
-  if (pineconeClientInstance) return pineconeClientInstance;
+/**
+ * Retrieves the singleton Pinecone client instance.
+ * Initializes the client on the first call.
+ * @returns {Promise<Pinecone>} A promise that resolves to the Pinecone client instance.
+ * @throws {Error} If the PINECONE_API_KEY environment variable is not set.
+ * @throws {Error} If the Pinecone client fails to initialize.
+ */
+export const getPineconeClient = async (): Promise<Pinecone> => {
+  if (pineconeClientInstance) {
+    return pineconeClientInstance;
+  }
 
-  const PINECONE_API_KEY = process.env.PINECONE_API_KEY ?? "";
-
-  if (!PINECONE_API_KEY) {
-    console.error("PINECONE_API_KEY environment variable is not set");
-    return null;
+  const apiKey = process.env.PINECONE_API_KEY;
+  if (!apiKey) {
+    throw new Error("PINECONE_API_KEY environment variable is not set.");
   }
 
   try {
-    pineconeClientInstance = new Pinecone({
-      apiKey: PINECONE_API_KEY,
-    });
+    console.log("Initializing Pinecone client...");
+    pineconeClientInstance = new Pinecone({ apiKey });
+    console.log("Pinecone client initialized successfully.");
     return pineconeClientInstance;
   } catch (error) {
     console.error("Failed to initialize Pinecone client:", error);
-    return null;
+    throw new Error("Failed to initialize Pinecone client.");
   }
 };
 
-// Get Pinecone index using singleton pattern
-export const getPineconeIndex = async () => {
-  if (pineconeIndexInstance) return pineconeIndexInstance;
-
-  const client = await getPineconeClient();
-  if (!client) return null;
-
-  const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME ?? "";
-
-  if (!PINECONE_INDEX_NAME) {
-    console.error("PINECONE_INDEX_NAME environment variable is not set");
-    return null;
+/**
+ * Retrieves the singleton Pinecone index instance.
+ * Initializes the index on the first call.
+ * @returns {Promise<Index>} A promise that resolves to the Pinecone index instance.
+ * @throws {Error} If the PINECONE_INDEX_NAME environment variable is not set.
+ * @throws {Error} If the Pinecone index fails to initialize.
+ */
+export const getPineconeIndex = async (): Promise<Index> => {
+  if (pineconeIndexInstance) {
+    return pineconeIndexInstance;
   }
 
-  console.log(`Initializing Pinecone with index: ${PINECONE_INDEX_NAME}`);
+  const indexName = process.env.PINECONE_INDEX_NAME;
+  if (!indexName) {
+    throw new Error("PINECONE_INDEX_NAME environment variable is not set.");
+  }
 
   try {
-    pineconeIndexInstance = client.Index(PINECONE_INDEX_NAME);
-    console.log("Pinecone index initialized successfully");
+    const client = await getPineconeClient();
+    console.log(`Getting Pinecone index: ${indexName}`);
+    pineconeIndexInstance = client.Index(indexName);
+    console.log("Pinecone index retrieved successfully.");
     return pineconeIndexInstance;
   } catch (error) {
     console.error("Failed to initialize Pinecone index:", error);
-    return null;
+    throw new Error("Failed to initialize Pinecone index.");
   }
 };
 
-// Helper function to check if Pinecone is properly configured
+/**
+ * Checks if the necessary Pinecone environment variables are configured.
+ * @returns {boolean} True if both PINECONE_API_KEY and PINECONE_INDEX_NAME are set, otherwise false.
+ */
 export const isPineconeConfigured = async (): Promise<boolean> => {
-  const PINECONE_API_KEY = process.env.PINECONE_API_KEY ?? "";
-  const PINECONE_INDEX_NAME = process.env.PINECONE_INDEX_NAME ?? "";
-  return !!PINECONE_API_KEY && !!PINECONE_INDEX_NAME;
+  const apiKey = process.env.PINECONE_API_KEY;
+  const indexName = process.env.PINECONE_INDEX_NAME;
+  return !!apiKey && !!indexName;
 };

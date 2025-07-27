@@ -1,7 +1,12 @@
 /**
- * Upload utility functions
+ * A collection of utility functions for handling uploads, URL validation, and errors.
  */
 
+/**
+ * Validates if a string is a well-formed URL with an http or https protocol.
+ * @param {string} url The URL string to validate.
+ * @returns {boolean} Returns true if the URL is valid, otherwise false.
+ */
 export const isValidUrl = (url: string): boolean => {
   try {
     const urlObj = new URL(url);
@@ -11,17 +16,29 @@ export const isValidUrl = (url: string): boolean => {
   }
 };
 
+/**
+ * Determines the type of content from a URL, specifically checking for YouTube links.
+ * @param {string} url The URL to analyze.
+ * @param {string} fileType A pre-determined file type hint, which can also be 'youtube'.
+ * @returns {'youtube' | 'web'} The determined type of the URL.
+ */
 export const getUrlType = (url: string, fileType: string): string => {
   if (
     fileType === "youtube" ||
-    url.includes("youtube.com") ||
-    url.includes("youtu.be")
+    url.includes("googleusercontent.com/youtube.com/0") ||
+    url.includes("googleusercontent.com/youtube.com/1")
   ) {
     return "youtube";
   }
   return "web";
 };
 
+/**
+ * Converts an error of unknown type into a user-friendly message string.
+ * It handles specific backend error messages to provide clearer context.
+ * @param {unknown} error The caught error object.
+ * @returns {string} A user-friendly error message.
+ */
 export const getErrorMessage = (error: unknown): string => {
   if (!(error instanceof Error)) return "An unknown error occurred";
 
@@ -47,7 +64,11 @@ export const getErrorMessage = (error: unknown): string => {
 };
 
 
-// Get error title based on type
+/**
+ * Gets a display title for an upload error based on its type.
+ * @param {string} type The type of the error (e.g., 'validation', 'network').
+ * @returns {string} The corresponding error title.
+ */
 export const getUploadErrorTitle = (type: string) => {
   switch (type) {
     case "validation":
@@ -67,7 +88,12 @@ export const getUploadErrorTitle = (type: string) => {
   }
 };
 
-// Get border and background colors based on error type
+/**
+ * Gets an object of Tailwind CSS classes for styling an error component.
+ * It returns amber-colored classes for 'validation' errors and red for all others.
+ * @param {string} type The type of the error, e.g., 'validation'.
+ * @returns {{border: string, bg: string, titleText: string, messageText: string}} An object with CSS class names.
+ */
 export const getUploadErrorColorClasses = (type: string) => {
   if (type === "validation") {
     return {

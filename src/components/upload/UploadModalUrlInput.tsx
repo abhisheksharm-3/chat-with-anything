@@ -3,26 +3,17 @@
 import { useState, useEffect } from "react";
 import { Send, AlertCircle } from "lucide-react";
 import { TypeUploadModalUrlInputProps } from "@/types/TypeUpload";
-import { isYoutubeUrl } from "@/utils/youtube-utils";
+import { extractYoutubeVideoId } from "@/utils/youtube-utils"; // UPDATED
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 
 /**
  * A controlled input component for users to submit a URL for processing.
  *
- * It includes a submit button within the input field and can be disabled during
- * upload operations. It has special logic to detect YouTube URLs and display a
- * relevant informational message to the user.
+ * It includes a submit button and special logic to detect YouTube URLs
+ * to display a relevant informational message.
  *
- * @component
  * @param {TypeUploadModalUrlInputProps} props - The properties for the component.
- * @param {string} props.url - The current value of the URL input field.
- * @param {{ name: string }} props.fileTypeConfig - Configuration object containing the display name for the expected URL type.
- * @param {boolean} props.isUrlOnly - If true, adjusts the label to reflect that only a URL is accepted.
- * @param {(event: React.ChangeEvent<HTMLInputElement>) => void} props.handleUrlChange - The callback function for the input's `onChange` event.
- * @param {() => void} props.handleUrlSubmit - The callback function for the submit button's `onClick` event.
- * @param {(event: React.KeyboardEvent<HTMLInputElement>) => void} props.handleKeyDown - The callback function for the input's `onKeyDown` event.
- * @param {boolean} props.isUploading - A flag to disable the submit button while an upload is in progress.
  * @returns {JSX.Element} The rendered URL input component.
  */
 const UploadModalUrlInput: React.FC<TypeUploadModalUrlInputProps> = ({
@@ -37,11 +28,10 @@ const UploadModalUrlInput: React.FC<TypeUploadModalUrlInputProps> = ({
   const [isYouTube, setIsYouTube] = useState(false);
 
   /**
-   * Effect to check if the currently entered URL is a YouTube link
-   * and update the state accordingly.
+   * Effect to check if the currently entered URL is a valid YouTube link.
    */
   useEffect(() => {
-    setIsYouTube(isYoutubeUrl(url));
+    setIsYouTube(!!extractYoutubeVideoId(url));
   }, [url]);
 
   return (

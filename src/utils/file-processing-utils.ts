@@ -7,24 +7,23 @@ import {
 import { SupabaseClient } from "@supabase/supabase-js";
 import { TypeFile } from "@/types/TypeSupabase";
 import { supabaseBrowserClient } from "./supabase/client";
-import { isYoutubeUrl } from "./youtube-utils";
 import { TypeGeminiImageData } from "@/types/TypeContent";
+import { extractYoutubeVideoId } from "./youtube-utils";
 
 /**
- * Retrieves and processes the content of a file based on its type.
- * For documents like PDFs and YouTube videos, it checks if they have been processed and indexed.
- * If not, it triggers the processing and indexing flow.
- * For already indexed content, it returns a placeholder string, which signals
- * that the content should be retrieved via a RAG query later.
- * @param {string} fileId - The unique identifier of the file.
- * @returns {Promise<string | null>} A promise that resolves to the file content, a placeholder string
- * (e.g., 'PDF_CONTENT', 'YOUTUBE_TRANSCRIPT'), an error message prefixed with 'ERROR:', or null if not found.
+ * Retrieves the content or triggers the processing for a given file.
+ * For documents and videos, it initiates a processing and indexing flow if not already completed.
+ * It returns placeholders for content that is retrieved via RAG, and direct content for others (e.g., URLs).
+ *
+ * @param fileId The unique identifier of the file.
+ * @returns A promise that resolves to the file content, a placeholder string
+ * (e.g., 'PDF_CONTENT'), an error message, or null.
  */
-export const getFileContent = async (fileId: string): Promise<string | null> => {
+export const getFileContent = async (
+  fileId: string
+): Promise<string | null> => {
   const supabase = supabaseBrowserClient();
 
-  // First get the file metadata from the database without filtering by user_id
-  console.log("Getting file content for fileId:", fileId);
   const { data: file, error: fileError } = await supabase
     .from("files")
     .select("*")
@@ -32,461 +31,208 @@ export const getFileContent = async (fileId: string): Promise<string | null> => 
     .single();
 
   if (fileError || !file) {
-    console.error("Error fetching file metadata:", fileError);
+    console.error("Error fetching file metadata:", fileError?.message);
     return null;
   }
 
-  console.log("File data for content extraction:", file);
+  // Use a switch statement to handle different file types cleanly.
+  switch (file.type) {
+    case "image":
+      return "IMAGE_FILE";
 
-  // For image files, return a placeholder - we'll handle them differently
-  if (file.type === "image") {
-    console.log("Image file detected, returning placeholder");
-    return "IMAGE_FILE";
+    case "video":
+    case "youtube":
+      if (file.url && extractYoutubeVideoId(file.url)) {
+        return _handleProcessableFile({
+          supabase,
+          file,
+          placeholder: "YOUTUBE_TRANSCRIPT",
+          processor: () => processYoutubeVideo(file.url!, file.id),
+        });
+      }
+      return file.url ?? null; // Fallback for non-YouTube videos
+
+    case "pdf":
+      return _handleProcessableFile({
+        supabase,
+        file,
+        placeholder: "PDF_CONTENT",
+        processor: async () => {
+          const blob = await getFileBlob(supabase, file);
+          if (!blob)
+            throw new Error("Could not read the PDF file from storage.");
+          return processPdfDocument(blob, file.id);
+        },
+      });
+
+    case "doc":
+    case "docs":
+    case "sheet":
+    case "sheets":
+    case "slides":
+      return _handleProcessableFile({
+        supabase,
+        file,
+        placeholder: `${file.type.toUpperCase()}_CONTENT`,
+        processor: async () => {
+          const blob = await getFileBlob(supabase, file);
+          if (!blob)
+            throw new Error(
+              `Could not read the ${file.type} file from storage.`
+            );
+          return processGenericDocument(blob, file.id, file.type);
+        },
+      });
+
+    case "web":
+    case "url":
+      return file.url;
+
+    default:
+      // Use pre-extracted text if available, otherwise return null.
+      return file.full_text ?? null;
   }
-
-  // For YouTube videos, process and index the transcript if not already done
-  if (
-    (file.type === "video" || file.type === "youtube") &&
-    file.url &&
-    isYoutubeUrl(file.url)
-  ) {
-    try {
-      // First check processing status in the database
-      if (file.processing_status === "completed") {
-        console.log("YouTube already processed according to database");
-        return "YOUTUBE_TRANSCRIPT";
-      }
-
-      if (file.processing_status === "failed") {
-        console.error(
-          "YouTube processing previously failed:",
-          file.processing_error,
-        );
-        return `ERROR: ${file.processing_error || "Failed to process YouTube video"}`;
-      }
-
-      // If not processed or status is unknown, check Pinecone
-      console.log("Checking if YouTube transcript exists in Pinecone");
-      const namespaceExists = await checkNamespaceExists(file.id);
-
-      if (namespaceExists) {
-        console.log(
-          "YouTube transcript found in Pinecone, returning placeholder",
-        );
-
-        // Update status to completed if not already
-        if (file.processing_status !== "completed") {
-          await supabase
-            .from("files")
-            .update({ processing_status: "completed" })
-            .eq("id", file.id);
-        }
-
-        // Return a placeholder - the actual content will be retrieved during query
-        return "YOUTUBE_TRANSCRIPT";
-      } else {
-        console.log("YouTube transcript not found in Pinecone");
-
-        // Try to process the YouTube video now
-        console.log("Attempting to process YouTube video now");
-
-        // Update status to processing
-        await supabase
-          .from("files")
-          .update({ processing_status: "processing" })
-          .eq("id", file.id);
-
-        // Process the YouTube video
-        const result = await processYoutubeVideo(file.url, file.id);
-
-        if (!result.success) {
-          console.error("Failed to process YouTube video:", result.error);
-
-          // Update status to failed
-          await supabase
-            .from("files")
-            .update({
-              processing_status: "failed",
-              processing_error:
-                result.error || "Failed to process YouTube video",
-            })
-            .eq("id", file.id);
-
-          return `ERROR: ${result.error || "Failed to process YouTube video"}`;
-        }
-
-        // Update status to completed
-        await supabase
-          .from("files")
-          .update({
-            processing_status: "completed",
-            indexed_chunks: result.numDocs,
-          })
-          .eq("id", file.id);
-
-        console.log("YouTube video processed and indexed successfully");
-        return "YOUTUBE_TRANSCRIPT";
-      }
-    } catch (processingError) {
-      console.error("Error processing YouTube video:", processingError);
-      return `ERROR: Failed to process the YouTube video. ${
-        processingError instanceof Error ? processingError.message : ""
-      }`;
-    }
-  }
-
-  // For URL type files, return the URL directly
-  if (file.type === "web" || file.type === "url") {
-    console.log("Returning URL as content:", file.url);
-    return file.url;
-  }
-
-  // If we already have extracted text, use that
-  if (file.full_text) {
-    console.log("Using pre-extracted text");
-    return file.full_text;
-  }
-
-  // For PDF files, try to query from Pinecone
-  if (file.type === "pdf") {
-    try {
-      // First check processing status in the database
-      if (file.processing_status === "completed") {
-        console.log("PDF already processed according to database");
-        return "PDF_CONTENT";
-      }
-
-      if (file.processing_status === "failed") {
-        console.error(
-          "PDF processing previously failed:",
-          file.processing_error,
-        );
-        return `ERROR: ${file.processing_error || "Failed to process PDF"}`;
-      }
-
-      // If not processed or status is unknown, check Pinecone
-      console.log("Checking if PDF content exists in Pinecone");
-      const namespaceExists = await checkNamespaceExists(file.id);
-
-      if (namespaceExists) {
-        console.log("PDF content found in Pinecone, returning placeholder");
-
-        // Update status to completed if not already
-        if (file.processing_status !== "completed") {
-          await supabase
-            .from("files")
-            .update({ processing_status: "completed" })
-            .eq("id", file.id);
-        }
-
-        // Return a placeholder - the actual content will be retrieved during query
-        return "PDF_CONTENT";
-      } else {
-        console.log("PDF content not found in Pinecone");
-
-        // Try to process the PDF now
-        console.log("Attempting to process PDF now");
-
-        // Update status to processing
-        await supabase
-          .from("files")
-          .update({ processing_status: "processing" })
-          .eq("id", file.id);
-
-        // Get the file content from storage
-        let fileBlob;
-        try {
-          fileBlob = await getFileBlob(supabase, file);
-        } catch (blobError) {
-          console.error("Error getting file blob:", blobError);
-
-          // Update status to failed
-          await supabase
-            .from("files")
-            .update({
-              processing_status: "failed",
-              processing_error: String(blobError),
-            })
-            .eq("id", file.id);
-
-          return `ERROR: Failed to read the PDF file. ${
-            blobError instanceof Error ? blobError.message : ""
-          }`;
-        }
-
-        if (!fileBlob) {
-          // Update status to failed
-          await supabase
-            .from("files")
-            .update({
-              processing_status: "failed",
-              processing_error: "Could not access the PDF file",
-            })
-            .eq("id", file.id);
-
-          return "ERROR: Could not access the PDF file.";
-        }
-
-        // Process the PDF
-        const result = await processPdfDocument(fileBlob, file.id);
-
-        if (!result.success) {
-          console.error("Failed to process PDF:", result.error);
-
-          // Update status to failed
-          await supabase
-            .from("files")
-            .update({
-              processing_status: "failed",
-              processing_error: result.error || "Failed to process PDF",
-            })
-            .eq("id", file.id);
-
-          return `ERROR: ${result.error || "Failed to process PDF"}`;
-        }
-
-        // Update status to completed
-        await supabase
-          .from("files")
-          .update({
-            processing_status: "completed",
-            indexed_chunks: result.numDocs,
-          })
-          .eq("id", file.id);
-
-        console.log("PDF processed and indexed successfully");
-        return "PDF_CONTENT";
-      }
-    } catch (processingError) {
-      console.error("Error processing PDF:", processingError);
-      return `ERROR: Failed to process the PDF file. ${
-        processingError instanceof Error ? processingError.message : ""
-      }`;
-    }
-  }
-
-  // For doc, sheet, and slides files, process them like PDFs
-  if (
-    file.type === "doc" ||
-    file.type === "docs" ||
-    file.type === "sheet" ||
-    file.type === "sheets" ||
-    file.type === "slides"
-  ) {
-    try {
-      // First check processing status in the database
-      if (file.processing_status === "completed") {
-        console.log(
-          `${file.type.toUpperCase()} already processed according to database`,
-        );
-        return `${file.type.toUpperCase()}_CONTENT`;
-      }
-
-      if (file.processing_status === "failed") {
-        console.error(
-          `${file.type} processing previously failed:`,
-          file.processing_error,
-        );
-        return `ERROR: ${
-          file.processing_error || `Failed to process ${file.type}`
-        }`;
-      }
-
-      // If not processed or status is unknown, check Pinecone
-      console.log(`Checking if ${file.type} content exists in Pinecone`);
-      const namespaceExists = await checkNamespaceExists(file.id);
-
-      if (namespaceExists) {
-        console.log(
-          `${file.type.toUpperCase()} content found in Pinecone, returning placeholder`,
-        );
-
-        // Update status to completed if not already
-        if (file.processing_status !== "completed") {
-          await supabase
-            .from("files")
-            .update({ processing_status: "completed" })
-            .eq("id", file.id);
-        }
-
-        // Return a placeholder - the actual content will be retrieved during query
-        return `${file.type.toUpperCase()}_CONTENT`;
-      } else {
-        console.log(`${file.type.toUpperCase()} content not found in Pinecone`);
-
-        // Try to process the document now
-        console.log(`Attempting to process ${file.type} now`);
-
-        // Update status to processing
-        await supabase
-          .from("files")
-          .update({ processing_status: "processing" })
-          .eq("id", file.id);
-
-        // Get the file content from storage
-        let fileBlob;
-        try {
-          fileBlob = await getFileBlob(supabase, file);
-        } catch (blobError) {
-          console.error("Error getting file blob:", blobError);
-
-          // Update status to failed
-          await supabase
-            .from("files")
-            .update({
-              processing_status: "failed",
-              processing_error: String(blobError),
-            })
-            .eq("id", file.id);
-
-          return `ERROR: Failed to read the ${file.type} file. ${
-            blobError instanceof Error ? blobError.message : ""
-          }`;
-        }
-
-        if (!fileBlob) {
-          // Update status to failed
-          await supabase
-            .from("files")
-            .update({
-              processing_status: "failed",
-              processing_error: `Could not access the ${file.type} file`,
-            })
-            .eq("id", file.id);
-
-          return `ERROR: Could not access the ${file.type} file.`;
-        }
-
-        // Process the document
-        const result = await processGenericDocument(
-          fileBlob,
-          file.id,
-          file.type,
-        );
-
-        if (!result.success) {
-          console.error(`Failed to process ${file.type}:`, result.error);
-
-          // Update status to failed
-          await supabase
-            .from("files")
-            .update({
-              processing_status: "failed",
-              processing_error:
-                result.error || `Failed to process ${file.type}`,
-            })
-            .eq("id", file.id);
-
-          return `ERROR: ${result.error || `Failed to process ${file.type}`}`;
-        }
-
-        // Update status to completed
-        await supabase
-          .from("files")
-          .update({
-            processing_status: "completed",
-            indexed_chunks: result.numDocs,
-          })
-          .eq("id", file.id);
-
-        console.log(
-          `${file.type.toUpperCase()} processed and indexed successfully`,
-        );
-        return `${file.type.toUpperCase()}_CONTENT`;
-      }
-    } catch (processingError) {
-      console.error(`Error processing ${file.type}:`, processingError);
-      return `ERROR: Failed to process the ${file.type} file. ${
-        processingError instanceof Error ? processingError.message : ""
-      }`;
-    }
-  }
-
-  // Default case if no specific handling
-  return null;
 };
 
 /**
- * Helper function to download a file's blob content from Supabase storage.
- * It tries various possible paths to locate the file since the exact storage path might vary.
- * @param {SupabaseClient} supabase - An instance of the Supabase client.
- * @param {TypeFile} file - The file metadata object from the database.
- * @returns {Promise<Blob | null>} A promise that resolves with the file Blob, or null if it cannot be downloaded.
+ * Internal helper to handle the processing logic for indexable files.
+ * This function checks the file's status, verifies against the vector store,
+ * and triggers processing if necessary, updating the status in Supabase along the way.
+ * @private
+ */
+async function _handleProcessableFile({
+  supabase,
+  file,
+  placeholder,
+  processor,
+}: {
+  supabase: SupabaseClient;
+  file: TypeFile;
+  placeholder: string;
+  processor: () => Promise<{
+    success: boolean;
+    error?: string;
+    numDocs?: number;
+  }>;
+}): Promise<string> {
+  const { id: fileId, processing_status, processing_error } = file;
+
+  // 1. Check for a previously failed status.
+  if (processing_status === "failed") {
+    console.error(
+      `Processing previously failed for file ${fileId}:`,
+      processing_error
+    );
+    return `ERROR: ${processing_error || `Failed to process ${file.type}`}`;
+  }
+
+  // 2. Check if already marked as completed or if namespace exists in Pinecone.
+  const namespaceExists =
+    processing_status === "completed" || (await checkNamespaceExists(fileId));
+
+  if (namespaceExists) {
+    // If the namespace exists but status isn't 'completed', update it now.
+    if (processing_status !== "completed") {
+      await supabase
+        .from("files")
+        .update({ processing_status: "completed" })
+        .eq("id", fileId);
+    }
+    return placeholder;
+  }
+
+  // 3. If not processed, trigger the processing now.
+  try {
+    console.log(`Processing ${file.type} file now: ${fileId}`);
+    await supabase
+      .from("files")
+      .update({ processing_status: "processing" })
+      .eq("id", fileId);
+
+    const result = await processor();
+
+    if (!result.success) {
+      throw new Error(result.error || `Unknown error during processing.`);
+    }
+
+    // Update status to completed on success.
+    await supabase
+      .from("files")
+      .update({
+        processing_status: "completed",
+        indexed_chunks: result.numDocs,
+        processing_error: null,
+      })
+      .eq("id", fileId);
+
+    console.log(`${file.type} processed and indexed successfully: ${fileId}`);
+    return placeholder;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to process ${file.type} ${fileId}:`, errorMessage);
+
+    // Update status to failed on error.
+    await supabase
+      .from("files")
+      .update({
+        processing_status: "failed",
+        processing_error: errorMessage,
+      })
+      .eq("id", fileId);
+
+    return `ERROR: ${errorMessage}`;
+  }
+}
+
+/**
+ * Downloads a file's blob content from Supabase storage using the
+ * defined path structure: <user_id>/<file_id>.
+ *
+ * @param supabase An instance of the Supabase client.
+ * @param file The file metadata object.
+ * @returns A promise that resolves with the file Blob, or null if it fails.
  */
 const getFileBlob = async (
   supabase: SupabaseClient,
-  file: TypeFile,
+  file: TypeFile
 ): Promise<Blob | null> => {
-  // Try with direct URL if available
-  if (file.url && file.url.includes("file-storage")) {
-    try {
-      // Extract path from URL
-      const urlObj = new URL(file.url);
-      const pathMatch = urlObj.pathname.match(/\/file-storage\/([^?]+)/);
-      const filePath = pathMatch ? pathMatch[1] : null;
-
-      if (filePath) {
-        console.log("Trying to download using path from URL:", filePath);
-        const result = await supabase.storage
-          .from("file-storage")
-          .download(filePath);
-
-        if (!result.error && result.data) {
-          return result.data;
-        }
-      }
-    } catch (urlError) {
-      console.error("Error extracting path from URL:", urlError);
-    }
+  // Ensure the required IDs are present.
+  if (!file.user_id || !file.id) {
+    console.error("Cannot get file blob without a user_id and file_id.", file);
+    return null;
   }
 
-  // Try with user_id/filename format (if we have user_id)
-  if (file.user_id) {
-    const filePath1 = `${file.user_id}/${Date.now()}_${file.name}`;
-    console.log("Trying path 1:", filePath1);
-    const result1 = await supabase.storage
-      .from("file-storage")
-      .download(filePath1);
+  // Construct the definitive path.
+  const path = `${file.user_id}/${file.id}`;
 
-    if (!result1.error && result1.data) {
-      return result1.data;
-    }
+  console.log(`Attempting to download from definitive storage path: ${path}`);
+  const { data, error } = await supabase.storage
+    .from("file-storage")
+    .download(path);
+
+  if (error) {
+    console.error(`Failed to download blob from path: ${path}`, error.message);
+    return null;
   }
 
-  // Try with various path formats
-  const possiblePaths = [
-    `${file.user_id || "unknown"}/${file.id}`,
-    `${file.id}`,
-    `uploads/${file.id}`,
-    `${file.name}`,
-  ];
-
-  for (const path of possiblePaths) {
-    console.log(`Trying path: ${path}`);
-    const result = await supabase.storage.from("file-storage").download(path);
-
-    if (!result.error && result.data) {
-      return result.data;
-    }
-  }
-
-  return null;
+  return data;
 };
 
 /**
- * Helper function to get image data as buffer for Gemini
- * @param {SupabaseClient} supabase - An instance of the Supabase client.
- * @param {TypeFile} file - The file metadata object from the database.
- * @returns {Promise<ImageData | null>} A promise that resolves with the image data, or null if it cannot be downloaded.
+ * Retrieves image data as a Buffer for use with Gemini.
+ *
+ * @param supabase An instance of the Supabase client.
+ * @param file The file metadata object.
+ * @returns A promise that resolves with the image data, or null on failure.
  */
 export const getImageData = async (
   supabase: SupabaseClient,
-  file: TypeFile,
+  file: TypeFile
 ): Promise<TypeGeminiImageData | null> => {
   try {
     const fileBlob = await getFileBlob(supabase, file);
     if (!fileBlob) {
-      return null;
+      throw new Error("Could not download image blob from storage.");
     }
 
     const arrayBuffer = await fileBlob.arrayBuffer();

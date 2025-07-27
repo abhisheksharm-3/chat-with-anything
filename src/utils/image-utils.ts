@@ -1,30 +1,38 @@
 /**
- * Image utilities module
- *
  * This module contains client-side utility functions for working with images.
- * These functions are not marked with "use server" and can be used on the client.
+ * These functions are designed to run in the browser.
  */
 
 /**
- * Prepare image context for chat
- * This creates a context message to be sent to the model
+ * Creates a context string for a chat model, combining file information with a user's query.
+ *
+ * This function builds a descriptive sentence that informs the model about an image
+ * the user is referencing.
+ *
+ * @param {string} fileName - The name of the image file (e.g., "cat_photo.jpg").
+ * @param {string} userQuery - The user's question or statement about the image.
+ * @param {string} [imageUrl] - The optional URL where the image can be accessed.
+ * @returns {string} A formatted context string to be sent to the model.
  */
 export const createImageContext = (
   fileName: string,
   userQuery: string,
-  imageUrl?: string,
+  imageUrl?: string
 ): string => {
+  let context = `I'm looking at an image file named "${fileName}".`;
+
   if (imageUrl) {
-    // If we have an image URL, include it in the context
-    return `I'm looking at an image file named "${fileName}" with URL: ${imageUrl}. ${userQuery}`;
+    context += ` The image can be viewed at: ${imageUrl}.`;
   }
 
-  // Otherwise, just use the file name
-  return `I'm looking at an image file named "${fileName}". ${userQuery}`;
+  return `${context} ${userQuery}`;
 };
 
 /**
- * Check if a file is an image based on its MIME type
+ * Checks if a file is an image by inspecting its MIME type.
+ *
+ * @param {string} mimeType - The MIME type of the file (e.g., "image/jpeg", "image/png").
+ * @returns {boolean} `true` if the MIME type starts with "image/", `false` otherwise.
  */
 export const isImageFile = (mimeType: string): boolean => {
   return mimeType.startsWith("image/");

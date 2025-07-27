@@ -13,7 +13,6 @@ import {
   getErrorFromSupabaseError,
   isChatError,
   validateChatId,
-  validateData,
 } from "@/utils/chat-utils";
 
 /** The base query key for all chat-related queries in React Query. */
@@ -50,7 +49,7 @@ export const useChats = (chatId?: string) => {
           return createChatError(
             "Authentication expired. Please log in again.",
             "AUTH_EXPIRED",
-            401,
+            401
           );
         }
 
@@ -62,7 +61,7 @@ export const useChats = (chatId?: string) => {
           return createChatError(
             "Network error. Please check your connection.",
             "NETWORK_ERROR",
-            0,
+            0
           );
         }
 
@@ -72,10 +71,10 @@ export const useChats = (chatId?: string) => {
       return createChatError(
         `Unknown error in ${context}`,
         "UNKNOWN_ERROR",
-        500,
+        500
       );
     },
-    [router],
+    [router]
   );
 
   // Validation helper
@@ -87,7 +86,7 @@ export const useChats = (chatId?: string) => {
       throw createChatError(
         "Database connection not available",
         "NO_SUPABASE",
-        500,
+        500
       );
     }
   }, [userId, supabase]);
@@ -101,47 +100,53 @@ export const useChats = (chatId?: string) => {
         console.error("Error updating chat list cache:", error);
       }
     },
-    [queryClient],
+    [queryClient]
   );
 
   const addChatToCache = useCallback(
     (newChat: TypeChat) => {
       updateChatListCache((oldData) => [newChat, ...(oldData || [])]);
     },
-    [updateChatListCache],
+    [updateChatListCache]
   );
 
   const updateChatInCache = useCallback(
     (updatedChat: TypeChat) => {
       // Update single chat cache
-      queryClient.setQueryData([...CHATS_QUERY_KEY, updatedChat.id], updatedChat);
+      queryClient.setQueryData(
+        [...CHATS_QUERY_KEY, updatedChat.id],
+        updatedChat
+      );
 
       // Update list cache
       updateChatListCache((oldData) => {
         if (!oldData) return [updatedChat];
         return oldData.map((chat) =>
-          chat.id === updatedChat.id ? updatedChat : chat,
+          chat.id === updatedChat.id ? updatedChat : chat
         );
       });
     },
-    [queryClient, updateChatListCache],
+    [queryClient, updateChatListCache]
   );
 
   const removeChatFromCache = useCallback(
     (chatId: string) => {
       queryClient.removeQueries({ queryKey: [...CHATS_QUERY_KEY, chatId] });
-      updateChatListCache((oldData) => 
-        oldData?.filter((chat) => chat.id !== chatId) || []
+      updateChatListCache(
+        (oldData) => oldData?.filter((chat) => chat.id !== chatId) || []
       );
     },
-    [queryClient, updateChatListCache],
+    [queryClient, updateChatListCache]
   );
 
   // Common query configuration
-  const baseQueryConfig = useMemo(() => ({
-    enabled: isAuthenticated && !!userId,
-    ...createRetryConfig(),
-  }), [isAuthenticated, userId]);
+  const baseQueryConfig = useMemo(
+    () => ({
+      enabled: isAuthenticated && !!userId,
+      ...createRetryConfig(),
+    }),
+    [isAuthenticated, userId]
+  );
 
   // --- QUERIES ---
 
@@ -162,7 +167,11 @@ export const useChats = (chatId?: string) => {
       }
 
       if (!Array.isArray(data)) {
-        throw createChatError("Invalid data format received", "INVALID_DATA", 500);
+        throw createChatError(
+          "Invalid data format received",
+          "INVALID_DATA",
+          500
+        );
       }
 
       return data as TypeChat[];
@@ -181,7 +190,11 @@ export const useChats = (chatId?: string) => {
       validateUserAuth();
 
       if (!isValidChatId) {
-        throw createChatError("Invalid chat ID provided", "INVALID_CHAT_ID", 400);
+        throw createChatError(
+          "Invalid chat ID provided",
+          "INVALID_CHAT_ID",
+          400
+        );
       }
 
       const { data, error } = await supabase
@@ -215,7 +228,11 @@ export const useChats = (chatId?: string) => {
       validateUserAuth();
 
       if (!fileId?.trim()) {
-        throw createChatError("Valid file ID is required", "INVALID_FILE_ID", 400);
+        throw createChatError(
+          "Valid file ID is required",
+          "INVALID_FILE_ID",
+          400
+        );
       }
 
       // Verify file exists and belongs to user
@@ -243,7 +260,7 @@ export const useChats = (chatId?: string) => {
         throw createChatError(
           "Failed to create chat - invalid response",
           "INVALID_CHAT_RESPONSE",
-          500,
+          500
         );
       }
 
@@ -259,10 +276,16 @@ export const useChats = (chatId?: string) => {
   /** Mutation to create a new chat record directly. */
   const createChatMutation = useMutation({
     mutationFn: async (
-      chatData: Omit<TypeChat, "id" | "user_id" | "created_at">,
+      chatData: Omit<TypeChat, "id" | "user_id" | "created_at">
     ): Promise<TypeChat> => {
       validateUserAuth();
-      validateData(chatData, "chat data");
+      if (!chatData) {
+        throw createChatError(
+          "Valid chat data is required.",
+          "INVALID_CHAT_DATA",
+          400
+        );
+      }
 
       const newChat = { ...chatData, user_id: userId };
       const { data, error } = await supabase
@@ -276,7 +299,11 @@ export const useChats = (chatId?: string) => {
       }
 
       if (!data) {
-        throw createChatError("No data returned from chat creation", "NO_DATA_RETURNED", 500);
+        throw createChatError(
+          "No data returned from chat creation",
+          "NO_DATA_RETURNED",
+          500
+        );
       }
 
       return data as TypeChat;
@@ -300,10 +327,20 @@ export const useChats = (chatId?: string) => {
       validateUserAuth();
 
       if (!validateChatId(chatId)) {
-        throw createChatError("Valid chat ID is required", "INVALID_CHAT_ID", 400);
+        throw createChatError(
+          "Valid chat ID is required",
+          "INVALID_CHAT_ID",
+          400
+        );
       }
 
-      validateData(chatData, "chat data");
+      if (!chatData) {
+        throw createChatError(
+          "Valid chat data is required.",
+          "INVALID_CHAT_DATA",
+          400
+        );
+      }
 
       const { data, error } = await supabase
         .from("chats")
@@ -318,7 +355,11 @@ export const useChats = (chatId?: string) => {
       }
 
       if (!data) {
-        throw createChatError("Chat not found or access denied", "CHAT_NOT_FOUND", 404);
+        throw createChatError(
+          "Chat not found or access denied",
+          "CHAT_NOT_FOUND",
+          404
+        );
       }
 
       return data as TypeChat;
@@ -336,7 +377,11 @@ export const useChats = (chatId?: string) => {
       validateUserAuth();
 
       if (!validateChatId(chatId)) {
-        throw createChatError("Valid chat ID is required", "INVALID_CHAT_ID", 400);
+        throw createChatError(
+          "Valid chat ID is required",
+          "INVALID_CHAT_ID",
+          400
+        );
       }
 
       const { error } = await supabase
@@ -369,19 +414,23 @@ export const useChats = (chatId?: string) => {
         ...CHATS_QUERY_KEY,
         targetChatId,
       ]) as TypeChat | undefined;
-      
+
       if (cachedChat) return cachedChat;
 
       // Fall back to main list
       return chatsQuery.data?.find((chat) => chat?.id === targetChatId);
     },
-    [queryClient, chatsQuery.data],
+    [queryClient, chatsQuery.data]
   );
 
   const handleDeleteChat = useCallback(
     async (chatId: string): Promise<void> => {
       if (!validateChatId(chatId)) {
-        throw createChatError("Valid chat ID is required", "INVALID_CHAT_ID", 400);
+        throw createChatError(
+          "Valid chat ID is required",
+          "INVALID_CHAT_ID",
+          400
+        );
       }
 
       setDeletingId(chatId);
@@ -391,7 +440,7 @@ export const useChats = (chatId?: string) => {
         setDeletingId(null);
       }
     },
-    [deleteChatMutation],
+    [deleteChatMutation]
   );
 
   return {
