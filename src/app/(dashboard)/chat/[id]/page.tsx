@@ -32,7 +32,7 @@ export async function generateMetadata({
  * @param props.params The route parameters containing the chat `id`.
  * @returns The chat page UI or a 404 page if the ID is invalid.
  */
-const ChatPage = async ({ params }: { params: { id: string } }) => {
+const ChatPage = async ({ params }: { params: Promise<{ id: string }> }) => {
   const PageParams = await params;
   const chatId = PageParams.id;
 
