@@ -1,50 +1,32 @@
 "use server";
+
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 
-// Initialize embeddings with your API key
-export const createGeminiEmbeddings = async (params?: {
-  apiKey?: string;
-  model?: string;
-}) => {
-  const apiKey = params?.apiKey || process.env.GEMINI_API_KEY || "";
-  const model = params?.model || "text-embedding-004"; // Updated to latest model
+/**
+ * Creates and initializes a GoogleGenerativeAIEmbeddings instance.
+ *
+ * This factory function ensures that the necessary API key is available and
+ * configures the client with a specified or default model.
+ *
+ * @param params - Optional parameters to override the default configuration.
+ * @param {string} [params.apiKey] - The Gemini API key. Defaults to the `GEMINI_API_KEY` environment variable.
+ * @param {string} [params.model] - The embedding model to use. Defaults to "text-embedding-004".
+ * @returns An instance of `GoogleGenerativeAIEmbeddings`.
+ * @throws An error if the Gemini API key is not provided via parameters or environment variables.
+ */
+export const createGeminiEmbeddings = async (
+  params?: { apiKey?: string; model?: string }
+): Promise<GoogleGenerativeAIEmbeddings> => {
+  const apiKey = params?.apiKey || process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error(
+      "Gemini API key is missing. Please provide it via the `apiKey` parameter or set the GEMINI_API_KEY environment variable."
+    );
+  }
 
   return new GoogleGenerativeAIEmbeddings({
     apiKey,
-    model,
+    model: params?.model || "text-embedding-004",
   });
-};
-
-// Function to get embeddings for multiple documents
-export const embedDocuments = async (
-  texts: string[],
-  embeddings: GoogleGenerativeAIEmbeddings,
-): Promise<number[][]> => {
-  try {
-    return await embeddings.embedDocuments(texts);
-  } catch (error) {
-    console.error("Error generating document embeddings:", error);
-    const errorMessage =
-      typeof error === "object" && error !== null && "message" in error
-        ? (error as { message: string }).message
-        : String(error);
-    throw new Error(`Failed to generate embeddings: ${errorMessage}`);
-  }
-};
-
-// Function to get embedding for a single query
-export const embedQuery = async (
-  text: string,
-  embeddings: GoogleGenerativeAIEmbeddings,
-): Promise<number[]> => {
-  try {
-    return await embeddings.embedQuery(text);
-  } catch (error) {
-    console.error("Error generating query embedding:", error);
-    const errorMessage =
-      typeof error === "object" && error !== null && "message" in error
-        ? (error as { message: string }).message
-        : String(error);
-    throw new Error(`Failed to generate embedding: ${errorMessage}`);
-  }
 };

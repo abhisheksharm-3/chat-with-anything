@@ -247,3 +247,24 @@ export const getImageData = async (
     return null;
   }
 };
+
+/**
+ * A helper to update the processing status of a file in Supabase.
+
+ */
+export const updateFileStatus = async (
+  supabase: SupabaseClient,
+  fileId: string,
+  status: "processing" | "failed" | "completed",
+  details: { error?: string; indexedChunks?: number; fullText?: string } = {}
+) => {
+  return supabase
+    .from("files")
+    .update({
+      processing_status: status,
+      processing_error: details.error,
+      indexed_chunks: details.indexedChunks,
+      full_text: details.fullText,
+    })
+    .eq("id", fileId);
+};

@@ -7,9 +7,6 @@
 // Export document processor
 export * from "./document-processor";
 
-// Export image processor and utilities
-export * from "./image-processor";
-
 // Export YouTube processor and utilities
 export * from "./youtube-processor";
 

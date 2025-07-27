@@ -1,4 +1,5 @@
 "use server";
+
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { createGeminiEmbeddings } from "../gemini/embeddings";
@@ -9,442 +10,177 @@ import mammoth from "mammoth";
 import * as XLSX from "xlsx";
 import { TypeSpreadsheetData, TypeSpreadsheetRow } from "@/types/TypeContent";
 
-// Constants for document processing
+// --- Constants ---
 const CHUNK_SIZE = 1000;
 const CHUNK_OVERLAP = 200;
 const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000;
+const RETRY_DELAY_MS = 1000;
 
 /**
- * Process a PDF file and store its embeddings in Pinecone
+ * A shared helper to process and store document chunks in Pinecone.
+ * This function handles splitting, embedding, and storing with retry logic.
+ * @private
  */
-export const processPdfDocument = async (
-  fileBlob: Blob,
+const _processAndStoreDocuments = async (
+  docs: Document[],
   namespace: string,
-  apiKey?: string,
-): Promise<{ numDocs: number; success: boolean; error?: string }> => {
-  console.log(`Starting PDF processing for namespace: ${namespace}`);
-
-  // Check if Pinecone is configured
-  if (!(await isPineconeConfigured())) {
-    console.error("Pinecone is not properly configured");
-    throw new Error(
-      "Pinecone is not properly configured. Please check your environment variables.",
-    );
+  apiKey?: string
+): Promise<{ numDocs: number }> => {
+  if (!docs || docs.length === 0) {
+    throw new Error("No processable content found in the document.");
   }
 
-  try {
-    // Load PDF and extract text
-    console.log("Loading PDF document...");
-    const loader = new PDFLoader(fileBlob);
-    const docs = await loader.load();
+  // 1. Split documents into chunks
+  console.log(`Splitting ${docs.length} document(s) into chunks...`);
+  const textSplitter = new RecursiveCharacterTextSplitter({
+    chunkSize: CHUNK_SIZE,
+    chunkOverlap: CHUNK_OVERLAP,
+  });
+  const chunkedDocs = await textSplitter.splitDocuments(docs);
+  console.log(`Document split into ${chunkedDocs.length} chunks.`);
 
-    if (!docs || docs.length === 0) {
-      console.error("No content extracted from PDF");
-      return {
-        numDocs: 0,
-        success: false,
-        error:
-          "No text content could be extracted from this PDF. The file might be empty, scanned, or protected.",
-      };
-    }
+  // 2. Create embeddings
+  console.log("Creating Gemini embeddings...");
+  const embeddings = await createGeminiEmbeddings({ apiKey });
+  if (!embeddings) {
+    throw new Error("Failed to create embeddings. Gemini API may not be configured properly.");
+  }
 
-    console.log(`Successfully extracted ${docs.length} pages from PDF`);
+  // 3. Store documents in Pinecone with retry logic
+  console.log(`Storing chunks in Pinecone with namespace: ${namespace}...`);
+  const pineconeIndex = await getPineconeIndex();
+  if (!pineconeIndex) {
+    throw new Error("Pinecone index is not initialized.");
+  }
 
-    // Split the documents into chunks
-    console.log(
-      `Splitting document into chunks (size: ${CHUNK_SIZE}, overlap: ${CHUNK_OVERLAP})...`,
-    );
-    const textSplitter = new RecursiveCharacterTextSplitter({
-      chunkSize: CHUNK_SIZE,
-      chunkOverlap: CHUNK_OVERLAP,
-    });
-    const chunkedDocs = await textSplitter.splitDocuments(docs);
-    console.log(`Document split into ${chunkedDocs.length} chunks`);
-
-    // Create embeddings using Gemini
-    console.log("Creating Gemini embeddings...");
-    const embeddings = await createGeminiEmbeddings({ apiKey });
-
-    if (!embeddings) {
-      throw new Error(
-        "Failed to create embeddings. Gemini API may not be configured properly.",
-      );
-    }
-
-    // Store documents in Pinecone with retry logic
-    console.log(
-      `Storing documents in Pinecone with namespace: ${namespace}...`,
-    );
-
-    let retryCount = 0;
-    let success = false;
-
-    while (retryCount < MAX_RETRIES && !success) {
-      try {
-        const pineconeIndex = await getPineconeIndex();
-        if (!pineconeIndex) {
-          throw new Error("Pinecone index is not initialized");
-        }
-
-        // First, check if there are any existing vectors in this namespace
-        try {
-          const stats = await pineconeIndex.describeIndexStats();
-          console.log("Pinecone index stats:", JSON.stringify(stats));
-        } catch (statsError) {
-          console.warn("Could not get index stats:", statsError);
-          // Continue anyway, this is just for debugging
-        }
-
-        // Store the documents
-        await PineconeStore.fromDocuments(chunkedDocs, embeddings, {
-          pineconeIndex,
-          namespace,
-        });
-
-        success = true;
-        console.log(
-          `Successfully stored ${chunkedDocs.length} document chunks in Pinecone`,
-        );
-      } catch (storeError) {
-        retryCount++;
-        console.error(
-          `Error storing documents in Pinecone (attempt ${retryCount}/${MAX_RETRIES}):`,
-          storeError,
-        );
-
-        if (retryCount < MAX_RETRIES) {
-          console.log(`Retrying in ${RETRY_DELAY}ms...`);
-          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
-        } else {
-          throw storeError;
-        }
+  let retries = 0;
+  while (retries < MAX_RETRIES) {
+    try {
+      await PineconeStore.fromDocuments(chunkedDocs, embeddings, {
+        pineconeIndex,
+        namespace,
+      });
+      console.log("Successfully stored document chunks in Pinecone.");
+      return { numDocs: chunkedDocs.length };
+    } catch (error) {
+      retries++;
+      console.error(`Error storing in Pinecone (attempt ${retries}/${MAX_RETRIES}):`, error);
+      if (retries >= MAX_RETRIES) {
+        throw error; // Re-throw after final attempt
       }
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
     }
+  }
 
-    return {
-      numDocs: chunkedDocs.length,
-      success: true,
-    };
-  } catch (error) {
-    console.error("Error processing PDF document:", error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to process PDF: ${errorMessage}`);
+  throw new Error("Failed to store documents in Pinecone after multiple retries.");
+};
+
+/**
+ * Extracts text from various document types (Word, Excel, PowerPoint).
+ * @private
+ */
+const _extractTextFromGenericDocument = async (
+  fileBlob: Blob,
+  documentType: string
+): Promise<string> => {
+  console.log(`Extracting text from ${documentType}...`);
+  const buffer = Buffer.from(await fileBlob.arrayBuffer());
+
+  switch (documentType) {
+    case "doc":
+    case "docs":
+      const docxResult = await mammoth.extractRawText({ buffer });
+      return docxResult.value;
+
+    case "sheet":
+    case "sheets":
+      const workbook = XLSX.read(buffer, { type: "buffer" });
+      const textParts: string[] = [];
+      workbook.SheetNames.forEach((sheetName) => {
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as TypeSpreadsheetData;
+        jsonData.forEach((row: TypeSpreadsheetRow) => {
+          if (Array.isArray(row)) {
+            const rowText = row.filter(cell => cell != null).map(String).join(" | ");
+            if (rowText) textParts.push(rowText);
+          }
+        });
+      });
+      return textParts.join("\n");
+
+    case "slides":
+      // Basic text extraction for slides. For more advanced parsing, a dedicated library would be needed.
+      return buffer.toString("utf8").replace(/[\x00-\x1F\x7F-\x9F]/g, " ").replace(/\s+/g, " ").trim();
+
+    default:
+      throw new Error(`Unsupported document type: ${documentType}`);
   }
 };
 
 /**
- * Process a generic document (docs, sheets, slides)
- * Currently this is a placeholder that will be expanded as needed
+ * Processes a PDF file by extracting its content and storing it as embeddings in Pinecone.
+ *
+ * @param fileBlob The PDF file blob.
+ * @param namespace The unique ID (and Pinecone namespace) for the file.
+ * @param apiKey Optional API key for Gemini.
+ * @returns A promise that resolves with the outcome of the processing.
+ */
+export const processPdfDocument = async (
+  fileBlob: Blob,
+  namespace: string,
+  apiKey?: string
+): Promise<{ numDocs: number; success: boolean; error?: string }> => {
+  console.log(`Starting PDF processing for namespace: ${namespace}`);
+  if (!(await isPineconeConfigured())) {
+    return { success: false, numDocs: 0, error: "Pinecone is not configured." };
+  }
+
+  try {
+    console.log("Loading PDF document...");
+    const loader = new PDFLoader(fileBlob);
+    const docs = await loader.load();
+
+    const { numDocs } = await _processAndStoreDocuments(docs, namespace, apiKey);
+    return { numDocs, success: true };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to process PDF for namespace ${namespace}:`, errorMessage);
+    return { numDocs: 0, success: false, error: errorMessage };
+  }
+};
+
+/**
+ * Processes a generic document (Word, Excel) by extracting its text and storing embeddings.
+ *
+ * @param fileBlob The document file blob.
+ * @param namespace The unique ID (and Pinecone namespace) for the file.
+ * @param documentType The type of the document (e.g., 'docs', 'sheets').
+ * @param apiKey Optional API key for Gemini.
+ * @returns A promise that resolves with the outcome of the processing.
  */
 export const processGenericDocument = async (
   fileBlob: Blob,
   namespace: string,
   documentType: string,
-  apiKey?: string,
+  apiKey?: string
 ): Promise<{ numDocs: number; success: boolean; error?: string }> => {
-  console.log(
-    `Starting ${documentType} processing for namespace: ${namespace}`,
-  );
-
-  // Check if Pinecone is configured
+  console.log(`Starting ${documentType} processing for namespace: ${namespace}`);
   if (!(await isPineconeConfigured())) {
-    console.error("Pinecone is not properly configured");
-    throw new Error(
-      "Pinecone is not properly configured. Please check your environment variables.",
-    );
+    return { success: false, numDocs: 0, error: "Pinecone is not configured." };
   }
 
   try {
-    // Extract text using the appropriate method for the document type
-    const text = await extractTextFromGenericDocument(fileBlob, documentType);
-
-    if (!text || text.trim().length === 0) {
-      console.error(`No content extracted from ${documentType}`);
-      return {
-        numDocs: 0,
-        success: false,
-        error: `No text content could be extracted from this ${documentType}. The file might be empty or in an unsupported format.`,
-      };
-    }
-
-    console.log(`Successfully extracted text from ${documentType}`);
-
-    // Create a document from the text
-    const docs = [
-      new Document({
-        pageContent: text,
-        metadata: { source: namespace, type: documentType },
-      }),
-    ];
-
-    // Split the documents into chunks
-    console.log(
-      `Splitting document into chunks (size: ${CHUNK_SIZE}, overlap: ${CHUNK_OVERLAP})...`,
-    );
-    const textSplitter = new RecursiveCharacterTextSplitter({
-      chunkSize: CHUNK_SIZE,
-      chunkOverlap: CHUNK_OVERLAP,
+    const text = await _extractTextFromGenericDocument(fileBlob, documentType);
+    const doc = new Document({
+      pageContent: text,
+      metadata: { source: namespace, type: documentType },
     });
-    const chunkedDocs = await textSplitter.splitDocuments(docs);
-    console.log(`Document split into ${chunkedDocs.length} chunks`);
 
-    // Create embeddings using Gemini
-    console.log("Creating Gemini embeddings...");
-    const embeddings = await createGeminiEmbeddings({ apiKey });
-
-    if (!embeddings) {
-      throw new Error(
-        "Failed to create embeddings. Gemini API may not be configured properly.",
-      );
-    }
-
-    // Store documents in Pinecone with retry logic
-    console.log(
-      `Storing document chunks in Pinecone with namespace: ${namespace}...`,
-    );
-
-    let retryCount = 0;
-    let success = false;
-
-    while (retryCount < MAX_RETRIES && !success) {
-      try {
-        const pineconeIndex = await getPineconeIndex();
-        if (!pineconeIndex) {
-          throw new Error("Pinecone index is not initialized");
-        }
-
-        // First, check if there are any existing vectors in this namespace
-        try {
-          const stats = await pineconeIndex.describeIndexStats();
-          console.log("Pinecone index stats:", JSON.stringify(stats));
-        } catch (statsError) {
-          console.warn("Could not get index stats:", statsError);
-          // Continue anyway, this is just for debugging
-        }
-
-        // Store the documents
-        await PineconeStore.fromDocuments(chunkedDocs, embeddings, {
-          pineconeIndex,
-          namespace,
-        });
-
-        success = true;
-        console.log(
-          `Successfully stored ${chunkedDocs.length} document chunks in Pinecone`,
-        );
-      } catch (storeError) {
-        retryCount++;
-        console.error(
-          `Error storing document in Pinecone (attempt ${retryCount}/${MAX_RETRIES}):`,
-          storeError,
-        );
-
-        if (retryCount < MAX_RETRIES) {
-          console.log(`Retrying in ${RETRY_DELAY}ms...`);
-          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
-        } else {
-          throw storeError;
-        }
-      }
-    }
-
-    return {
-      numDocs: chunkedDocs.length,
-      success: true,
-    };
+    const { numDocs } = await _processAndStoreDocuments([doc], namespace, apiKey);
+    return { numDocs, success: true };
   } catch (error) {
-    console.error(`Error processing ${documentType}:`, error);
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to process ${documentType}: ${errorMessage}`);
-  }
-};
-
-/**
- * Extract text from a generic document (docs, sheets, slides)
- * Uses appropriate loaders based on file type
- */
-const extractTextFromGenericDocument = async (
-  fileBlob: Blob,
-  documentType: string,
-): Promise<string> => {
-  console.log(`Extracting text from ${documentType}...`);
-
-  try {
-    let text = "";
-
-    // Convert blob to buffer for processing
-    const arrayBuffer = await fileBlob.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    switch (documentType) {
-      case "doc":
-      case "docs":
-        // For Word documents, use mammoth for .docx files
-        try {
-          const result = await mammoth.extractRawText({ buffer });
-          text = result.value;
-
-          if (!text || text.trim().length < 50) {
-            throw new Error("Could not extract meaningful text from document");
-          }
-        } catch {
-          console.warn(
-            `Mammoth extraction failed for ${documentType}, trying fallback method`,
-          );
-          // Fallback: try basic text extraction
-          text = buffer.toString("utf8");
-          text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "");
-          text = text.replace(/\s+/g, " ").trim();
-
-          if (!text || text.length < 50) {
-            throw new Error("No readable text content found in document");
-          }
-        }
-        break;
-
-      case "sheet":
-      case "sheets":
-        // For Excel files, use xlsx library
-        try {
-          const workbook = XLSX.read(buffer, { type: "buffer" });
-          const textParts: string[] = [];
-
-          // Extract text from all sheets
-          workbook.SheetNames.forEach((sheetName) => {
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-            // Convert each row to text
-            (jsonData as TypeSpreadsheetData).forEach(
-              (row: TypeSpreadsheetRow) => {
-                if (Array.isArray(row)) {
-                  const rowText = row
-                    .filter(
-                      (cell) =>
-                        cell !== null && cell !== undefined && cell !== "",
-                    )
-                    .map((cell) => String(cell).trim())
-                    .join(" | ");
-                  if (rowText) {
-                    textParts.push(rowText);
-                  }
-                }
-              },
-            );
-          });
-
-          text = textParts.join("\n");
-
-          if (!text || text.trim().length < 50) {
-            throw new Error(
-              "Could not extract meaningful text from spreadsheet",
-            );
-          }
-        } catch {
-          console.warn(
-            `XLSX extraction failed for ${documentType}, trying fallback method`,
-          );
-          // Fallback: try basic text extraction
-          text = buffer.toString("utf8");
-          text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "");
-          text = text.replace(/\s+/g, " ").trim();
-
-          if (!text || text.length < 50) {
-            throw new Error("No readable text content found in spreadsheet");
-          }
-        }
-        break;
-
-      case "slides":
-        // For PowerPoint files, use enhanced text extraction
-        try {
-          // Try to extract text using XML parsing for .pptx files
-          // For .ppt files, we'll use basic extraction
-          text = buffer.toString("utf8");
-
-          // Clean up PowerPoint-specific formatting and extract readable content
-          const cleanedText = text
-            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "")
-            .replace(/<[^>]*>/g, " ") // Remove XML tags
-            .replace(/\s+/g, " ")
-            .trim();
-
-          // Extract meaningful text parts
-          const textParts = cleanedText
-            .split("\n")
-            .map((line) => line.trim())
-            .filter((line) => line.length > 0 && /[a-zA-Z0-9]/.test(line))
-            .join("\n");
-
-          if (textParts.length > 50) {
-            text = textParts;
-          } else {
-            throw new Error(
-              "Could not extract meaningful text from presentation",
-            );
-          }
-        } catch {
-          console.warn(
-            `Enhanced text extraction failed for ${documentType}, trying basic method`,
-          );
-          // Fallback: try basic text extraction
-          text = buffer.toString("utf8");
-          text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, "");
-          text = text.replace(/\s+/g, " ").trim();
-
-          if (!text || text.length < 50) {
-            throw new Error("No readable text content found in presentation");
-          }
-        }
-        break;
-
-      default:
-        throw new Error(`Unsupported document type: ${documentType}`);
-    }
-
-    console.log(
-      `Successfully extracted ${text.length} characters from ${documentType}`,
-    );
-    return text;
-  } catch (error) {
-    console.error(`Error extracting text from ${documentType}:`, error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(
-      `Failed to extract text from ${documentType}: ${errorMessage}`,
-    );
-  }
-};
-
-/**
- * Extract text from a PDF file
- */
-export const extractTextFromPdf = async (fileBlob: Blob): Promise<string> => {
-  console.log("Extracting text from PDF...");
-
-  try {
-    const loader = new PDFLoader(fileBlob);
-    const docs = await loader.load();
-
-    if (!docs || docs.length === 0) {
-      console.log("No content extracted from PDF");
-      return "";
-    }
-
-    console.log(`Successfully extracted text from ${docs.length} pages`);
-
-    // Combine all page content
-    const combinedText = docs
-      .map((doc: Document) => doc.pageContent)
-      .join("\n\n");
-    console.log(
-      `Total extracted text length: ${combinedText.length} characters`,
-    );
-
-    return combinedText;
-  } catch (error) {
-    console.error("Error extracting text from PDF:", error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to extract text from PDF: ${errorMessage}`);
+    console.error(`Failed to process ${documentType} for namespace ${namespace}:`, errorMessage);
+    return { numDocs: 0, success: false, error: errorMessage };
   }
 };
