@@ -22,16 +22,16 @@ const GlowBackground: React.FC<TypeGlowProps> = ({
   className = "",
   glowElements = [
     {
-      position: "left-[20%] top-1/2",
+      position: "left-[25%] top-1/2",
       size: { width: 500, height: 500 },
       blur: 150,
-      color: "rgba(84, 99, 255, 0.15)",
+      color: "rgba(84, 99, 255, 0.25)",
     },
     {
-      position: "right-[20%] top-1/2",
+      position: "right-[25%] top-1/2",
       size: { width: 500, height: 500 },
       blur: 150,
-      color: "rgba(84, 99, 255, 0.15)",
+      color: "rgba(84, 99, 255, 0.25)",
     },
   ],
 }) => {
