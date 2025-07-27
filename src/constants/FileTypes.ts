@@ -8,6 +8,12 @@ import githubIcon from "@/assets/images/logos/github.png";
 import notionIcon from "@/assets/images/logos/notion.png";
 import { TypeFileTypeConfig } from "@/types/TypeUpload";
 
+/**
+ * An array of configuration objects for each supported file type.
+ *
+ * Each object defines the properties for an uploadable content type, including its
+ * name, icon, accepted MIME types/extensions, and size limits.
+ */
 export const FileTypes: TypeFileTypeConfig[] = [
   {
     type: "pdf",
@@ -75,17 +81,24 @@ export const FileTypes: TypeFileTypeConfig[] = [
   },
 ];
 
-// Helper function to get file type config
+/** A Map for efficient O(1) lookup of file type configurations. */
+const fileTypeConfigMap = new Map(FileTypes.map(ft => [ft.type, ft]));
+
+/**
+ * Retrieves the configuration object for a specific file type.
+ *
+ * @param fileType The type of the file (e.g., 'pdf', 'doc').
+ * @returns {TypeFileTypeConfig} The corresponding configuration object. Defaults to the first type if not found.
+ */
 export const getFileTypeConfig = (fileType: string): TypeFileTypeConfig => {
-  return FileTypes.find((ft) => ft.type === fileType) || FileTypes[0];
+  return fileTypeConfigMap.get(fileType) || FileTypes[0];
 };
 
-// Helper function to get all accepted file types
+/**
+ * Compiles a flat list of all accepted MIME types and extensions from the configuration.
+ *
+ * @returns {string[]} An array of all unique accepted file specifiers.
+ */
 export const getAllAcceptedFileTypes = (): string[] => {
-  return FileTypes.reduce((acc, ft) => {
-    if (ft.accept) {
-      acc.push(...ft.accept.split(","));
-    }
-    return acc;
-  }, [] as string[]);
+  return FileTypes.flatMap(ft => ft.accept ? ft.accept.split(",") : []);
 };

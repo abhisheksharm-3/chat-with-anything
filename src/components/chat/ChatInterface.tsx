@@ -32,7 +32,6 @@ const ChatInterface = ({ chatId }: { chatId: string }) => {
     chat,
     file,
     isChatLoading,
-    isChatError,
     messagesLoading,
     isFileLoading,
     isFileError,
@@ -54,7 +53,7 @@ const ChatInterface = ({ chatId }: { chatId: string }) => {
   }
 
   // Error state for when the chat is not found
-  if (isChatError) {
+  if (!isChatLoading && !chat) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

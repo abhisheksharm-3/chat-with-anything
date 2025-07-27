@@ -1,5 +1,11 @@
 import { TypeUser } from "@/types/TypeSupabase";
 
+/**
+ * An array of configuration objects for rendering sections in a desktop settings UI.
+ *
+ * Each object defines a user profile field, including its display label,
+ * the corresponding key in the `TypeUser` object, and whether it is editable.
+ */
 export const SettingsSections = [
   {
     id: "displayName",
@@ -18,6 +24,12 @@ export const SettingsSections = [
   },
 ];
 
+/**
+ * An array of configuration objects for rendering sections in a mobile settings UI.
+ *
+ * Each object defines a setting, its display label, and a `getUserValue` function
+ * to retrieve and format the corresponding value from the user object.
+ */
 export const MobileSettingsSections = [
   {
     id: "displayName",

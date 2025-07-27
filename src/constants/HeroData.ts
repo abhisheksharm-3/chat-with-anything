@@ -7,7 +7,12 @@ import pdfImg from "@/assets/images/logos/pdf.png";
 import imageFileImg from "@/assets/images/logos/flat-color-icons_image-file.png";
 import slidesImg from "@/assets/images/logos/slides.png";
 
-// Floating logo configurations
+/**
+ * An array of configuration objects for rendering floating logo animations.
+ *
+ * Each object defines the image source, alt text, and various Tailwind CSS classes
+ * for positioning, rotation, and sizing to create a decorative visual effect.
+ */
 export const FloatingLogosData = [
   {
     src: youtubeImg,
@@ -83,7 +88,10 @@ export const FloatingLogosData = [
   },
 ];
 
-// Word rotate options
+/**
+ * An array of strings used for a word rotation animation, typically in a hero section.
+ * This list represents the different types of content the application can handle.
+ */
 export const RotateWords = [
   "PDF",
   "Google Docs",

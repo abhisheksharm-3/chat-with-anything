@@ -1,5 +1,12 @@
 import { TypePricingData } from "@/types/TypeContent";
 
+/**
+ * A centralized data object containing all pricing plan information.
+ *
+ * This configuration is structured by billing frequency (`annual`, `lifetime`)
+ * and then by plan tier (`free`, `personal`, `pro`). Each plan object includes
+ * its price, subtitle, features, and any relevant billing notes.
+ */
 export const PricingData: TypePricingData = {
   annual: {
     free: {

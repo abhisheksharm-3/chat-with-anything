@@ -3,6 +3,12 @@ import {
   TypeUploadError,
 } from "@/types/TypeUpload";
 
+/**
+ * Configuration for providing user-friendly help messages and styles for different error types.
+ *
+ * This object maps specific `TypeUploadError['type']` values to an icon,
+ * a helpful message, and Tailwind CSS classes for styling the help box.
+ */
 export const UploadErrorHelpConfig = {
   auth: {
     icon: "🔒",
@@ -30,8 +36,14 @@ export const UploadErrorHelpConfig = {
   },
 } as const;
 
-export // Configuration for detail fields
-const UploadErrorDetailFields: TypeDetailUploadErrorField[] = [
+/**
+ * An array of configuration objects used to render detailed fields in an error display.
+ *
+ * Each object defines a piece of technical information to be shown to the user,
+ * such as the error type or original error message. It includes a `condition`
+ * function to determine if the field should be displayed.
+ */
+export const UploadErrorDetailFields: TypeDetailUploadErrorField[] = [
   {
     key: "type",
     label: "Error Type",

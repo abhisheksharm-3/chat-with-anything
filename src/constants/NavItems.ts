@@ -1,10 +1,18 @@
 import { Clock, File, Settings } from "lucide-react";
 
+/**
+ * An array of configuration objects for the main desktop sidebar navigation.
+ * Each object defines a navigation link and its corresponding icon.
+ */
 export const NavigationItems = [
   { href: "/choose", icon: File },
   { href: "/history", icon: Clock },
 ] as const;
 
+/**
+ * An array of configuration objects for the mobile navigation menu.
+ * Each object includes a link, icon, title, and a brief description for display.
+ */
 export const MobileNavItems = [
   {
     href: "/choose",
@@ -26,12 +34,20 @@ export const MobileNavItems = [
   },
 ] as const;
 
+/**
+ * An array of configuration objects for routes displayed in the public-facing navbar.
+ * These are typically used for marketing or informational pages.
+ */
 export const PublicNavbarRoutes = [
   { label: "Pricing", url: "/#pricing" },
   { label: "FAQ", url: "/#faq" },
   { label: "Contact Us", url: "/#contact-us" },
 ];
 
+/**
+ * An array of configuration objects for rendering call-to-action (CTA) buttons.
+ * Each object defines the button's label, navigation link, and visual variant.
+ */
 export const CtaButtons = [
   { label: "Login", link: "/login", variant: "outline" as const },
   { label: "Try For Free", link: "/signup", variant: "default" as const },
