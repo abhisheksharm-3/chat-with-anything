@@ -7,14 +7,14 @@ import { notFound } from "next/navigation";
  * Dynamically generates SEO metadata for a specific chat page.
  *
  * @param props The properties passed to the page, containing route params.
- * @param props.params The dynamic route parameters.
+ * @param props.params The dynamic route parameters wrapped in a Promise.
  * @param props.params.id The unique identifier of the chat.
  * @returns A Promise that resolves to the Metadata object.
  */
 export async function generateMetadata({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const PageParams = await params;
   const chatId = PageParams.id;
