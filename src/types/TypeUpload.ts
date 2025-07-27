@@ -61,6 +61,16 @@ export interface TypeUseUploadLogicProps {
 
 export type TypeUploadStatus = "idle" | "uploading" | "uploaded" | "error";
 
+export interface TypeUploadState {
+  uploadStatus: TypeUploadStatus;
+  fileName: string;
+  url: string;
+  error: TypeUploadError | null;
+  selectedFile: File | null;
+  retryCount: number;
+  isRetrying: boolean;
+}
+
 // Enhanced error types for better error categorization
 export interface TypeUploadError {
   type:

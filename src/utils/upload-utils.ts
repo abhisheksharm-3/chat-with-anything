@@ -2,6 +2,9 @@
  * A collection of utility functions for handling uploads, URL validation, and errors.
  */
 
+import { EnumUploadActionType } from "@/constants/EnumUploadData";
+import { TypeUploadError, TypeUploadState } from "@/types/TypeUpload";
+
 /**
  * Validates if a string is a well-formed URL with an http or https protocol.
  * @param {string} url The URL string to validate.
@@ -63,7 +66,6 @@ export const getErrorMessage = (error: unknown): string => {
   return message;
 };
 
-
 /**
  * Gets a display title for an upload error based on its type.
  * @param {string} type The type of the error (e.g., 'validation', 'network').
@@ -109,4 +111,67 @@ export const getUploadErrorColorClasses = (type: string) => {
     titleText: "text-red-700",
     messageText: "text-red-600",
   };
+};
+
+export const initialUploadState: TypeUploadState = {
+  uploadStatus: "idle",
+  fileName: "",
+  url: "",
+  error: null,
+  selectedFile: null,
+  retryCount: 0,
+  isRetrying: false,
+};
+
+export type UploadAction =
+  | {
+      type: EnumUploadActionType.SET_STATUS;
+      payload: TypeUploadState["uploadStatus"];
+    }
+  | { type: EnumUploadActionType.SET_FILE; payload: File }
+  | { type: EnumUploadActionType.SET_URL; payload: string }
+  | { type: EnumUploadActionType.SET_ERROR; payload: TypeUploadError | null }
+  | { type: EnumUploadActionType.RESET_FILE }
+  | { type: EnumUploadActionType.RESET }
+  | { type: EnumUploadActionType.RETRY }
+  | { type: EnumUploadActionType.SET_IS_RETRYING; payload: boolean };
+
+export const uploadReducer = (
+  state: TypeUploadState,
+  action: UploadAction
+): TypeUploadState => {
+  switch (action.type) {
+    case EnumUploadActionType.SET_STATUS:
+      return { ...state, uploadStatus: action.payload, error: null };
+    case EnumUploadActionType.SET_FILE:
+      return {
+        ...initialUploadState,
+        selectedFile: action.payload,
+        fileName: action.payload.name,
+      };
+    case EnumUploadActionType.SET_URL:
+      return {
+        ...state,
+        url: action.payload,
+        selectedFile: null,
+        fileName: "",
+      };
+    case EnumUploadActionType.SET_ERROR:
+      return { ...state, error: action.payload, uploadStatus: "error" };
+    case EnumUploadActionType.RESET_FILE:
+      return { ...state, selectedFile: null, fileName: "" };
+    case EnumUploadActionType.RESET:
+      return initialUploadState;
+    case EnumUploadActionType.RETRY:
+      return {
+        ...state,
+        error: null,
+        uploadStatus: "idle",
+        retryCount: state.retryCount + 1,
+      };
+    case EnumUploadActionType.SET_IS_RETRYING:
+      return { ...state, isRetrying: action.payload };
+    default:
+      return state;
+  }
 };

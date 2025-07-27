@@ -2,43 +2,43 @@ import { TypeAuthError, TypeAuthErrorInfo } from "@/types/TypeAuth";
 import { EnumAuthErrorType } from "./EnumAuthErrorTypes";
 
 export const ErrorMessages: Record<string, Partial<TypeAuthError>> = {
-  // Supabase Auth errors
-  "Invalid login credentials": {
+  // Supabase Auth errors - ALL KEYS SHOULD BE LOWERCASE
+  "invalid login credentials": {
     type: EnumAuthErrorType.AUTHENTICATION_ERROR,
     userMessage:
       "The email or password you entered is incorrect. Please check your credentials and try again.",
     retryable: true,
   },
-  "Email not confirmed": {
+  "email not confirmed": {
     type: EnumAuthErrorType.AUTHENTICATION_ERROR,
     userMessage:
       "Please check your email and click the confirmation link before signing in.",
     retryable: false,
   },
-  "User already registered": {
+  "user already registered": {
     type: EnumAuthErrorType.VALIDATION_ERROR,
     userMessage:
       "An account with this email already exists. Please try signing in instead.",
     retryable: false,
   },
-  "Password should be at least 6 characters": {
+  "password should be at least 6 characters": {
     type: EnumAuthErrorType.VALIDATION_ERROR,
     userMessage: "Your password must be at least 6 characters long.",
     retryable: false,
   },
-  "Unable to validate email address": {
+  "unable to validate email address": {
     type: EnumAuthErrorType.VALIDATION_ERROR,
     userMessage: "Please enter a valid email address.",
     retryable: false,
   },
-  "Email rate limit exceeded": {
+  "email rate limit exceeded": {
     type: EnumAuthErrorType.RATE_LIMIT_ERROR,
     userMessage:
       "Too many attempts. Please wait a few minutes before trying again.",
     retryable: true,
     retryAfter: 300, // 5 minutes
   },
-  "Signup disabled": {
+  "signup disabled": {
     type: EnumAuthErrorType.AUTHORIZATION_ERROR,
     userMessage:
       "New account registration is currently unavailable. Please try again later.",
@@ -59,7 +59,7 @@ export const ErrorMessages: Record<string, Partial<TypeAuthError>> = {
       "Connection problem. Please check your internet connection and try again.",
     retryable: true,
   },
-  NetworkError: {
+  networkerror: {
     type: EnumAuthErrorType.NETWORK_ERROR,
     userMessage:
       "Network error occurred. Please check your connection and try again.",
@@ -80,7 +80,7 @@ export const ErrorMessages: Record<string, Partial<TypeAuthError>> = {
   },
 
   // Session errors
-  "No authenticated user found": {
+  "no authenticated user found": {
     type: EnumAuthErrorType.SESSION_ERROR,
     userMessage: "Authentication failed. Please try signing up again.",
     retryable: true,

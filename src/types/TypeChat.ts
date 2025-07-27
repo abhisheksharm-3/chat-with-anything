@@ -72,3 +72,9 @@ export interface TypeUseChatInterfaceReturn {
   handleSendMessage: () => Promise<void>;
   handleKeyPress: (e: React.KeyboardEvent) => void;
 }
+
+export interface TypeChatInterfaceState {
+  inputValue: string;
+  showDocument: boolean;
+  localMessages: TypeMessage[];
+}

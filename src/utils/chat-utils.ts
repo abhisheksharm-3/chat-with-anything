@@ -1,7 +1,8 @@
-import { TypeChatError } from "@/types/TypeChat";
-import { TypeChat, TypeFile } from "@/types/TypeSupabase";
+import { TypeChatError, TypeChatInterfaceState } from "@/types/TypeChat";
+import { TypeChat, TypeFile, TypeMessage } from "@/types/TypeSupabase";
 import { Metadata } from "next";
 import { supabaseBrowserClient } from "./supabase/client";
+import { syncMessagesWithOptimisticUpdates } from "./message-utils";
 
 // --- Constants for Error Handling and Retry Logic ---
 
@@ -232,4 +233,48 @@ const buildMetadata = (
       description,
     },
   };
+};
+
+export type ChatInterfaceAction = 
+  | { type: 'SET_INPUT_VALUE'; payload: string }
+  | { type: 'SET_SHOW_DOCUMENT'; payload: boolean }
+  | { type: 'SYNC_MESSAGES'; payload: TypeMessage[] }
+  | { type: 'ADD_INITIAL_ERROR'; payload: TypeMessage }
+  | { type: 'SEND_MESSAGE_START'; payload: { tempUserMessage: TypeMessage; tempAiMessage: TypeMessage } }
+  | { type: 'SEND_MESSAGE_ERROR'; payload: { tempUserMessage: TypeMessage; tempAiMessage: TypeMessage; errorMessage: TypeMessage } };
+
+export const initialChatInterfaceState: TypeChatInterfaceState = {
+  inputValue: "",
+  showDocument: false,
+  localMessages: [],
+};
+export const chatInterfaceReducer = (
+  state: TypeChatInterfaceState,
+  action: ChatInterfaceAction
+): TypeChatInterfaceState => {
+  switch (action.type) {
+    case 'SET_INPUT_VALUE':
+      return { ...state, inputValue: action.payload };
+    case 'SET_SHOW_DOCUMENT':
+      return { ...state, showDocument: action.payload };
+    case 'SYNC_MESSAGES':
+      return { ...state, localMessages: syncMessagesWithOptimisticUpdates(action.payload, state.localMessages) };
+    case 'ADD_INITIAL_ERROR':
+      return { ...state, localMessages: [action.payload] };
+    case 'SEND_MESSAGE_START':
+      return {
+        ...state,
+        inputValue: "",
+        localMessages: [...state.localMessages, action.payload.tempUserMessage, action.payload.tempAiMessage],
+      };
+    case 'SEND_MESSAGE_ERROR':
+      return {
+        ...state,
+        localMessages: state.localMessages
+          .filter((msg: TypeMessage) => msg.id !== action.payload.tempUserMessage.id && msg.id !== action.payload.tempAiMessage.id)
+          .concat(action.payload.errorMessage),
+      };
+    default:
+      return state;
+  }
 };

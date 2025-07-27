@@ -1,93 +1,49 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useReducer } from "react";
 import { useRouter } from "next/navigation";
-import { TypeMessage } from "@/types/TypeSupabase";
 import { useMessages } from "@/hooks/useMessages";
 import { useChats } from "@/hooks/useChats";
 import { useFileById } from "@/hooks/useFiles";
-import {
-  checkYouTubeProcessingError,
-  createErrorMessage,
-  createOptimisticMessages,
-  createYouTubeErrorMessage,
-  syncMessagesWithOptimisticUpdates,
-} from "@/utils/message-utils";
-import { TypeUseChatInterfaceProps, TypeUseChatInterfaceReturn } from "@/types/TypeChat";
+import { checkYouTubeProcessingError, createErrorMessage, createOptimisticMessages, createYouTubeErrorMessage } from "@/utils/message-utils";
+import { chatInterfaceReducer, initialChatInterfaceState } from "@/utils/chat-utils";
 
-const RedirectDelay = 2000;
+const REDIRECT_DELAY_MS = 2000;
 
 /**
  * Manages all state and logic for the chat interface.
- *
- * This hook encapsulates data fetching, real-time message synchronization,
- * optimistic UI updates, loading/error states, and event handlers for a given
- * chat session. It returns a comprehensive API for the presentational
- * `ChatInterface` component.
  */
-export const useChatInterface = ({ chatId }: TypeUseChatInterfaceProps): TypeUseChatInterfaceReturn => {
+export const useChatInterface = ({ chatId }: { chatId: string }) => {
   const router = useRouter();
-
-  // --- Core Hooks ---
-  const {
-    messages: serverMessages,
-    isLoading: messagesLoading,
-    isSending,
-    sendMessage,
-    subscribeToMessages,
-  } = useMessages(chatId);
-  const { getChatById } = useChats();
-
-  // --- Local State ---
-  const [inputValue, setInputValue] = useState("");
-  const [showDocument, setShowDocument] = useState(false);
-  const [localMessages, setLocalMessages] = useState<TypeMessage[]>([]);
+  const [state, dispatch] = useReducer(chatInterfaceReducer, initialChatInterfaceState);
+  const { inputValue, localMessages, showDocument } = state;
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // --- Core Data Hooks ---
+  const { messages: serverMessages, isLoading: messagesLoading, isSending, sendMessage, subscribeToMessages } = useMessages(chatId);
+  const { getChatById } = useChats(); // Fixed: use getChatById instead
+  
   // --- Derived State ---
-  const chat = getChatById(chatId);
-  const {
-    data: file,
-    isLoading: isFileLoading,
-    isError: isFileError,
-  } = useFileById(chat?.file_id || "");
-
+  const chat = getChatById(chatId); // Fixed: call getChatById
+  const { data: file, isLoading: isFileLoading, isError: isFileError } = useFileById(chat?.file_id || ""); // Fixed: use file_id
+  
   const isChatLoading = !chat && messagesLoading;
   const isChatError = !chat && !messagesLoading;
 
-  // --- Memoized Handlers ---
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
-
+  // --- Handlers ---
   const handleSendMessage = useCallback(async () => {
     const trimmedInput = inputValue.trim();
     if (!trimmedInput || isSending) return;
 
-    const { tempUserMessage, tempAiMessage } = createOptimisticMessages(
-      chatId,
-      trimmedInput
-    );
-
-    // Update UI optimistically
-    setLocalMessages((prev) => [...prev, tempUserMessage, tempAiMessage]);
-    setInputValue(""); // Clear input immediately
+    const { tempUserMessage, tempAiMessage } = createOptimisticMessages(chatId, trimmedInput);
+    dispatch({ type: 'SEND_MESSAGE_START', payload: { tempUserMessage, tempAiMessage } });
 
     try {
       await sendMessage(trimmedInput);
-      // Success: sync effect will automatically replace temp messages
     } catch (error) {
       console.error("Failed to send message:", error);
-      
-      // Replace temporary messages with error message
       const errorMessage = createErrorMessage(chatId);
-      setLocalMessages((prev) => 
-        prev
-          .filter((msg) => 
-            msg.id !== tempUserMessage.id && msg.id !== tempAiMessage.id
-          )
-          .concat(errorMessage)
-      );
+      dispatch({ type: 'SEND_MESSAGE_ERROR', payload: { tempUserMessage, tempAiMessage, errorMessage } });
     }
   }, [inputValue, isSending, chatId, sendMessage]);
 
@@ -97,50 +53,38 @@ export const useChatInterface = ({ chatId }: TypeUseChatInterfaceProps): TypeUse
       handleSendMessage();
     }
   }, [handleSendMessage]);
+  
+  const setInputValue = (value: string) => dispatch({ type: 'SET_INPUT_VALUE', payload: value });
+  const setShowDocument = (show: boolean) => dispatch({ type: 'SET_SHOW_DOCUMENT', payload: show });
 
   // --- Effects ---
-
-  // Handle chat not found with redirect
   useEffect(() => {
     if (!isChatLoading && isChatError) {
-      const timer = setTimeout(() => {
-        router.push("/not-found");
-      }, RedirectDelay);
-      
+      const timer = setTimeout(() => router.push("/not-found"), REDIRECT_DELAY_MS);
       return () => clearTimeout(timer);
     }
   }, [isChatError, isChatLoading, router]);
 
-  // Synchronize server messages with local optimistic state
   useEffect(() => {
     if (serverMessages) {
-      setLocalMessages((currentMessages) =>
-        syncMessagesWithOptimisticUpdates(serverMessages, currentMessages)
-      );
+      dispatch({ type: 'SYNC_MESSAGES', payload: serverMessages });
     }
   }, [serverMessages]);
 
-  // Handle YouTube processing errors
   useEffect(() => {
     if (!file || localMessages.length > 0) return;
-
-    const hasYouTubeError = checkYouTubeProcessingError(file);
-    if (hasYouTubeError) {
+    
+    if (checkYouTubeProcessingError(file)) {
       const errorMessage = createYouTubeErrorMessage(chatId, file);
-      setLocalMessages([errorMessage]);
+      dispatch({ type: 'ADD_INITIAL_ERROR', payload: errorMessage });
     }
   }, [file, chatId, localMessages.length]);
 
-  // Subscribe to real-time message updates
   useEffect(() => {
     const unsubscribe = subscribeToMessages();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     return unsubscribe;
-  }, [subscribeToMessages]);
-
-  // Auto-scroll to latest message
-  useEffect(() => {
-    scrollToBottom();
-  }, [localMessages, scrollToBottom]);
+  }, [subscribeToMessages, localMessages]);
 
   return {
     // State
@@ -150,17 +94,14 @@ export const useChatInterface = ({ chatId }: TypeUseChatInterfaceProps): TypeUse
     setShowDocument,
     localMessages,
     messagesEndRef,
-
-    // Derived state
+    // Derived State
     chat,
     file,
     isChatLoading,
-    isChatError,
     messagesLoading,
     isFileLoading,
     isFileError,
     isSending,
-
     // Handlers
     handleSendMessage,
     handleKeyPress,

@@ -5,35 +5,36 @@ import { useState, useEffect } from "react";
 /**
  * A client-side custom hook to detect if the current device viewport is of a mobile size.
  *
- * It listens for window resize events and updates its state accordingly. During server-side
- * rendering (SSR) and initial client hydration, it returns `false` to prevent layout shifts
- * and mismatches, only providing the true value once the component has mounted on the client.
+ * It uses the `window.matchMedia` API for efficient, breakpoint-based media query matching.
+ * During server-side rendering (SSR) and initial hydration, it defaults to `false` to
+ * prevent layout shifts, providing the true value only after client-side mounting.
  *
- * @param {number} [breakpoint=768] - The width in pixels to use as the threshold for what is considered a mobile device.
- * @returns {boolean} Returns `true` if `window.innerWidth` is less than the breakpoint, otherwise `false`.
+ * @param {number} [breakpoint=768] - The width in pixels to use as the mobile threshold.
+ * @returns {boolean} `true` if the viewport width is less than the breakpoint, otherwise `false`.
  */
 export const useIsMobile = (breakpoint = 768): boolean => {
-  // Initialize with null to safely handle server-side rendering
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  // `useState` initializes with a getter function to ensure `window` is only accessed on the client.
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // This function runs only on the client
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < breakpoint);
+    const mediaQuery = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+
+    // Function to update state when the media query match changes.
+    const handleMediaChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches);
     };
+    
+    // Set the initial value correctly after the component mounts.
+    setIsMobile(mediaQuery.matches);
 
-    // Set the initial value after mounting
-    checkIsMobile();
+    // Listen for changes to the media query.
+    mediaQuery.addEventListener("change", handleMediaChange);
 
-    // Update the value on window resize
-    window.addEventListener("resize", checkIsMobile);
-
-    // Clean up the event listener on component unmount
-    return () => window.removeEventListener("resize", checkIsMobile);
+    // Clean up the event listener on component unmount.
+    return () => mediaQuery.removeEventListener("change", handleMediaChange);
   }, [breakpoint]);
 
-  // Return a default of `false` during SSR and initial hydration
-  return isMobile === null ? false : isMobile;
+  return isMobile;
 };
 
 export default useIsMobile;

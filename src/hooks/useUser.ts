@@ -3,132 +3,140 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
 import { TypeUser } from "@/types/TypeSupabase";
+import { Session } from "@supabase/supabase-js";
 
-/** The base query key for all user-related queries in React Query. */
+/** The base query key for the authenticated user's session and profile. */
 export const USER_QUERY_KEY = ["user"];
 
 /**
  * A custom hook for managing the user's authentication session and profile data.
  *
- * It fetches the Supabase auth session and the user's public profile from the 'users' table.
- * It provides a unified user object, loading/error states, and mutations for updating the
- * user profile and signing out. It includes a fallback mechanism to provide basic user
- * details from the session while the full profile is loading.
+ * This hook fetches the user session and profile in a single query and provides
+ * reactive state, derived values, and mutation functions for profile updates and sign-out.
  *
- * @returns {object} An object containing the user session, profile, auth status, and action handlers.
- * @property {TypeUser | null} user - The user's profile data. Falls back to basic session info while loading.
- * @property {Session | null} session - The raw Supabase auth session object.
- * @property {boolean} isLoading - True if the session or user profile is being fetched.
- * @property {boolean} isError - True if an error occurred during fetching.
- * @property {Error | null} error - The error object if an error occurred.
- * @property {boolean} isAuthenticated - A boolean flag indicating if the user is logged in.
- * @property {string | undefined} userId - The unique ID of the authenticated user.
- * @property {(userData: Partial<TypeUser>) => void} updateUser - Mutation function to update the user's profile.
- * @property {(userData: Partial<TypeUser>) => Promise<TypeUser>} updateUserAsync - Async version of updateUser.
- * @property {boolean} isUpdating - True if the user profile update is in progress.
- * @property {() => void} signOut - Mutation function to sign the user out.
- * @property {() => Promise<boolean>} signOutAsync - Async version of signOut.
- * @property {boolean} isSigningOut - True if the sign-out process is in progress.
+ * @returns An object containing the user's data, auth status, and action handlers.
  */
 export const useUser = () => {
   const queryClient = useQueryClient();
   const supabase = supabaseBrowserClient();
 
-  /** Query to fetch the current Supabase auth session. */
-  const sessionQuery = useQuery({
-    queryKey: [...USER_QUERY_KEY, "session"],
+  /**
+   * Main query to fetch both the user session and their profile from the 'users' table.
+   * This runs once and provides all necessary user data.
+   */
+  const {
+    data: userData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: USER_QUERY_KEY,
     queryFn: async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) throw error;
-      return data.session;
-    },
-  });
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!session?.user) return { session: null, profile: null };
 
-  /** Query to fetch the user's public profile from the 'users' table. */
-  const userQuery = useQuery({
-    queryKey: [...USER_QUERY_KEY, "profile"],
-    queryFn: async () => {
-      if (!sessionQuery.data?.user?.id) return null;
-
-      const { data, error } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("users")
         .select("*")
-        .eq("id", sessionQuery.data.user.id)
-        .single();
+        .eq("id", session.user.id)
+        .single<TypeUser>();
 
-      if (error) {
-        // If no profile is found, it's not a hard error. The user might have just signed up.
-        if (error.code === "PGRST116") {
-          console.warn("User profile not found in database");
-          return null;
-        }
-        throw error;
+      // A missing profile is not a critical error (e.g., new user).
+      if (profileError && profileError.code !== "PGRST116") {
+        throw profileError;
       }
-
-      return data as TypeUser;
+      
+      return { session, profile };
     },
-    enabled: !!sessionQuery.data?.user?.id, // Only run this query if the user is authenticated
   });
 
-  /** Mutation to update the user's profile in the 'users' table. */
-  const updateUserMutation = useMutation({
-    mutationFn: async (userData: Partial<TypeUser>) => {
-      if (!sessionQuery.data?.user?.id)
-        throw new Error("No authenticated user");
+  /** Mutation to update the user's profile. */
+  const {
+    mutate: updateUser,
+    mutateAsync: updateUserAsync,
+    isPending: isUpdating,
+  } = useMutation({
+    mutationFn: async (updatedData: Partial<TypeUser>) => {
+      if (!userData?.session?.user) throw new Error("User not authenticated.");
 
-      const { data, error } = await supabase
+      const { data, error: updateError } = await supabase
         .from("users")
-        .update(userData)
-        .eq("id", sessionQuery.data.user.id)
+        .update(updatedData)
+        .eq("id", userData.session.user.id)
         .select()
-        .single();
-
-      if (error) throw error;
-      return data as TypeUser;
+        .single<TypeUser>();
+        
+      if (updateError) throw updateError;
+      return data;
     },
-    onSuccess: (updatedUser) => {
-      // Optimistically update the user profile in the cache
-      queryClient.setQueryData([...USER_QUERY_KEY, "profile"], updatedUser);
+    onSuccess: (updatedProfile) => {
+      // Optimistically update the cache with the new profile data.
+      queryClient.setQueryData(
+        USER_QUERY_KEY,
+        (oldData: { session: Session | null; profile: TypeUser | null } | null) => ({
+          ...oldData,
+          profile: updatedProfile,
+        })
+      );
     },
   });
 
-  /** Mutation to sign the user out from Supabase auth. */
-  const signOutMutation = useMutation({
+  /** Mutation to sign the user out. */
+  const {
+    mutate: signOut,
+    mutateAsync: signOutAsync,
+    isPending: isSigningOut,
+  } = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      return true;
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) throw signOutError;
     },
     onSuccess: () => {
-      // Invalidate all user-related queries to clear session and profile data
-      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEY });
+      // Clear the user query from the cache upon successful sign-out.
+      queryClient.setQueryData(USER_QUERY_KEY, null);
     },
   });
 
-  /** A fallback user object created from session data for a better UX while the full profile loads. */
-  const defaultUser: TypeUser | null = sessionQuery.data?.user
+  /**
+   * A fallback user object created from session data.
+   * This provides a better UX while the full profile is loading or if it doesn't exist.
+   */
+  const userFallback: TypeUser | null = userData?.session?.user
     ? {
-        id: sessionQuery.data.user.id,
-        email: sessionQuery.data.user.email || "",
-        name: sessionQuery.data.user.user_metadata?.full_name || "",
-        created_at:
-          sessionQuery.data.user.created_at || new Date().toISOString(),
+        id: userData.session.user.id,
+        email: userData.session.user.email ?? "",
+        name: userData.session.user.user_metadata?.full_name ?? "",
+        created_at: userData.session.user.created_at ?? new Date().toISOString(),
       }
     : null;
 
   return {
-    user: userQuery.data || defaultUser,
-    session: sessionQuery.data,
-    isLoading: sessionQuery.isLoading || userQuery.isLoading,
-    isError: sessionQuery.isError || userQuery.isError,
-    error: sessionQuery.error || userQuery.error,
-    isAuthenticated: !!sessionQuery.data?.user,
-    userId: sessionQuery.data?.user?.id,
-    updateUser: updateUserMutation.mutate,
-    updateUserAsync: updateUserMutation.mutateAsync,
-    isUpdating: updateUserMutation.isPending,
-    signOut: signOutMutation.mutate,
-    signOutAsync: signOutMutation.mutateAsync,
-    isSigningOut: signOutMutation.isPending,
+    /** The full user profile, with a fallback to basic session info. */
+    user: userData?.profile || userFallback,
+    /** The raw Supabase auth session object. */
+    session: userData?.session,
+    /** True if the session or user profile is being fetched. */
+    isLoading,
+    /** True if an error occurred during fetching. */
+    isError,
+    /** The error object, if an error occurred. */
+    error,
+    /** A boolean flag indicating if the user is logged in. */
+    isAuthenticated: !!userData?.session?.user,
+    /** The unique ID of the authenticated user. */
+    userId: userData?.session?.user?.id,
+    /** Function to update the user's profile. */
+    updateUser,
+    /** Async version of updateUser. */
+    updateUserAsync,
+    /** True if the user profile update is in progress. */
+    isUpdating,
+    /** Function to sign the user out. */
+    signOut,
+    /** Async version of signOut. */
+    signOutAsync,
+    /** True if the sign-out process is in progress. */
+    isSigningOut,
   };
 };

@@ -72,7 +72,6 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
     handleRemoveFile,
     handleRetry,
     handleSubmit,
-    handleUrlSubmit,
     handleKeyDown,
     isUploading,
     resetState,
@@ -221,7 +220,7 @@ const UploadModal: React.FC<TypeUploadModalProps> = ({
             fileTypeConfig={fileTypeConfig}
             isUrlOnly={isUrlOnly}
             handleUrlChange={handleUrlChange}
-            handleUrlSubmit={handleUrlSubmit}
+            handleUrlSubmit={handleSubmit}
             handleKeyDown={handleKeyDown}
             isUploading={isUploading}
           />

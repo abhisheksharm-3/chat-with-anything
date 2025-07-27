@@ -1,271 +1,161 @@
 "use client";
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import {
-  TypeAuthAction,
-  TypeAuthError,
-  TypeAuthFormData,
-  TypeLoginFormData,
-  TypeSignupFormData,
-} from "@/types/TypeAuth";
+import { TypeAuthAction, TypeAuthError, TypeAuthFormData, TypeLoginFormData, TypeSignupFormData } from "@/types/TypeAuth";
 import { signIn, signUp } from "@/app/(auth)/actions";
 import { supabaseBrowserClient } from "@/utils/supabase/client";
 import { EnumAuthErrorType } from "@/constants/EnumAuthErrorTypes";
 import { categorizeAuthError, handleAuthErrors } from "@/utils/auth-utils";
 
+// Type for server action functions
+type ServerActionFunction = (formData: FormData) => Promise<string | undefined>;
+
 /**
  * A custom hook to manage user authentication processes like login and signup.
+ *
  * It uses React Query's `useMutation` to handle asynchronous operations,
- * state management (loading, error, success), and server-side actions.
+ * state management (loading, error, success), and server-side actions. It provides
+ * detailed error objects and separate states for login and signup flows.
  */
 export const useAuth = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const supabase = supabaseBrowserClient();
 
-  const invalidateAuthQueries = () => {
+  // --- Private Helper Functions ---
+
+  /** Invalidates all user-related queries to refetch fresh data after an auth change. @private */
+  const _invalidateAuthQueries = () => {
     queryClient.invalidateQueries({ queryKey: ["user"] });
-    queryClient.invalidateQueries({ queryKey: ["auth"] });
   };
 
-  const handleSuccessNavigation = (action: TypeAuthAction) => {
+  /** Handles navigation after a successful login or signup. @private */
+  const _handleSuccessNavigation = (action: TypeAuthAction) => {
     if (action === "login") {
       router.push("/choose");
     } else {
+      // For signup, show a success message before redirecting to login.
       setTimeout(() => router.push("/login"), 2000);
     }
   };
 
-  const logAuthError = (action: TypeAuthAction, error: TypeAuthError) => {
-    if (process.env.NODE_ENV !== "production") {
-      console.error(`${action.charAt(0).toUpperCase() + action.slice(1)} error:`, {
-        type: error.type,
-        message: error.message,
-        userMessage: error.userMessage,
-        context: error.context,
-        retryable: error.retryable,
-      });
-    }
-  };
-
-  const shouldRetry = (failureCount: number, error: TypeAuthError, action: TypeAuthAction): boolean => {
-    const maxRetries = action === "login" ? 3 : 2;
-
-    if (!error.retryable || failureCount >= maxRetries) {
-      return false;
-    }
-
-    const nonRetryableTypes = [EnumAuthErrorType.RATE_LIMIT_ERROR];
-    if (action === "signup") {
-      nonRetryableTypes.push(
-        EnumAuthErrorType.VALIDATION_ERROR,
-        EnumAuthErrorType.USER_CREATION_ERROR
-      );
-    }
-
-    return !nonRetryableTypes.includes(error.type);
-  };
-
-  const calculateRetryDelay = (attemptIndex: number, error?: TypeAuthError): number => {
-    const baseDelay = 1000;
-    const delay = baseDelay * Math.pow(2, attemptIndex);
-
-    if (error?.type === EnumAuthErrorType.NETWORK_ERROR) {
-      return delay + Math.random() * 1000;
-    }
-
-    return delay;
-  };
-
-  const createMutationConfig = (action: TypeAuthAction) => ({
-    onSuccess: () => {
-      invalidateAuthQueries();
-      handleSuccessNavigation(action);
-    },
-    onError: (error: TypeAuthError) => logAuthError(action, error),
-    retry: (failureCount: number, error: TypeAuthError) => 
-      shouldRetry(failureCount, error, action),
-    retryDelay: calculateRetryDelay,
-  });
-
-  const prepareFormData = (data: TypeAuthFormData, type: TypeAuthAction): FormData => {
+  /** Prepares form data for server actions. @private */
+  const _prepareFormData = (data: TypeAuthFormData, type: TypeAuthAction): FormData => {
     const formData = new FormData();
-
-    if (type === "login") {
-      const { email, password } = data as TypeLoginFormData;
-      formData.append("email", email);
-      formData.append("password", password);
-    } else {
-      const { fullName, email, password } = data as TypeSignupFormData;
-      formData.append("full-name", fullName);
-      formData.append("email", email);
-      formData.append("password", password);
+    // All auth forms have email and password
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+    // Signup has an additional full name field
+    if (type === "signup") {
+      formData.append("full-name", (data as TypeSignupFormData).fullName);
     }
-
     return formData;
   };
 
   /**
    * Creates a user profile in the public 'users' table after a successful signup.
-   * This is necessary because Supabase's `auth.users` table is private.
+   * This is a critical step to make user data accessible to the application.
+   * @private
    */
-  const createUserProfile = async (signupData: TypeSignupFormData) => {
+  const _createUserProfile = async (signupData: TypeSignupFormData, userId: string) => {
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError) {
-        throw categorizeAuthError(sessionError, {
-          action: "getSession",
-          step: "createUserProfile",
-        });
-      }
-
-      const userId = sessionData.session?.user?.id;
-      if (!userId) {
-        throw categorizeAuthError(
-          new Error("No authenticated user found after signup"),
-          {
-            action: "validateSession",
-            step: "createUserProfile",
-            sessionExists: !!sessionData.session,
-            userExists: !!sessionData.session?.user,
-          }
-        );
-      }
-
-      const defaultUser = {
+      const userProfile = {
         id: userId,
         email: signupData.email,
         name: signupData.fullName,
-        created_at: new Date().toISOString(),
       };
-
-      const { error: insertError } = await supabase
-        .from("users")
-        .insert(defaultUser);
-
-      if (insertError) {
-        throw categorizeAuthError(insertError, {
-          action: "insertUser",
-          step: "createUserProfile",
-          userId,
-          userEmail: signupData.email,
-        });
-      }
-
-      return defaultUser;
+      const { error: insertError } = await supabaseBrowserClient().from("users").insert(userProfile);
+      if (insertError) throw insertError;
+      return userProfile;
     } catch (error) {
-      if (error && typeof error === "object" && "type" in error) {
-        throw error as TypeAuthError;
-      }
-
-      const categorizedError = categorizeAuthError(error, {
-        action: "createUserProfile",
-        step: "general",
-      });
+      // This is a critical error. The user is created in auth but not in the public table.
+      const categorizedError = categorizeAuthError(error, { action: "createUserProfile" });
       categorizedError.type = EnumAuthErrorType.USER_CREATION_ERROR;
-      categorizedError.userMessage =
-        "Your account was created but we couldn't complete the setup. Please contact support.";
+      categorizedError.userMessage = "Your account was created but setup failed. Please contact support.";
       throw categorizedError;
     }
   };
-
-  const executeAuthAction = async (
+  
+  /** Executes the server action for login or signup and handles errors. @private */
+  const _executeAuthAction = async (
     data: TypeAuthFormData,
     action: TypeAuthAction,
-    serverAction: (formData: FormData) => Promise<unknown>
+    serverAction: ServerActionFunction
   ) => {
     try {
-      const formData = prepareFormData(data, action);
+      const formData = _prepareFormData(data, action);
       const result = await serverAction(formData);
 
+      // Server actions return an error object on failure, otherwise null/undefined.
       if (result) {
-        const context = action === "login" 
-          ? { email: (data as TypeLoginFormData).email }
-          : { email: (data as TypeSignupFormData).email, fullName: (data as TypeSignupFormData).fullName };
-        
-        throw categorizeAuthError(result, { action, ...context });
+        throw result;
       }
-
       return { success: true };
     } catch (error) {
-      const context = action === "login"
-        ? { email: (data as TypeLoginFormData).email }
-        : { email: (data as TypeSignupFormData).email, fullName: (data as TypeSignupFormData).fullName };
-      
-      handleAuthErrors(error, action, context);
+      // Standardize the error and re-throw for the mutation to catch.
+      handleAuthErrors(error, action, { email: data.email });
     }
   };
 
+  // --- MUTATIONS ---
+
+  /** Mutation for handling the user login process. */
   const loginMutation = useMutation({
-    mutationFn: (data: TypeLoginFormData) => executeAuthAction(data, "login", signIn),
-    ...createMutationConfig("login"),
+    mutationFn: (data: TypeLoginFormData) => _executeAuthAction(data, "login", signIn),
+    onSuccess: () => {
+      _invalidateAuthQueries();
+      _handleSuccessNavigation("login");
+    },
+    onError: (error) => console.error("Login mutation failed:", error),
   });
 
+  /** Mutation for handling the user signup process, including profile creation. */
   const signupMutation = useMutation({
     mutationFn: async (data: TypeSignupFormData) => {
-      const result = await executeAuthAction(data, "signup", signUp);
-      if (result?.success) {
-        const userProfile = await createUserProfile(data);
-        return { success: true, userProfile };
+      await _executeAuthAction(data, "signup", signUp);
+      
+      // After successful signup, get the new user's ID to create their profile.
+      const { data: { session }, error } = await supabaseBrowserClient().auth.getSession();
+      if (error || !session?.user.id) {
+        throw categorizeAuthError(error || "No user session found after signup.", { action: "getSession" });
       }
-      return result;
+      
+      const userProfile = await _createUserProfile(data, session.user.id);
+      return { success: true, userProfile };
     },
-    ...createMutationConfig("signup"),
+    onSuccess: () => {
+      // Do not invalidate queries here, as the user is not logged in yet.
+      _handleSuccessNavigation("signup");
+    },
+    onError: (error) => console.error("Signup mutation failed:", error),
   });
 
-  const getErrorFromMutation = (
-    mutation: typeof loginMutation | typeof signupMutation
-  ): TypeAuthError | null => {
-    const error = mutation.error;
-    return error && typeof error === "object" && "type" in error
-      ? (error as TypeAuthError)
-      : null;
-  };
+  // --- Derived State and Return Object ---
 
-  const canRetryAfter = (error: TypeAuthError | null): number | null => {
-    if (!error?.retryable || !error.retryAfter) {
-      return null;
-    }
-    return error.retryAfter * 1000;
-  };
-
-  const loginError = getErrorFromMutation(loginMutation);
-  const signupError = getErrorFromMutation(signupMutation);
+  const loginError = loginMutation.error as TypeAuthError | null;
+  const signupError = signupMutation.error as TypeAuthError | null;
 
   return {
-    // General state
+    // General
     isLoading: loginMutation.isPending || signupMutation.isPending,
 
-    // Login state
+    // Login
+    handleLogin: loginMutation.mutate,
+    isLoginLoading: loginMutation.isPending,
+    loginSuccess: loginMutation.isSuccess,
     loginError,
     loginErrorMessage: loginError?.userMessage || null,
-    loginSuccess: loginMutation.isSuccess,
-    isLoginLoading: loginMutation.isPending,
-    isLoginRetryable: loginError?.retryable || false,
+    resetLoginState: loginMutation.reset,
 
-    // Signup state
+    // Signup
+    handleSignup: signupMutation.mutate,
+    isSignupLoading: signupMutation.isPending,
+    signupSuccess: signupMutation.isSuccess,
     signupError,
     signupErrorMessage: signupError?.userMessage || null,
-    signupSuccess: signupMutation.isSuccess,
-    isSignupLoading: signupMutation.isPending,
-    isSignupRetryable: signupError?.retryable || false,
+    resetSignupState: signupMutation.reset,
     successMessage: signupMutation.isSuccess
-      ? "Account created successfully! You can now sign in."
+      ? "Account created! Please check your email to verify and then sign in."
       : null,
-
-    // Actions
-    handleLogin: (data: TypeLoginFormData) => loginMutation.mutate(data),
-    handleSignup: (data: TypeSignupFormData) => signupMutation.mutate(data),
-
-    // Reset functions
-    resetLoginState: () => loginMutation.reset(),
-    resetSignupState: () => signupMutation.reset(),
-
-    // Enhanced error utilities
-    getRetryDelay: () => canRetryAfter(loginError) || canRetryAfter(signupError),
-    getErrorContext: () => loginError?.context || signupError?.context || null,
-    getCurrentErrorType: (): EnumAuthErrorType | null =>
-      loginError?.type || signupError?.type || null,
   };
 };
