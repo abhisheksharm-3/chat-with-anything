@@ -11,7 +11,6 @@ import { Document } from "langchain/document";
  * @param query The text to search for.
  * @param namespace The Pinecone namespace to query within.
  * @param topK The number of top results to return. Defaults to 5.
- * @param apiKey Optional API key for Gemini embeddings.
  * @returns A promise that resolves to an array of matching documents.
  * @throws An error if services are not configured or if the query fails.
  */
@@ -19,7 +18,6 @@ export const queryDocuments = async (
   query: string,
   namespace: string,
   topK: number = 5,
-  apiKey?: string,
 ): Promise<Document[]> => {
   console.log(`Querying top ${topK} documents in namespace "${namespace}"...`);
 
@@ -33,7 +31,7 @@ export const queryDocuments = async (
   }
 
   try {
-    const embeddings = await createGeminiEmbeddings({ apiKey });
+    const embeddings = await createGeminiEmbeddings();
     if (!embeddings) {
       throw new Error("Failed to create Gemini embeddings.");
     }

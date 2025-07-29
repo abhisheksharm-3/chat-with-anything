@@ -62,10 +62,9 @@ const _splitTranscriptToDocs = async (
 const _storeDocsInPinecone = async (
   docs: Document[],
   namespace: string,
-  apiKey?: string
 ) => {
   console.log("Creating Gemini embeddings...");
-  const embeddings = await createGeminiEmbeddings({ apiKey });
+  const embeddings = await createGeminiEmbeddings();
   if (!embeddings) {
     throw new Error("Failed to create embeddings. Gemini API may not be configured properly.");
   }
@@ -102,13 +101,11 @@ const _storeDocsInPinecone = async (
  *
  * @param videoUrl The URL of the YouTube video.
  * @param namespace The unique ID (and Pinecone namespace) for the file.
- * @param apiKey Optional API key for Gemini.
  * @returns A promise that resolves with the outcome of the processing.
  */
 export const processYoutubeVideo = async (
   videoUrl: string,
   namespace: string,
-  apiKey?: string
 ): Promise<{ numDocs: number; success: boolean; error?: string }> => {
   console.log(`Starting YouTube transcript processing for namespace: ${namespace}`);
   if (!(await isPineconeConfigured())) {
@@ -126,7 +123,7 @@ export const processYoutubeVideo = async (
 
     const transcriptText = await _fetchAndFormatTranscript(videoId);
     const chunkedDocs = await _splitTranscriptToDocs(transcriptText, videoUrl);
-    await _storeDocsInPinecone(chunkedDocs, namespace, apiKey);
+    await _storeDocsInPinecone(chunkedDocs, namespace);
 
     await updateFileStatus(supabase, namespace, "completed", {
       indexedChunks: chunkedDocs.length,

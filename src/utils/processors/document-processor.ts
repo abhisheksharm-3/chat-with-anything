@@ -24,7 +24,6 @@ const RETRY_DELAY_MS = 1000;
 const _processAndStoreDocuments = async (
   docs: Document[],
   namespace: string,
-  apiKey?: string
 ): Promise<{ numDocs: number }> => {
   if (!docs || docs.length === 0) {
     throw new Error("No processable content found in the document.");
@@ -41,7 +40,7 @@ const _processAndStoreDocuments = async (
 
   // 2. Create embeddings
   console.log("Creating Gemini embeddings...");
-  const embeddings = await createGeminiEmbeddings({ apiKey });
+  const embeddings = await createGeminiEmbeddings();
   if (!embeddings) {
     throw new Error("Failed to create embeddings. Gemini API may not be configured properly.");
   }
@@ -122,13 +121,11 @@ const _extractTextFromGenericDocument = async (
  *
  * @param fileBlob The PDF file blob.
  * @param namespace The unique ID (and Pinecone namespace) for the file.
- * @param apiKey Optional API key for Gemini.
  * @returns A promise that resolves with the outcome of the processing.
  */
 export const processPdfDocument = async (
   fileBlob: Blob,
   namespace: string,
-  apiKey?: string
 ): Promise<{ numDocs: number; success: boolean; error?: string }> => {
   console.log(`Starting PDF processing for namespace: ${namespace}`);
   if (!(await isPineconeConfigured())) {
@@ -140,7 +137,7 @@ export const processPdfDocument = async (
     const loader = new PDFLoader(fileBlob);
     const docs = await loader.load();
 
-    const { numDocs } = await _processAndStoreDocuments(docs, namespace, apiKey);
+    const { numDocs } = await _processAndStoreDocuments(docs, namespace);
     return { numDocs, success: true };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -155,14 +152,12 @@ export const processPdfDocument = async (
  * @param fileBlob The document file blob.
  * @param namespace The unique ID (and Pinecone namespace) for the file.
  * @param documentType The type of the document (e.g., 'docs', 'sheets').
- * @param apiKey Optional API key for Gemini.
  * @returns A promise that resolves with the outcome of the processing.
  */
 export const processGenericDocument = async (
   fileBlob: Blob,
   namespace: string,
   documentType: string,
-  apiKey?: string
 ): Promise<{ numDocs: number; success: boolean; error?: string }> => {
   console.log(`Starting ${documentType} processing for namespace: ${namespace}`);
   if (!(await isPineconeConfigured())) {
@@ -176,7 +171,7 @@ export const processGenericDocument = async (
       metadata: { source: namespace, type: documentType },
     });
 
-    const { numDocs } = await _processAndStoreDocuments([doc], namespace, apiKey);
+    const { numDocs } = await _processAndStoreDocuments([doc], namespace);
     return { numDocs, success: true };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
