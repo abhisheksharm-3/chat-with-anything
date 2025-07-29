@@ -185,29 +185,40 @@ async function _handleProcessableFile({
 }
 
 /**
- * Downloads a file's blob content from Supabase storage using the
- * defined path structure: <user_id>/<file_id>.
+ * Downloads a file's blob content from Supabase storage by extracting
+ * the path from the file's public URL.
  *
  * @param supabase An instance of the Supabase client.
- * @param file The file metadata object.
+ * @param file The file metadata object, which must contain the `url`.
  * @returns A promise that resolves with the file Blob, or null if it fails.
  */
 const getFileBlob = async (
   supabase: SupabaseClient,
   file: TypeFile
 ): Promise<Blob | null> => {
-  // Ensure the required IDs are present.
-  if (!file.user_id || !file.id) {
-    console.error("Cannot get file blob without a user_id and file_id.", file);
+  // A file URL is required to download the blob from storage.
+  if (!file.url) {
+    console.error("Cannot get file blob without a file URL.", file);
     return null;
   }
 
-  // Construct the definitive path.
-  const path = `${file.user_id}/${file.id}`;
+  const STORAGE_BUCKET = "file-storage";
+  let path: string;
 
-  console.log(`Attempting to download from definitive storage path: ${path}`);
+  try {
+    // Extract the storage path from the public URL.
+    // e.g., URL: ".../storage/v1/object/public/file-storage/user_id/file_name.pdf"
+    // The path we need is: "user_id/file_name.pdf"
+    path = new URL(file.url).pathname.split(`/${STORAGE_BUCKET}/`)[1];
+    if (!path) throw new Error("Path extraction from URL failed.");
+  } catch (e) {
+    console.error(`Could not parse storage path from URL: ${file.url}`, e);
+    return null;
+  }
+
+  console.log(`Attempting to download from storage path: ${path}`);
   const { data, error } = await supabase.storage
-    .from("file-storage")
+    .from(STORAGE_BUCKET)
     .download(path);
 
   if (error) {
