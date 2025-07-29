@@ -5,19 +5,11 @@ import { TypeButtonCta } from "@/types/TypeUi";
 import { ArrowRight } from "lucide-react";
 
 /**
- * A reusable call-to-action (CTA) button component.
- * It wraps a shadcn/ui Button within a Next.js Link, providing a simple
- * and consistent way to create styled, linked buttons throughout the application.
+ * A reusable, linked call-to-action (CTA) button.
+ * It's a flexible wrapper around the shadcn/ui Button.
  *
  * @component
  * @param {TypeButtonCta} props - The properties for the component.
- * @param {string} [props.label="Get Started"] - The text to display on the button.
- * @param {string} [props.link="#"] - The destination URL for the link.
- * @param {'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'} [props.variant="default"] - The visual style variant of the button.
- * @param {'default' | 'sm' | 'lg' | 'icon'} [props.size="lg"] - The size variant of the button.
- * @param {boolean} [props.showArrow=false] - If true, displays a right arrow icon next to the label.
- * @param {string} [props.className] - Optional additional CSS classes to apply to the button.
- * @param {object} [props...props] - Any other props to be spread onto the underlying Button component.
  * @returns {JSX.Element} The rendered CTA button component.
  */
 const ButtonCta = ({
@@ -30,11 +22,13 @@ const ButtonCta = ({
   ...props
 }: TypeButtonCta) => {
   return (
-    <Link href={link} className="inline-block w-full">
+    // The Link wrapper no longer forces full-width by default.
+    <Link href={link}>
       <Button
         variant={variant}
         size={size}
-        className={cn("cursor-pointer px-8 py-4 text-base w-full", className)}
+        // w-full has been removed from the base classes for better reusability
+        className={cn("cursor-pointer px-8 py-4 text-base", className)}
         {...props}
       >
         {label}

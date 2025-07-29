@@ -1,31 +1,54 @@
 import Features from "@/components/landing-page/Features";
-import Footer from "@/components/landing-page/Footer";
 import Hero from "@/components/landing-page/Hero";
 import Pricing from "@/components/landing-page/Pricing";
-import Navbar from "@/components/landing-page/Navbar";
 import Faqs from "@/components/landing-page/Faq";
+import Dither from "@/components/backgrounds/Dither/Dither";
+import Layout from "@/components/layout/Layout";
 
 /**
  * Renders the main landing page for the application.
  *
- * This server component serves as a layout that assembles all the major
- * sections of the homepage, such as the Hero, Features, Pricing, and Footer.
+ * This server component uses the Layout wrapper and adds a full-screen
+ * dither background for the hero section while maintaining the layout structure.
  *
  * @returns {JSX.Element} The complete homepage component.
  */
 const Home = () => {
-  return (
-    <div className="bg-[#121212]">
-      <Navbar />
+  // Brand color: oklch(0.563 0.194 286.5) ≈ rgb(104, 54, 203)
+  const brandViolet: [number, number, number] = [0.408, 0.212, 0.796];
 
-      <div className="mx-auto pt-2 lg:pt-10 lg:px-28">
-        <Hero />
+  return (
+    <Layout 
+      showDitherBackground={false}
+      contentClassName="p-0"
+    >
+      {/* Hero section with full dither background */}
+      <div className="relative min-h-screen">
+        {/* Full dither background for hero - LOW z-index */}
+        <div className="absolute inset-0 z-0">
+          <Dither
+            waveColor={brandViolet}
+            disableAnimation={false}
+            enableMouseInteraction={true}
+            mouseRadius={0.3}
+            colorNum={3}
+            waveAmplitude={0.2}
+            waveFrequency={1.5}
+            waveSpeed={0.02}
+          />
+        </div>
+        <div className="relative z-40">
+          <Hero />
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-background z-30" />
+      </div>
+      {/* Rest of the sections */}
+      <div className="bg-background relative z-20">
         <Features />
         <Pricing />
         <Faqs />
-        <Footer />
       </div>
-    </div>
+    </Layout>
   );
 };
 

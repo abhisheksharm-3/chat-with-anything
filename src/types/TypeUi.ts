@@ -75,3 +75,39 @@ export interface TypeWordRotateProps {
   motionProps?: MotionProps;
   className?: string;
 }
+
+export interface LayoutProps {
+  children: React.ReactNode;
+  /**
+   * Whether to show the dither background behind the navbar
+   * @default true
+   */
+  showDitherBackground?: boolean;
+  /**
+   * Whether to apply backdrop blur to the navbar
+   * @default true
+   */
+  enableNavbarBlur?: boolean;
+  /**
+   * Custom className for the main content wrapper
+   */
+  contentClassName?: string;
+  /**
+   * Whether to show the footer
+   * @default true
+   */
+  showFooter?: boolean;
+  /**
+   * Custom dither configuration
+   */
+  ditherConfig?: {
+    waveColor?: [number, number, number];
+    disableAnimation?: boolean;
+    enableMouseInteraction?: boolean;
+    mouseRadius?: number;
+    colorNum?: number;
+    waveAmplitude?: number;
+    waveFrequency?: number;
+    waveSpeed?: number;
+  };
+}
