@@ -1,29 +1,20 @@
-"use client";
+// src/components/dashboard/LogoutDialog.tsx
 
+"use client";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import { TypeDialogProps } from "@/types/TypeUi";
 
-/**
- * A modal dialog component that prompts the user for confirmation before signing out.
- * This is a client component that utilizes hooks to handle state and the sign-out process.
- *
- * @component
- * @param {TypeDialogProps} props - The properties for the component.
- * @param {React.ReactNode} props.trigger - The clickable element that opens the dialog.
- * @param {boolean} [props.defaultOpen=false] - If true, the dialog will be open on initial render.
- * @returns {JSX.Element} The rendered dialog component.
- */
-const LogoutDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
-  const [open, setOpen] = useState(defaultOpen);
+const LogoutDialog = ({ trigger }: TypeDialogProps) => {
+  const [open, setOpen] = useState(false);
   const router = useRouter();
   const { signOut, isSigningOut } = useUser();
 
-  /**
+    /**
    * Handles the user logout process, redirects to the login page on success,
    * and logs any errors.
    */
@@ -37,64 +28,25 @@ const LogoutDialog = ({ trigger, defaultOpen = false }: TypeDialogProps) => {
     }
   };
 
-  /**
-   * Closes the dialog without logging out.
-   */
-  const handleCancel = () => {
-    setOpen(false);
-  };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogTitle className="sr-only">Logout Confirmation</DialogTitle>
-      <DialogContent
-        className="bg-[#121212] border border-[#333] max-w-md p-6 rounded-xl gap-2"
-        showCloseButton={false}
-      >
-        <div className="flex justify-between items-start">
-          <h2 className="text-lg font-semibold">Logout?</h2>
-          <Button
-            onClick={handleCancel}
-            variant="ghost"
-            className="text-gray-400 hover:text-white cursor-pointer"
-            disabled={isSigningOut}
-            aria-label="Close dialog"
-          >
-            <X size={24} />
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Are you sure you want to logout?</DialogTitle>
+          <DialogDescription>
+            This action will end your current session and you will need to sign in again.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="mt-4">
+          <DialogClose asChild><Button variant="outline" disabled={isSigningOut}>Cancel</Button></DialogClose>
+          <Button variant="destructive" onClick={handleLogout} disabled={isSigningOut}>
+            {isSigningOut && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Yes, Logout
           </Button>
-        </div>
-
-        <p className="text-gray-400 text-sm mb-6">
-          Are you sure you want to logout? This action cannot be undone.
-        </p>
-
-        <div className="flex gap-3">
-          <Button
-            onClick={handleCancel}
-            className="flex-1 py-6 text-center bg-[#1a1a1a] hover:bg-[#252525] border border-[#333] rounded-xl font-medium cursor-pointer"
-            disabled={isSigningOut}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleLogout}
-            className="flex-1 py-6 text-center bg-red-600 hover:bg-red-700 rounded-xl font-medium cursor-pointer"
-            disabled={isSigningOut}
-          >
-            {isSigningOut ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Logging out...
-              </>
-            ) : (
-              "Yes, Logout"
-            )}
-          </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
-
 export default LogoutDialog;
