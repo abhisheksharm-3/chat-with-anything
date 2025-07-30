@@ -7,6 +7,7 @@ import { Clock, File, Settings } from "lucide-react";
 export const NavigationItems = [
   { title: "New Chat", href: "/choose", icon: File },
   { title: "History", href: "/history", icon: Clock },
+  { title: "Account Settings", href: "/settings", icon: Settings },
 ] as const;
 
 /**

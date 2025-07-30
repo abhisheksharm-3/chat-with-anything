@@ -3,8 +3,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { LogOut, Settings } from "lucide-react";
-import SettingsDialog from "@/components/dashboard/SettingsDialog";
+import { LogOut } from "lucide-react";
 import LogoutDialog from "@/components/dashboard/LogoutDialog";
 import { NavigationItems } from "@/constants/NavItems";
 import { usePathname } from "next/navigation";
@@ -33,18 +32,6 @@ const DesktopNavigation = () => {
           <TooltipContent side="right">{title}</TooltipContent>
         </Tooltip>
       ))}
-      <SettingsDialog
-        trigger={
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground">
-                <Settings className="h-5 w-5" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right">Settings</TooltipContent>
-          </Tooltip>
-        }
-      />
     </nav>
   );
 };

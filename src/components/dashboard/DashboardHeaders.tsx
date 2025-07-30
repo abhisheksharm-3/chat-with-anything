@@ -29,7 +29,7 @@ const ActiveTab = ({ chat, file }: { chat: TypeChat | null; file: TypeFile | nul
 // This sub-component is used by the Desktop Header
 const AddTabButton = () => (
   <Button asChild variant="outline" size="icon">
-    <Link href="/dashboard"><Plus className="h-4 w-4" /></Link>
+    <Link href="/choose"><Plus className="h-4 w-4" /></Link>
   </Button>
 );
 
