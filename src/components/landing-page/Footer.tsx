@@ -11,7 +11,7 @@ import Link from "next/link";
  */
 const Footer = () => {
   return (
-    <footer className="border-t border-white/10 py-8 text-center bg-black/70">
+    <footer className="border-t border-white/10 py-8 text-center">
       <div className="container mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-6 text-sm text-neutral-400">
         {/* Updated copyright with current year and brand name */}
         <span>© {new Date().getFullYear()} inquora. All rights reserved.</span>

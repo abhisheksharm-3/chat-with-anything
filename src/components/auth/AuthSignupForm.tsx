@@ -1,16 +1,11 @@
+// src/components/auth/AuthSignupForm.tsx
+
 "use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { signupSchema, TypeSignupFormValues } from "../../schemas/AuthSchema";
@@ -18,29 +13,17 @@ import { AuthPasswordInput } from "./AuthPasswordInput";
 import { AuthStatusMessage } from "./AuthStatusMessage";
 import { useAuth } from "@/hooks/useAuth";
 
-/** Shared styling for form inputs to ensure a consistent appearance. */
+// Reusable input styling using theme variables (border, primary for focus).
 const inputClassName =
-  "bg-[#1a1a1a] border-gray-700 text-white focus-visible:ring-primary";
+  "h-12 bg-transparent border-border transition-colors focus-visible:ring-offset-0 focus-visible:border-primary focus-visible:ring-primary";
 
 /**
- * Renders the user registration form.
- *
- * Manages form state with `react-hook-form` and validates input using a Zod schema,
- * including a password confirmation check. It connects to the `useAuth` hook to
- * handle the submission logic, loading state, and display of server-side
- * error or success messages.
- *
- * @returns {JSX.Element} The signup form component.
+ * Themed user signup form with validation and submission handling.
  */
 export const AuthSignupForm = () => {
   const form = useForm<TypeSignupFormValues>({
     resolver: zodResolver(signupSchema),
-    defaultValues: {
-      fullName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
+    defaultValues: { fullName: "", email: "", password: "", confirmPassword: "" },
   });
 
   const {
@@ -52,91 +35,71 @@ export const AuthSignupForm = () => {
 
   return (
     <>
-      {/* Display server-side error message if present */}
       {signupErrorMessage && (
         <AuthStatusMessage message={signupErrorMessage} type="error" />
       )}
-
-      {/* Display success message after registration */}
       {successMessage && (
         <AuthStatusMessage message={successMessage} type="success" />
       )}
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
             name="fullName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm text-gray-300">
-                  Full Name
-                </FormLabel>
+                <FormLabel className="text-muted-foreground">Full Name</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="John Doe"
-                    className={inputClassName}
-                    {...field}
-                  />
+                  <Input placeholder="John Doe" className={inputClassName} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
+          {/* ... other form fields would follow the same pattern ... */}
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm text-gray-300">Email</FormLabel>
+                <FormItem>
+                <FormLabel className="text-muted-foreground">Email</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="you@example.com"
-                    className={inputClassName}
-                    {...field}
-                  />
+                    <Input placeholder="you@example.com" className={inputClassName} {...field} />
                 </FormControl>
                 <FormMessage />
-              </FormItem>
+                </FormItem>
             )}
-          />
-
-          <FormField
+            />
+            <FormField
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm text-gray-300">
-                  Password
-                </FormLabel>
+                <FormItem>
+                <FormLabel className="text-muted-foreground">Password</FormLabel>
                 <FormControl>
-                  <AuthPasswordInput field={field} className={inputClassName} />
+                    <AuthPasswordInput field={field} className={inputClassName} />
                 </FormControl>
                 <FormMessage />
-              </FormItem>
+                </FormItem>
             )}
-          />
-
-          <FormField
+            />
+            <FormField
             control={form.control}
             name="confirmPassword"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-sm text-gray-300">
-                  Confirm Password
-                </FormLabel>
+                <FormItem>
+                <FormLabel className="text-muted-foreground">Confirm Password</FormLabel>
                 <FormControl>
-                  <AuthPasswordInput field={field} className={inputClassName} />
+                    <AuthPasswordInput field={field} className={inputClassName} />
                 </FormControl>
                 <FormMessage />
-              </FormItem>
+                </FormItem>
             )}
-          />
-
+            />
           <Button
             type="submit"
-            className="w-full py-5 cursor-pointer"
+            className="h-12 w-full !mt-8 text-md font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 hover:bg-primary/90 active:scale-100"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -145,7 +108,7 @@ export const AuthSignupForm = () => {
                 Creating account...
               </>
             ) : (
-              "Create account"
+              "Create Account"
             )}
           </Button>
         </form>

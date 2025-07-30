@@ -64,7 +64,7 @@ const Features = () => {
       // Example: style={{ backgroundImage: 'url(/path/to/your/image.jpg)' }}
     >
       {/* Background Overlay for consistent theme and text visibility */}
-      <div className="absolute inset-0 bg-black/70 z-0" />
+      <div className="absolute inset-0 z-0" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
         {/* Features badge */}

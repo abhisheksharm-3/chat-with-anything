@@ -103,6 +103,7 @@ export interface LayoutProps {
   ditherConfig?: {
     waveColor?: [number, number, number];
     disableAnimation?: boolean;
+    fullscreen?: boolean; 
     enableMouseInteraction?: boolean;
     mouseRadius?: number;
     colorNum?: number;

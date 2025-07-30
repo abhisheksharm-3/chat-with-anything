@@ -17,7 +17,7 @@ const Faqs = () => {
   return (
     <section id="faq" className="relative w-full bg-cover bg-center py-24 sm:py-32">
       {/* Background Overlay for consistent theme and text visibility */}
-      <div className="absolute inset-0 z-0 bg-black/70" />
+      <div className="absolute inset-0 z-0" />
 
       <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
         {/* Header structure mirroring the Features and Pricing sections */}

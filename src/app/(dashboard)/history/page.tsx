@@ -1,29 +1,23 @@
+// src/app/history/page.tsx
+
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { useChats } from "@/hooks/useChats";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Send, AlertCircle, RefreshCw } from "lucide-react";
+import { Search, Plus, AlertCircle, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { HistoryPageSkeletonItems } from "@/constants/HistoryPage";
 import { HistoryChatlistSkeletonItem } from "@/components/history/HistoryPageSkeletonLoader";
 import { HistoryPageChatItem } from "@/components/history/HistoryPageChatItem";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 /**
- * Renders the user's chat history page.
- *
- * This component fetches chat data, handles loading and error states, and provides
- * a search interface to filter the chat list. It is designed to be robust,
- * with specific UI states for loading, fetch errors, empty results, and search errors.
- *
- * @returns {JSX.Element} The rendered history page.
+ * Renders the user's chat history page with a redesigned, themed UI.
  */
 const HistoryPage = () => {
   const { chats, isLoading, isError, error, refetch } = useChats();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchError, setSearchError] = useState<string | null>(null);
 
   const filteredChats = (Array.isArray(chats) ? chats : []).filter(
     (chat) =>
@@ -31,158 +25,82 @@ const HistoryPage = () => {
       chat.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchError(null); // Clear previous errors on new input
-    setSearchQuery(e.target.value);
-  };
-
-  const handleSearch = () => {
-    if (searchQuery.trim().length > 100) {
-      setSearchError(
-        "Search query is too long. Please use fewer than 100 characters."
-      );
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
-
-  // Main render function for the page content based on the data fetching state.
   const renderContent = () => {
     if (isError) {
       return (
-        <div className="flex flex-col items-center justify-center text-center px-4 py-8 sm:py-12">
-          <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-          <h3 className="text-sm sm:text-base font-medium mb-2 text-white">
-            Failed to load chats
-          </h3>
-          <p className="text-xs sm:text-sm text-[#A9A9A9] font-medium text-center max-w-xs sm:max-w-md mb-4 sm:mb-6 leading-relaxed">
-            {error instanceof Error
-              ? `Error: ${error.message}`
-              : "An unexpected error occurred."}
-          </p>
-          <Button
-            onClick={() => refetch()}
-            variant="destructive"
-            className="px-3 sm:px-6 py-2 sm:py-3 rounded-lg gap-2 cursor-pointer transition-colors"
-          >
-            <RefreshCw size={14} className="sm:w-4 sm:h-4" />
-            <span>Retry</span>
+        <div className="mt-16 text-center">
+          <Alert variant="destructive" className="mx-auto max-w-md">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Failed to load chats</AlertTitle>
+            <AlertDescription>
+              {error instanceof Error ? error.message : "An unexpected error occurred."}
+            </AlertDescription>
+          </Alert>
+          <Button onClick={() => refetch()} variant="secondary" className="mt-6">
+            <RefreshCw className="mr-2 h-4 w-4" /> Retry
           </Button>
         </div>
       );
     }
-
     if (isLoading) {
       return (
-        <div className="w-full space-y-2 sm:space-y-3">
-          {HistoryPageSkeletonItems.map((item) => (
-            <HistoryChatlistSkeletonItem key={item.id} />
-          ))}
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => <HistoryChatlistSkeletonItem key={i} />)}
         </div>
       );
     }
-
     if (filteredChats.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center text-center px-4 py-8 sm:py-12">
-          <h3 className="text-sm sm:text-base font-medium mb-2">
-            No chats found
-          </h3>
-          <p className="text-xs sm:text-sm text-[#A9A9A9] font-medium text-center max-w-xs sm:max-w-md mb-4 sm:mb-6 leading-relaxed">
+        <div className="mt-16 flex flex-col items-center text-center">
+          <h3 className="text-xl font-semibold text-foreground">No Chats Found</h3>
+          <p className="mt-2 max-w-md text-muted-foreground">
             {searchQuery
               ? "No chats match your search. Try a different term."
-              : "You have no chats yet. Upload a document to start a new one."}
+              : "You have no chats yet. Create one to get started."}
           </p>
-          <Link href="/choose">
-            <Button className="px-3 sm:px-6 py-2 sm:py-3 rounded-lg gap-2 cursor-pointer transition-colors">
-              <Plus size={14} className="sm:w-4 sm:h-4" />
-              <span>New chat</span>
-            </Button>
-          </Link>
+          <Button asChild className="mt-6">
+            <Link href="/dashboard">
+              <Plus className="mr-2 h-4 w-4" /> New Chat
+            </Link>
+          </Button>
         </div>
       );
     }
-
     return (
-      <div className="w-full space-y-2 sm:space-y-3 px-3">
+      <div className="space-y-3">
         {filteredChats.map((chat) =>
-          chat?.id ? (
-            <div
-              key={chat.id}
-              className="border border-[#333] rounded-lg overflow-hidden"
-            >
-              <HistoryPageChatItem chat={chat} />
-            </div>
-          ) : null
+          chat?.id ? <HistoryPageChatItem key={chat.id} chat={chat} /> : null
         )}
       </div>
     );
   };
 
   return (
-    <div className="flex flex-col min-h-screen max-w-screen bg-[#0f0f0f]">
-      <div className="w-full max-w-4xl mx-auto lg:px-8 flex-1">
-        <div className="flex flex-col py-4 sm:py-6">
-          {/* Header */}
-          <div className="text-center mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold mb-1 sm:mb-2 text-white">
-              File History
-            </h2>
-            <p className="text-xs sm:text-sm font-normal text-[#A9A9A9]">
-              Review your chat history
-            </p>
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative w-full max-w-sm sm:max-w-lg mx-auto mb-4 sm:mb-6">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-              size={16}
-            />
-            <Input
-              type="text"
-              placeholder="Search chat"
-              value={searchQuery}
-              onChange={handleSearchInputChange}
-              onKeyDown={handleKeyPress}
-              className="pl-10 pr-10 text-sm text-gray-300 bg-[#1a1a1a] border-[#333] focus:border-[#555] rounded-xl h-10 sm:h-12"
-              maxLength={100}
-            />
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSearch}
-                className="p-1 h-6 w-6 hover:bg-[#2a2a2a] rounded"
-              >
-                <Send
-                  size={14}
-                  className="text-gray-500 hover:text-gray-400 transition-colors"
-                />
-              </Button>
-            </div>
-          </div>
-
-          {/* Search Error Alert */}
-          {searchError && (
-            <div className="w-full max-w-sm sm:max-w-lg mx-auto mb-4">
-              <Alert className="border-red-500 bg-red-50/10">
-                <AlertCircle className="h-4 w-4 text-red-500" />
-                <AlertDescription className="text-red-400">
-                  {searchError}
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
-
-          {/* Main Content */}
-          <div className="w-full flex-1">{renderContent()}</div>
-        </div>
+    <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
+      {/* Header */}
+      <div className="mb-8 text-center">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground">
+          Chat History
+        </h1>
+        <p className="mt-2 text-muted-foreground">
+          Review, search, and manage your past conversations.
+        </p>
       </div>
+
+      {/* Search Bar */}
+      <div className="relative mx-auto mb-8 w-full max-w-lg">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search by chat title..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-11 w-full pl-10"
+        />
+      </div>
+
+      {/* Main Content */}
+      {renderContent()}
     </div>
   );
 };

@@ -1,16 +1,11 @@
+// src/components/auth/AuthLoginForm.tsx
+
 "use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { loginSchema, TypeLoginFormValues } from "../../schemas/AuthSchema";
@@ -18,26 +13,17 @@ import { AuthPasswordInput } from "./AuthPasswordInput";
 import { AuthStatusMessage } from "./AuthStatusMessage";
 import { useAuth } from "@/hooks/useAuth";
 
-/** Shared styling for form inputs to ensure a consistent appearance. */
+// Reusable input styling using theme variables (border, primary for focus).
 const inputClassName =
-  "bg-[#1a1a1a] border-gray-700 text-white focus-visible:ring-primary";
+  "h-12 bg-transparent border-border transition-colors focus-visible:ring-offset-0 focus-visible:border-primary focus-visible:ring-primary";
 
 /**
- * Renders the user login form.
- *
- * Manages form state with `react-hook-form` and validates input using a Zod schema.
- * It connects to the `useAuth` hook to handle the submission logic, loading state,
- * and display of any server-side error messages.
- *
- * @returns {JSX.Element} The login form component.
+ * Themed user login form with validation and submission handling.
  */
 export const AuthLoginForm = () => {
   const form = useForm<TypeLoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
 
   const {
@@ -48,19 +34,18 @@ export const AuthLoginForm = () => {
 
   return (
     <>
-      {/* Display global error message from the API if present */}
       {loginErrorMessage && (
         <AuthStatusMessage message={loginErrorMessage} type="error" />
       )}
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm text-gray-300">Email</FormLabel>
+                <FormLabel className="text-muted-foreground">Email</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="you@example.com"
@@ -78,9 +63,7 @@ export const AuthLoginForm = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm text-gray-300">
-                  Password
-                </FormLabel>
+                <FormLabel className="text-muted-foreground">Password</FormLabel>
                 <FormControl>
                   <AuthPasswordInput field={field} className={inputClassName} />
                 </FormControl>
@@ -91,7 +74,7 @@ export const AuthLoginForm = () => {
 
           <Button
             type="submit"
-            className="w-full py-5 cursor-pointer"
+            className="h-12 w-full !mt-8 text-md font-semibold bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 hover:bg-primary/90 active:scale-100"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -100,7 +83,7 @@ export const AuthLoginForm = () => {
                 Signing in...
               </>
             ) : (
-              "Sign in"
+              "Sign In"
             )}
           </Button>
         </form>

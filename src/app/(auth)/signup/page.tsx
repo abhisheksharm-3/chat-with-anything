@@ -1,34 +1,21 @@
-import { AuthHeader } from "@/components/auth/AuthHeader";
-import { AuthLink } from "@/components/auth/AuthLink";
+// src/app/(auth)/signup/page.tsx
+
 import { AuthSignupForm } from "@/components/auth/AuthSignupForm";
+import { AuthLink } from "@/components/auth/AuthLink";
+import { AuthHeader } from "@/components/auth/AuthHeader";
 
 /**
- * Renders the main layout for the user signup page.
- *
- * This component acts as a container, assembling the header, the signup form,
- * and the navigation link to the login page. It does not contain any state or
- * logic itself, delegating those responsibilities to its child components.
- *
- * @returns {JSX.Element} The rendered signup page component.
+ * Renders the user signup page within a themed "glass" panel.
  */
 const SignupPage = () => {
   return (
-    <div className="w-full max-w-md space-y-8">
-      {/* Auth Header */}
+    <div className="w-full max-w-md space-y-8 rounded-2xl border border-white/10 bg-black/20 p-8 shadow-2xl shadow-black/40 backdrop-blur-lg">
       <AuthHeader
-        title="Create your account"
-        subtitle="Sign up to get started with Chat With Anything"
+        title="Create an Account"
+        subtitle="Start your journey with Inquora today"
       />
-
-      {/* Signup Form */}
       <AuthSignupForm />
-
-      {/* Link to Login Page */}
-      <AuthLink
-        text="Already have an account?"
-        linkText="Sign in"
-        href="/login"
-      />
+      <AuthLink text="Already have an account?" linkText="Sign in" href="/login" />
     </div>
   );
 };

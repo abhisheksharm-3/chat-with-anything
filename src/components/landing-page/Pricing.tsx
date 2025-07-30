@@ -26,7 +26,7 @@ const Pricing = () => {
       className="relative w-full border-b border-white/10 bg-cover bg-center py-24 sm:py-32"
     >
       {/* Background Overlay for consistent theme and text visibility */}
-      <div className="absolute inset-0 z-0 bg-black/70" />
+      <div className="absolute inset-0 z-0" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-6 text-center">
         {/* Badge with pulsing dot - exactly like the Features section */}
