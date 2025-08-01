@@ -1,23 +1,16 @@
-// src/app/(auth)/layout.tsx
-
 import { Metadata } from "next";
-import Layout from "@/components/layout/Layout"; // Import the main layout
+import Layout from "@/components/layout/Layout";
+import { AuthBrandingPanel } from "@/components/auth/AuthBrandingPanel";
 
-/**
- * SEO metadata for all authentication pages.
- */
 export const metadata: Metadata = {
   title: "Authentication - Inquora",
   description: "Login or sign up to access your Inquora dashboard.",
 };
 
 /**
- * Defines the shared layout for authentication pages using the main Layout component.
- *
- * This component configures the main layout for a focused authentication experience:
- * - Enables a full-screen dither background with the brand color.
- * - Disables the footer to reduce distractions.
- * - Centers the content (the login/signup form) on the page.
+ * @description A definitive, asymmetric layout for authentication. It reserves a
+ * fixed-width column for the form, ensuring a consistent, app-like feel, while
+ * the branding panel dynamically fills the remaining space.
  */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const brandViolet: [number, number, number] = [0.408, 0.212, 0.796];
@@ -25,16 +18,23 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <Layout
       showFooter={false}
-      enableNavbarBlur={false} // Often cleaner to disable blur when bg is already dynamic
-      contentClassName="flex items-center justify-center w-full px-4"
+      enableNavbarBlur={false}
+      contentClassName="w-full"
       ditherConfig={{
         waveColor: brandViolet,
-        fullscreen: true, // Tell the layout to make the background full-screen
+        fullscreen: true,
         waveAmplitude: 0.1,
-        waveFrequency: 2.5,
+        waveFrequency: 1.5,
+        waveSpeed: 0.02,
       }}
     >
-      {children}
+      <div className="absolute inset-0 bg-black/60" />
+      <div className="min-h-screen w-full lg:grid lg:grid-cols-[1fr_480px]">
+        <AuthBrandingPanel />
+        <div className="relative flex items-center justify-center p-4">
+          {children}
+        </div>
+      </div>
     </Layout>
   );
 }
